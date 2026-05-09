@@ -1,0 +1,626 @@
+/* ============================================================
+   📱 NEOCLASS - Responsive Design
+   Styles adaptatifs pour tous les écrans
+   ============================================================ */
+
+/* ─────────────────────────────────────────────────────────────
+   📐 POINTS DE RUPTURE (Breakpoints)
+   ─────────────────────────────────────────────────────────────
+   xs: < 480px   (Petits mobiles)
+   sm: 480-640px (Mobiles)
+   md: 640-768px (Grands mobiles / petites tablettes)
+   lg: 768-1024px (Tablettes)
+   xl: 1024-1280px (Petits laptops)
+   2xl: > 1280px (Desktop)
+   ───────────────────────────────────────────────────────────── */
+
+/* ─────────────────────────────────────────────────────────────
+   📏 MOBILE FIRST - Base (< 480px)
+   ───────────────────────────────────────────────────────────── */
+
+/* Typographie mobile */
+h1 { font-size: var(--nc-text-2xl); }
+h2 { font-size: var(--nc-text-xl); }
+h3 { font-size: var(--nc-text-lg); }
+h4 { font-size: var(--nc-text-base); }
+
+/* Layout mobile */
+.app-content {
+  padding: var(--nc-space-md);
+}
+
+.page-header {
+  margin-bottom: var(--nc-space-lg);
+}
+
+.page-title {
+  font-size: var(--nc-text-xl);
+}
+
+/* Cards mobile */
+.card {
+  padding: var(--nc-space-md);
+}
+
+.stat-card {
+  padding: var(--nc-space-md);
+}
+
+.stat-card-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+}
+
+.stat-card-value {
+  font-size: var(--nc-text-xl);
+}
+
+/* Buttons mobile */
+.btn {
+  padding: 0.625rem 1.25rem;
+  font-size: var(--nc-text-sm);
+}
+
+.btn-lg {
+  padding: 0.875rem 1.5rem;
+}
+
+/* Forms mobile */
+.form-input {
+  padding: 0.75rem 1rem;
+  font-size: var(--nc-text-base);
+}
+
+/* Course cards mobile */
+.course-card-image {
+  height: 140px;
+}
+
+.course-card-title {
+  font-size: var(--nc-text-base);
+}
+
+/* Hide elements on mobile */
+.hide-mobile {
+  display: none !important;
+}
+
+/* Streak card mobile */
+.streak-count {
+  font-size: var(--nc-text-4xl);
+}
+
+.streak-days {
+  gap: var(--nc-space-xs);
+}
+
+.streak-day {
+  width: 30px;
+  height: 30px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📱 SMALL MOBILE (sm: >= 480px)
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 480px) {
+  h1 { font-size: var(--nc-text-3xl); }
+  h2 { font-size: var(--nc-text-2xl); }
+  
+  .page-title {
+    font-size: var(--nc-text-2xl);
+  }
+  
+  .course-card-image {
+    height: 150px;
+  }
+  
+  .streak-count {
+    font-size: var(--nc-text-5xl);
+  }
+  
+  .streak-day {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📱 MEDIUM (md: >= 640px)
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  h1 { font-size: var(--nc-text-3xl); }
+  
+  .app-content {
+    padding: var(--nc-space-lg);
+  }
+  
+  .page-title {
+    font-size: var(--nc-text-2xl);
+  }
+  
+  .card {
+    padding: var(--nc-space-lg);
+  }
+  
+  .stat-card {
+    padding: var(--nc-space-lg);
+  }
+  
+  .stat-card-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+  
+  .stat-card-value {
+    font-size: var(--nc-text-2xl);
+  }
+  
+  /* Grid 2 colonnes */
+  .grid-sm-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Show on sm and up */
+  .show-sm {
+    display: block !important;
+  }
+  
+  .show-sm-flex {
+    display: flex !important;
+  }
+  
+  /* Course cards */
+  .course-card-image {
+    height: 160px;
+  }
+  
+  .course-card-title {
+    font-size: var(--nc-text-lg);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📱 TABLET (lg: >= 768px)
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  h1 { font-size: var(--nc-text-4xl); }
+  h2 { font-size: var(--nc-text-3xl); }
+  h3 { font-size: var(--nc-text-2xl); }
+  
+  .app-content {
+    padding: var(--nc-space-xl);
+  }
+  
+  .page-header {
+    margin-bottom: var(--nc-space-xl);
+  }
+  
+  .page-title {
+    font-size: var(--nc-text-3xl);
+  }
+  
+  /* Grid 3 colonnes */
+  .grid-md-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  /* Buttons */
+  .btn {
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .btn-lg {
+    padding: 1rem 2rem;
+    font-size: var(--nc-text-lg);
+  }
+  
+  /* Show on md and up */
+  .show-md {
+    display: block !important;
+  }
+  
+  .show-md-flex {
+    display: flex !important;
+  }
+  
+  /* Hide on md and up */
+  .hide-md {
+    display: none !important;
+  }
+  
+  /* Modal larger */
+  .modal {
+    max-width: 500px;
+  }
+  
+  .modal-lg {
+    max-width: 700px;
+  }
+  
+  /* Header search */
+  .header-search {
+    width: 280px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   💻 SMALL LAPTOP (xl: >= 1024px)
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 1024px) {
+  /* Sidebar visible */
+  .app-sidebar {
+    transform: translateX(0);
+  }
+  
+  .app-main {
+    margin-left: var(--nc-sidebar-width);
+  }
+  
+  .sidebar-overlay {
+    display: none !important;
+  }
+  
+  /* Grid 4 colonnes */
+  .grid-lg-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  /* Page title */
+  .page-title {
+    font-size: var(--nc-text-3xl);
+  }
+  
+  /* Show on lg and up */
+  .show-lg {
+    display: block !important;
+  }
+  
+  .show-lg-flex {
+    display: flex !important;
+  }
+  
+  /* Hide on lg and up */
+  .hide-lg {
+    display: none !important;
+  }
+  
+  /* Header */
+  .header-toggle {
+    display: none;
+  }
+  
+  .header-search {
+    width: 350px;
+  }
+  
+  /* Stat cards row */
+  .stat-cards-row {
+    display: flex;
+    gap: var(--nc-space-lg);
+  }
+  
+  .stat-cards-row .stat-card {
+    flex: 1;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🖥️ DESKTOP (2xl: >= 1280px)
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 1280px) {
+  .app-content {
+    padding: var(--nc-space-2xl);
+  }
+  
+  .page-title {
+    font-size: var(--nc-text-4xl);
+  }
+  
+  /* Grid 5 colonnes */
+  .grid-xl-5 {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  
+  /* Show on xl */
+  .show-xl {
+    display: block !important;
+  }
+  
+  .show-xl-flex {
+    display: flex !important;
+  }
+  
+  /* Header search */
+  .header-search {
+    width: 400px;
+  }
+  
+  /* Container max width */
+  .container {
+    max-width: 1400px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🖼️ LARGE DESKTOP (>= 1536px)
+   ───────────────────────────────────────────────────────────── */
+@media (min-width: 1536px) {
+  :root {
+    --nc-sidebar-width: 300px;
+  }
+  
+  .container {
+    max-width: 1600px;
+  }
+  
+  /* Grid 6 colonnes */
+  .grid-2xl-6 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📐 ORIENTATIONS
+   ───────────────────────────────────────────────────────────── */
+
+/* Landscape mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .app-content {
+    padding: var(--nc-space-sm) var(--nc-space-lg);
+  }
+  
+  .bottom-nav {
+    height: 48px;
+  }
+  
+  .bottom-nav-icon {
+    font-size: 1.25rem;
+  }
+  
+  .bottom-nav-label {
+    display: none;
+  }
+  
+  /* Reduce heights in landscape */
+  .streak-card {
+    padding: var(--nc-space-md);
+  }
+  
+  .streak-icon {
+    font-size: 2rem;
+    margin-bottom: var(--nc-space-sm);
+  }
+  
+  .streak-count {
+    font-size: var(--nc-text-3xl);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   📏 CONTAINER QUERIES (pour composants)
+   ───────────────────────────────────────────────────────────── */
+
+/* Container for stat cards */
+@container (min-width: 400px) {
+  .stat-card-container .stat-card {
+    flex-direction: row;
+  }
+}
+
+/* Container for course grid */
+@container (min-width: 600px) {
+  .courses-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@container (min-width: 900px) {
+  .courses-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🎨 UTILITAIRES RESPONSIVE
+   ───────────────────────────────────────────────────────────── */
+
+/* Flex direction */
+@media (max-width: 640px) {
+  .flex-col-sm {
+    flex-direction: column;
+  }
+  
+  .items-start-sm {
+    align-items: flex-start;
+  }
+  
+  .gap-sm-md {
+    gap: var(--nc-space-md);
+  }
+}
+
+/* Text alignment */
+@media (max-width: 640px) {
+  .text-center-sm {
+    text-align: center;
+  }
+  
+  .text-left-sm {
+    text-align: left;
+  }
+}
+
+/* Width */
+@media (max-width: 640px) {
+  .w-full-sm {
+    width: 100%;
+  }
+}
+
+/* Padding/Margin */
+@media (max-width: 640px) {
+  .p-sm-md {
+    padding: var(--nc-space-md);
+  }
+  
+  .px-sm-md {
+    padding-left: var(--nc-space-md);
+    padding-right: var(--nc-space-md);
+  }
+  
+  .py-sm-md {
+    padding-top: var(--nc-space-md);
+    padding-bottom: var(--nc-space-md);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🖨️ PRINT STYLES
+   ───────────────────────────────────────────────────────────── */
+@media print {
+  .app-sidebar,
+  .app-header,
+  .bottom-nav,
+  .btn,
+  .toast-container,
+  .modal-backdrop {
+    display: none !important;
+  }
+  
+  .app-main {
+    margin-left: 0;
+  }
+  
+  .app-content {
+    padding: 0;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+    break-inside: avoid;
+  }
+  
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+  
+  body {
+    background: white;
+    color: black;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🖥️ HIGH DPI / RETINA
+   ───────────────────────────────────────────────────────────── */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Sharper borders */
+  .card {
+    border-width: 0.5px;
+  }
+  
+  .form-input {
+    border-width: 1px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🎯 TOUCH DEVICES
+   ───────────────────────────────────────────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .sidebar-link {
+    padding: 1rem var(--nc-space-md);
+  }
+  
+  .dropdown-item {
+    padding: var(--nc-space-md);
+  }
+  
+  /* Remove hover effects that don't work on touch */
+  .card:hover {
+    transform: none;
+  }
+  
+  .btn:hover {
+    transform: none;
+  }
+  
+  /* Active states instead */
+  .btn:active {
+    transform: scale(0.98);
+  }
+  
+  .card:active {
+    transform: scale(0.99);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🌙 DARK MODE + RESPONSIVE
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  /* Auto dark mode if not explicitly set */
+  html:not([data-theme]) {
+    --nc-bg: #0f172a;
+    --nc-bg-card: #1e293b;
+    --nc-text: #f1f5f9;
+    --nc-text-secondary: #94a3b8;
+    --nc-border: #334155;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   ♿ ACCESSIBILITÉ
+   ───────────────────────────────────────────────────────────── */
+
+/* Focus visible */
+@media (max-width: 768px) {
+  :focus-visible {
+    outline-offset: 4px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift:hover,
+  .hover-scale:hover,
+  .card:hover,
+  .btn:hover {
+    transform: none;
+  }
+  
+  .animate-bounce,
+  .animate-pulse,
+  .animate-spin,
+  .streak-fire,
+  .glow-pulse,
+  .float {
+    animation: none;
+  }
+}
+
+/* High contrast */
+@media (prefers-contrast: high) {
+  :root {
+    --nc-border: #000;
+    --nc-text-secondary: #1e293b;
+  }
+  
+  .btn {
+    border: 2px solid currentColor;
+  }
+  
+  .card {
+    border: 2px solid var(--nc-border);
+  }
+}

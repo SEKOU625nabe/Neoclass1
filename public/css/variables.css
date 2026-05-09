@@ -1,0 +1,228 @@
+/* ============================================================
+   🎨 NEOCLASS DESIGN SYSTEM - Variables CSS
+   Inspiré de Duolingo, Coursera, et EdTech Modern
+   ============================================================ */
+
+:root {
+  /* ─── Couleurs Primaires (Style Duolingo) ─── */
+  --nc-primary: #58CC02;
+  --nc-primary-light: #7BDF3E;
+  --nc-primary-dark: #46A302;
+  --nc-primary-50: #F0FDF4;
+  --nc-primary-100: #DCFCE7;
+  --nc-primary-200: #BBF7D0;
+  
+  /* Alias pour compatibilité */
+  --primary: var(--nc-primary);
+  --primary-light: var(--nc-primary-light);
+  --primary-dark: var(--nc-primary-dark);
+  
+  /* ─── Couleurs Accent ─── */
+  --nc-accent: #FF9600;
+  --nc-accent-light: #FFB52E;
+  --nc-accent-dark: #D97706;
+  --accent: var(--nc-accent);
+  --accent-light: var(--nc-accent-light);
+  
+  /* ─── Couleurs de Succès/Erreur ─── */
+  --nc-success: #58CC02;
+  --nc-success-light: #7BDF3E;
+  --nc-success-bg: #F0FDF4;
+  --nc-danger: #FF4B4B;
+  --nc-danger-light: #FF6B6B;
+  --nc-danger-bg: #FEF2F2;
+  --nc-warning: #FF9600;
+  --nc-warning-bg: #FFFBEB;
+  --nc-info: #1CB0F6;
+  --nc-info-bg: #EFF6FF;
+  --success: var(--nc-success);
+  --danger: var(--nc-danger);
+  --info: var(--nc-info);
+  
+  /* ─── Gamification (XP, Niveaux) ─── */
+  --nc-xp: #FF9600;
+  --nc-xp-light: #FFB52E;
+  --nc-gold: #FFD900;
+  --nc-gold-light: #FFE34D;
+  --nc-streak: #FF9600;
+  --nc-lives: #FF4B4B;
+  --gold: var(--nc-gold);
+  
+  /* ─── Arrière-plans ─── */
+  --nc-bg: #F7F7F7;
+  --nc-bg-card: #FFFFFF;
+  --nc-bg-elevated: #FFFFFF;
+  --nc-bg-overlay: rgba(0, 0, 0, 0.5);
+  --nc-bg-hover: #F1F5F9;
+  --nc-bg-active: #E2E8F0;
+  --bg: var(--nc-bg);
+  --bg-card: var(--nc-bg-card);
+  --bg-hover: var(--nc-bg-hover);
+  
+  /* ─── Textes ─── */
+  --nc-text: #3C3C3C;
+  --nc-text-secondary: #777777;
+  --nc-text-muted: #AFAFAF;
+  --nc-text-inverse: #FFFFFF;
+  --text: var(--nc-text);
+  --text-secondary: var(--nc-text-secondary);
+  
+  /* ─── Bordures ─── */
+  --nc-border: #E5E5E5;
+  --nc-border-hover: #CCCCCC;
+  --nc-border-focus: var(--nc-primary);
+  --border: var(--nc-border);
+  
+  /* ─── Ombres (Style Duolingo avec profondeur) ─── */
+  --nc-shadow-sm: 0 2px 0 var(--nc-border);
+  --nc-shadow: 0 4px 0 var(--nc-border);
+  --nc-shadow-md: 0 6px 0 var(--nc-border);
+  --nc-shadow-lg: 0 8px 0 var(--nc-border);
+  --nc-shadow-xl: 0 10px 0 var(--nc-border);
+  --nc-shadow-glow: 0 0 20px rgba(88, 204, 2, 0.3);
+  --shadow: var(--nc-shadow);
+  --shadow-lg: var(--nc-shadow-lg);
+  
+  /* ─── Espacements ─── */
+  --nc-space-xs: 0.25rem;
+  --nc-space-sm: 0.5rem;
+  --nc-space-md: 1rem;
+  --nc-space-lg: 1.5rem;
+  --nc-space-xl: 2rem;
+  --nc-space-2xl: 3rem;
+  --nc-space-3xl: 4rem;
+  
+  /* ─── Rayon de Bordure ─── */
+  --nc-radius-sm: 0.375rem;
+  --nc-radius: 0.5rem;
+  --nc-radius-md: 0.75rem;
+  --nc-radius-lg: 1rem;
+  --nc-radius-xl: 1.5rem;
+  --nc-radius-full: 9999px;
+  
+  /* ─── Typographie ─── */
+  --nc-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --nc-font-arabic: 'Amiri', serif;
+  --nc-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Tailles de Police */
+  --nc-text-xs: 0.75rem;
+  --nc-text-sm: 0.875rem;
+  --nc-text-base: 1rem;
+  --nc-text-lg: 1.125rem;
+  --nc-text-xl: 1.25rem;
+  --nc-text-2xl: 1.5rem;
+  --nc-text-3xl: 1.875rem;
+  --nc-text-4xl: 2.25rem;
+  --nc-text-5xl: 3rem;
+  
+  /* Poids de Police */
+  --nc-font-light: 300;
+  --nc-font-normal: 400;
+  --nc-font-medium: 500;
+  --nc-font-semibold: 600;
+  --nc-font-bold: 700;
+  --nc-font-extrabold: 800;
+  
+  /* Hauteur de Ligne */
+  --nc-leading-tight: 1.25;
+  --nc-leading-normal: 1.5;
+  --nc-leading-relaxed: 1.625;
+  
+  /* ─── Transitions ─── */
+  --nc-transition-fast: 150ms ease;
+  --nc-transition: 200ms ease;
+  --nc-transition-slow: 300ms ease;
+  --nc-transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* ─── Layout ─── */
+  --nc-nav-height: 64px;
+  --nc-sidebar-width: 280px;
+  --nc-sidebar-collapsed: 72px;
+  --nc-content-max-width: 1280px;
+  
+  /* ─── Z-Index ─── */
+  --nc-z-dropdown: 100;
+  --nc-z-sticky: 200;
+  --nc-z-fixed: 300;
+  --nc-z-modal-backdrop: 400;
+  --nc-z-modal: 500;
+  --nc-z-popover: 600;
+  --nc-z-tooltip: 700;
+  --nc-z-toast: 800;
+}
+
+/* ============================================================
+   🌙 MODE SOMBRE - Élégant avec accents dorés
+   ============================================================ */
+[data-theme="dark"],
+.dark-mode {
+  --nc-primary: #FFD900;
+  --nc-primary-light: #FFE34D;
+  --nc-primary-dark: #E5C100;
+  --primary: var(--nc-primary);
+  --primary-light: var(--nc-primary-light);
+  --primary-dark: var(--nc-primary-dark);
+  
+  --nc-bg: #0A0A12;
+  --nc-bg-card: #12121F;
+  --nc-bg-elevated: #1A1A2E;
+  --nc-bg-hover: #1A1A2E;
+  --nc-bg-active: #2A2A40;
+  --bg: var(--nc-bg);
+  --bg-card: var(--nc-bg-card);
+  
+  --nc-text: #FFFFFF;
+  --nc-text-secondary: #B8B8C8;
+  --nc-text-muted: #777790;
+  --text: var(--nc-text);
+  --text-secondary: var(--nc-text-secondary);
+  
+  --nc-border: #2A2A40;
+  --nc-border-hover: #3A3A55;
+  --border: var(--nc-border);
+  
+  --nc-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --nc-shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
+  
+  /* Accents dorés pour le mode sombre */
+  --nc-accent: #FFD900;
+  --nc-gold: #FFD900;
+  --accent: var(--nc-accent);
+  --gold: var(--nc-gold);
+}
+
+/* Mode Coran de nuit */
+[data-theme="dark"][data-quran-night="true"] {
+  --nc-bg: #050510;
+  --nc-bg-card: #0a0a1a;
+  --nc-primary: #fbbf24;
+}
+
+/* ============================================================
+   🎯 Classes Utilitaires de Couleurs
+   ============================================================ */
+.text-primary { color: var(--nc-primary) !important; }
+.text-accent { color: var(--nc-accent) !important; }
+.text-success { color: var(--nc-success) !important; }
+.text-danger { color: var(--nc-danger) !important; }
+.text-warning { color: var(--nc-warning) !important; }
+.text-info { color: var(--nc-info) !important; }
+.text-muted { color: var(--nc-text-muted) !important; }
+.text-secondary { color: var(--nc-text-secondary) !important; }
+
+.bg-primary { background-color: var(--nc-primary) !important; }
+.bg-accent { background-color: var(--nc-accent) !important; }
+.bg-success { background-color: var(--nc-success) !important; }
+.bg-danger { background-color: var(--nc-danger) !important; }
+.bg-card { background-color: var(--nc-bg-card) !important; }
+
+/* ============================================================
+   📱 Points de Rupture Responsifs
+   ============================================================ */
+/* 
+  Mobile: < 640px
+  Tablet: 640px - 1024px
+  Desktop: > 1024px
+  Large: > 1280px
+*/

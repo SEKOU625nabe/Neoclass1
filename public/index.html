@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#58CC02">
+  <meta name="description" content="Neoclass - La plateforme d'apprentissage gamifiée pour l'Afrique. Apprends avec des cours interactifs, des quiz et gagne des XP !">
+  
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  
+  <!-- CSS Design System -->
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  
+  <title>Neoclass - Apprends, Progresse, Réussis ! 🎓</title>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+  <!-- ============================================================
+       LOADER INITIAL
+       ============================================================ -->
+  <div id="app-loader" class="app-loader">
+    <div class="loader-brand">
+      <span class="logo-icon">🎓</span>
+      <span class="logo-text">Neoclass</span>
+    </div>
+    <div class="loader-spinner"></div>
+    <p>Chargement...</p>
+  </div>
+
+  <!-- ============================================================
+       SIDEBAR NAVIGATION
+       ============================================================ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="logo">
+        <span class="logo-icon">🎓</span>
+        <span class="logo-text">Neoclass</span>
+      </a>
+      <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+        <span></span>
+      </button>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="/" class="nav-link" data-page="home">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Accueil</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/courses" class="nav-link" data-page="courses">
+            <span class="nav-icon">📚</span>
+            <span class="nav-text">Cours</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/practice" class="nav-link" data-page="practice">
+            <span class="nav-icon">💪</span>
+            <span class="nav-text">S'entraîner</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/leaderboard" class="nav-link" data-page="leaderboard">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-text">Classement</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/shop" class="nav-link" data-page="shop">
+            <span class="nav-icon">🛒</span>
+            <span class="nav-text">Boutique</span>
+          </a>
+        </li>
+      </ul>
+      
+      <div class="nav-divider"></div>
+      
+      <ul class="nav-list nav-secondary">
+        <li class="nav-item" data-auth="logged-in">
+          <a href="/profile" class="nav-link" data-page="profile">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Profil</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="/settings" class="nav-link" data-page="settings">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Paramètres</span>
+          </a>
+        </li>
+        <li class="nav-item" data-auth="logged-in">
+          <button class="nav-link" id="logout-btn">
+            <span class="nav-icon">🚪</span>
+            <span class="nav-text">Déconnexion</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+    
+    <!-- User Stats (Mobile) -->
+    <div class="sidebar-footer" data-auth="logged-in">
+      <div class="user-mini-stats">
+        <div class="stat">
+          <span class="stat-icon">⚡</span>
+          <span class="stat-value" data-user="xp">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">🔥</span>
+          <span class="stat-value" data-user="streak">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-icon">🪙</span>
+          <span class="stat-value" data-user="coins">0</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       MAIN CONTENT AREA
+       ============================================================ -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menu-toggle" aria-label="Menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <h1 class="page-title" id="page-title">Accueil</h1>
+      </div>
+      
+      <div class="header-center">
+        <!-- Search (Desktop) -->
+        <div class="search-box" id="search-box">
+          <input type="search" placeholder="Rechercher un cours..." 
+                 class="search-input" id="search-input">
+          <button class="search-btn" aria-label="Rechercher">🔍</button>
+        </div>
+      </div>
+      
+      <div class="header-right">
+        <!-- Stats Bar -->
+        <div class="stats-bar" data-auth="logged-in">
+          <div class="stat-item" data-tooltip="Points d'expérience">
+            <span class="stat-icon">⚡</span>
+            <span class="stat-value" data-user="xp">0</span>
+          </div>
+          <div class="stat-item" data-tooltip="Série de jours">
+            <span class="stat-icon streak-fire">🔥</span>
+            <span class="stat-value" data-user="streak">0</span>
+          </div>
+          <div class="stat-item" data-tooltip="Pièces">
+            <span class="stat-icon">🪙</span>
+            <span class="stat-value" data-user="coins">0</span>
+          </div>
+        </div>
+        
+        <!-- User Menu -->
+        <div class="user-menu" data-auth="logged-in">
+          <button class="user-avatar-btn" id="user-menu-btn" 
+                  data-dropdown-toggle="user-dropdown">
+            <img src="/assets/images/default-avatar.png" alt="Avatar" 
+                 class="user-avatar" data-user="avatar">
+            <span class="user-level" data-user="level">1</span>
+          </button>
+          
+          <div class="dropdown-menu" id="user-dropdown">
+            <div class="dropdown-header">
+              <img src="/assets/images/default-avatar.png" alt="" 
+                   class="dropdown-avatar" data-user="avatar">
+              <div class="dropdown-user-info">
+                <span class="dropdown-name" data-user="name">Utilisateur</span>
+                <span class="dropdown-email" data-user="email">email@example.com</span>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <a href="/profile" class="dropdown-item">👤 Mon Profil</a>
+            <a href="/settings" class="dropdown-item">⚙️ Paramètres</a>
+            <a href="/subscription" class="dropdown-item">💎 Abonnement</a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="logout-dropdown-btn">
+              🚪 Déconnexion
+            </button>
+          </div>
+        </div>
+        
+        <!-- Auth Buttons (Not logged in) -->
+        <div class="auth-buttons" data-auth="logged-out">
+          <button class="btn btn-outline" id="login-btn">Connexion</button>
+          <button class="btn btn-primary" id="signup-btn">S'inscrire</button>
+        </div>
+        
+        <!-- Theme Toggle -->
+        <button class="theme-toggle" id="theme-toggle" aria-label="Changer le thème">
+          <span class="theme-icon-light">☀️</span>
+          <span class="theme-icon-dark">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============================================================
+         PAGES CONTAINER
+         ============================================================ -->
+    <div class="pages-container" id="pages-container">
+      
+      <!-- PAGE: HOME -->
+      <section class="page active" id="page-home" data-page="home">
+        <div class="container">
+          <!-- Welcome Banner -->
+          <div class="welcome-banner" data-auth="logged-in">
+            <div class="welcome-content">
+              <h2>👋 Bonjour, <span data-user="name">Apprenant</span> !</h2>
+              <p>Continue ta progression et atteins tes objectifs aujourd'hui.</p>
+            </div>
+            <div class="welcome-stats">
+              <div class="welcome-stat">
+                <span class="welcome-stat-value" data-user="xp">0</span>
+                <span class="welcome-stat-label">XP Total</span>
+              </div>
+              <div class="welcome-stat">
+                <span class="welcome-stat-value" data-user="level">1</span>
+                <span class="welcome-stat-label">Niveau</span>
+              </div>
+              <div class="welcome-stat highlight">
+                <span class="welcome-stat-value">🔥 <span data-user="streak">0</span></span>
+                <span class="welcome-stat-label">Jours de suite</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hero (Not logged in) -->
+          <div class="hero-section" data-auth="logged-out">
+            <div class="hero-content">
+              <h1 class="hero-title">
+                Apprends comme tu joues
+                <span class="hero-highlight">🎮</span>
+              </h1>
+              <p class="hero-subtitle">
+                La plateforme d'apprentissage gamifiée pour les élèves africains. 
+                Gagne des XP, débloque des badges et monte dans le classement !
+              </p>
+              <div class="hero-cta">
+                <button class="btn btn-primary btn-lg" id="hero-signup-btn">
+                  Commencer gratuitement
+                </button>
+                <button class="btn btn-outline btn-lg" id="hero-demo-btn">
+                  Voir la démo
+                </button>
+              </div>
+              <div class="hero-stats">
+                <div class="hero-stat">
+                  <span class="hero-stat-value">10K+</span>
+                  <span class="hero-stat-label">Étudiants</span>
+                </div>
+                <div class="hero-stat">
+                  <span class="hero-stat-value">500+</span>
+                  <span class="hero-stat-label">Cours</span>
+                </div>
+                <div class="hero-stat">
+                  <span class="hero-stat-value">95%</span>
+                  <span class="hero-stat-label">Satisfaction</span>
+                </div>
+              </div>
+            </div>
+            <div class="hero-image">
+              <img src="/assets/images/hero-illustration.svg" alt="Apprendre avec Neoclass" 
+                   loading="lazy">
+            </div>
+          </div>
+          
+          <!-- Daily Goal -->
+          <div class="daily-goal-card" data-auth="logged-in">
+            <div class="goal-header">
+              <h3>🎯 Objectif du jour</h3>
+              <span class="goal-progress-text">
+                <span id="daily-xp">0</span> / <span id="daily-goal">50</span> XP
+              </span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="daily-progress" style="width: 0%"></div>
+            </div>
+            <p class="goal-message" id="goal-message">
+              Complete une leçon pour atteindre ton objectif !
+            </p>
+          </div>
+          
+          <!-- Continue Learning -->
+          <section class="section" data-auth="logged-in">
+            <div class="section-header">
+              <h2 class="section-title">📖 Continuer</h2>
+              <a href="/courses" class="section-link">Voir tout</a>
+            </div>
+            <div class="courses-grid" id="continue-courses">
+              <!-- Courses chargés dynamiquement -->
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+          </section>
+          
+          <!-- Recommended Courses -->
+          <section class="section">
+            <div class="section-header">
+              <h2 class="section-title">✨ Recommandés pour toi</h2>
+              <a href="/courses" class="section-link">Explorer</a>
+            </div>
+            <div class="courses-grid" id="recommended-courses">
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+              <div class="skeleton-card"></div>
+            </div>
+          </section>
+          
+          <!-- Categories -->
+          <section class="section">
+            <div class="section-header">
+              <h2 class="section-title">📂 Catégories</h2>
+            </div>
+            <div class="categories-grid" id="categories-grid">
+              <!-- Catégories chargées dynamiquement -->
+            </div>
+          </section>
+          
+          <!-- Leaderboard Preview -->
+          <section class="section">
+            <div class="section-header">
+              <h2 class="section-title">🏆 Top Apprenants</h2>
+              <a href="/leaderboard" class="section-link">Voir le classement</a>
+            </div>
+            <div class="leaderboard-preview" id="leaderboard-preview">
+              <div class="skeleton-list"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+      
+      <!-- PAGE: COURSES -->
+      <section class="page" id="page-courses" data-page="courses">
+        <div class="container">
+          <div class="page-header">
+            <h2>📚 Tous les cours</h2>
+            <div class="filters">
+              <select class="form-select" id="filter-category">
+                <option value="">Toutes les catégories</option>
+              </select>
+              <select class="form-select" id="filter-level">
+                <option value="">Tous les niveaux</option>
+                <option value="6eme">6ème</option>
+                <option value="5eme">5ème</option>
+                <option value="4eme">4ème</option>
+                <option value="3eme">3ème</option>
+                <option value="seconde">Seconde</option>
+                <option value="premiere">Première</option>
+                <option value="terminale">Terminale</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="courses-grid" id="all-courses">
+            <!-- Cours chargés dynamiquement -->
+          </div>
+          
+          <div class="loading-more" id="courses-loading" style="display: none;">
+            <div class="loader-spinner"></div>
+            <span>Chargement...</span>
+          </div>
+        </div>
+      </section>
+      
+      <!-- PAGE: LESSON (Dynamic) -->
+      <section class="page" id="page-lesson" data-page="lesson">
+        <div class="lesson-container">
+          <div class="lesson-header">
+            <button class="btn btn-ghost" id="lesson-back">
+              ← Retour
+            </button>
+            <div class="lesson-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" id="lesson-progress-bar"></div>
+              </div>
+              <span id="lesson-progress-text">1/10</span>
+            </div>
+            <button class="btn btn-ghost" id="lesson-close">
+              ✕
+            </button>
+          </div>
+          
+          <div class="lesson-content" id="lesson-content">
+            <!-- Contenu de la leçon chargé dynamiquement -->
+          </div>
+          
+          <div class="lesson-footer">
+            <button class="btn btn-secondary" id="lesson-prev" disabled>
+              Précédent
+            </button>
+            <button class="btn btn-primary" id="lesson-next">
+              Continuer
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- PAGE: QUIZ -->
+      <section class="page" id="page-quiz" data-page="quiz">
+        <div class="quiz-container">
+          <div class="quiz-header">
+            <div class="quiz-progress">
+              <span id="quiz-question-num">1</span>/<span id="quiz-total">10</span>
+            </div>
+            <div class="quiz-timer" id="quiz-timer">
+              ⏱️ <span id="timer-value">00:00</span>
+            </div>
+            <div class="quiz-hearts" id="quiz-hearts">
+              ❤️❤️❤️
+            </div>
+          </div>
+          
+          <div class="quiz-question-container" id="quiz-question-container">
+            <!-- Question chargée dynamiquement -->
+          </div>
+          
+          <div class="quiz-footer">
+            <button class="btn btn-ghost" id="quiz-skip">
+              Passer
+            </button>
+            <button class="btn btn-primary" id="quiz-check" disabled>
+              Vérifier
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- PAGE: LEADERBOARD -->
+      <section class="page" id="page-leaderboard" data-page="leaderboard">
+        <div class="container">
+          <div class="leaderboard-header">
+            <div class="tabs">
+              <button class="tab active" data-tab="tab-global">🌍 Global</button>
+              <button class="tab" data-tab="tab-weekly">📅 Semaine</button>
+              <button class="tab" data-tab="tab-friends">👥 Amis</button>
+            </div>
+          </div>
+          
+          <div class="tab-container">
+            <div class="tab-panel active" id="tab-global">
+              <div class="leaderboard-list" id="leaderboard-global">
+                <!-- Classement chargé dynamiquement -->
+              </div>
+            </div>
+            <div class="tab-panel" id="tab-weekly" hidden>
+              <div class="leaderboard-list" id="leaderboard-weekly"></div>
+            </div>
+            <div class="tab-panel" id="tab-friends" hidden>
+              <div class="leaderboard-list" id="leaderboard-friends"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- PAGE: PROFILE -->
+      <section class="page" id="page-profile" data-page="profile">
+        <div class="container">
+          <div class="profile-header">
+            <div class="profile-avatar-container">
+              <img src="/assets/images/default-avatar.png" alt="Avatar" 
+                   class="profile-avatar" data-user="avatar">
+              <button class="avatar-edit-btn" id="avatar-edit-btn">📷</button>
+              <div class="profile-level-badge" data-user="level">1</div>
+            </div>
+            <div class="profile-info">
+              <h2 class="profile-name" data-user="name">Utilisateur</h2>
+              <p class="profile-email" data-user="email">email@example.com</p>
+              <div class="profile-badges" id="profile-badges">
+                <!-- Badges chargés dynamiquement -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="profile-stats-grid">
+            <div class="profile-stat-card">
+              <span class="profile-stat-icon">⚡</span>
+              <span class="profile-stat-value" data-user="xp">0</span>
+              <span class="profile-stat-label">XP Total</span>
+            </div>
+            <div class="profile-stat-card">
+              <span class="profile-stat-icon">🔥</span>
+              <span class="profile-stat-value" data-user="streak">0</span>
+              <span class="profile-stat-label">Série actuelle</span>
+            </div>
+            <div class="profile-stat-card">
+              <span class="profile-stat-icon">📚</span>
+              <span class="profile-stat-value" id="lessons-completed">0</span>
+              <span class="profile-stat-label">Leçons</span>
+            </div>
+            <div class="profile-stat-card">
+              <span class="profile-stat-icon">🏆</span>
+              <span class="profile-stat-value" id="rank">-</span>
+              <span class="profile-stat-label">Classement</span>
+            </div>
+          </div>
+          
+          <div class="profile-section">
+            <h3>🏅 Badges débloqués</h3>
+            <div class="achievements-grid" id="achievements-grid">
+              <!-- Achievements chargés dynamiquement -->
+            </div>
+          </div>
+          
+          <div class="profile-section">
+            <h3>📊 Activité récente</h3>
+            <div class="activity-calendar" id="activity-calendar">
+              <!-- Calendrier d'activité -->
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- PAGE: SETTINGS -->
+      <section class="page" id="page-settings" data-page="settings">
+        <div class="container container-sm">
+          <h2>⚙️ Paramètres</h2>
+          
+          <div class="settings-section">
+            <h3>Apparence</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Thème</span>
+                <span class="setting-desc">Choisir le mode d'affichage</span>
+              </div>
+              <select class="form-select" id="setting-theme">
+                <option value="light">☀️ Clair</option>
+                <option value="dark">🌙 Sombre</option>
+                <option value="system">🔄 Système</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings-section">
+            <h3>Notifications</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Rappels quotidiens</span>
+                <span class="setting-desc">Recevoir un rappel pour maintenir ta série</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-daily-reminder" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Sons</span>
+                <span class="setting-desc">Activer les effets sonores</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-sounds" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="settings-section">
+            <h3>Apprentissage</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Objectif quotidien</span>
+                <span class="setting-desc">XP à gagner chaque jour</span>
+              </div>
+              <select class="form-select" id="setting-daily-goal">
+                <option value="20">Décontracté (20 XP)</option>
+                <option value="50" selected>Normal (50 XP)</option>
+                <option value="100">Sérieux (100 XP)</option>
+                <option value="200">Intense (200 XP)</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings-section" data-auth="logged-in">
+            <h3>Compte</h3>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Modifier le profil</span>
+              </div>
+              <a href="/profile/edit" class="btn btn-outline">Modifier</a>
+            </div>
+            <div class="setting-item">
+              <div class="setting-info">
+                <span class="setting-label">Changer le mot de passe</span>
+              </div>
+              <button class="btn btn-outline" id="change-password-btn">Changer</button>
+            </div>
+            <div class="setting-item danger">
+              <div class="setting-info">
+                <span class="setting-label">Supprimer le compte</span>
+                <span class="setting-desc">Cette action est irréversible</span>
+              </div>
+              <button class="btn btn-danger" id="delete-account-btn">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- PAGE: 404 -->
+      <section class="page" id="page-404" data-page="404">
+        <div class="container text-center">
+          <div class="error-page">
+            <span class="error-icon">🔍</span>
+            <h2>Page non trouvée</h2>
+            <p>La page que tu cherches n'existe pas ou a été déplacée.</p>
+            <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+          </div>
+        </div>
+      </section>
+      
+    </div>
+    <!-- End Pages Container -->
+    
+  </main>
+
+  <!-- ============================================================
+       BOTTOM NAVIGATION (Mobile)
+       ============================================================ -->
+  <nav class="bottom-nav">
+    <a href="/" class="bottom-nav-item active" data-page="home">
+      <span class="bottom-nav-icon">🏠</span>
+      <span class="bottom-nav-label">Accueil</span>
+    </a>
+    <a href="/courses" class="bottom-nav-item" data-page="courses">
+      <span class="bottom-nav-icon">📚</span>
+      <span class="bottom-nav-label">Cours</span>
+    </a>
+    <a href="/practice" class="bottom-nav-item" data-page="practice">
+      <span class="bottom-nav-icon">💪</span>
+      <span class="bottom-nav-label">Pratique</span>
+    </a>
+    <a href="/leaderboard" class="bottom-nav-item" data-page="leaderboard">
+      <span class="bottom-nav-icon">🏆</span>
+      <span class="bottom-nav-label">Rang</span>
+    </a>
+    <a href="/profile" class="bottom-nav-item" data-page="profile" data-auth="logged-in">
+      <span class="bottom-nav-icon">👤</span>
+      <span class="bottom-nav-label">Profil</span>
+    </a>
+  </nav>
+
+  <!-- ============================================================
+       SCROLL TO TOP
+       ============================================================ -->
+  <button class="scroll-to-top" id="scroll-to-top" aria-label="Retour en haut">
+    ↑
+  </button>
+
+  <!-- ============================================================
+       TOAST CONTAINER
+       ============================================================ -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- ============================================================
+       SCRIPTS
+       ============================================================ -->
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics-compat.js"></script>
+  
+  <!-- Core Modules -->
+  <script src="/js/core/config.js"></script>
+  <script src="/js/utils/helpers.js"></script>
+  <script src="/js/core/store.js"></script>
+  <script src="/js/core/router.js"></script>
+  <script src="/js/core/firebase.js"></script>
+  
+  <!-- Feature Modules -->
+  <script src="/js/modules/ui.js"></script>
+  <script src="/js/modules/auth.js"></script>
+  <script src="/js/modules/gamification.js"></script>
+  <script src="/js/modules/courses.js"></script>
+  
+  <!-- App Initialization -->
+  <script src="/js/app.js"></script>
+</body>
+</html>

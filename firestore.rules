@@ -1,0 +1,205 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================================
+    // 🔐 RÈGLES DE SÉCURITÉ FIREBASE POUR NEOCLASS
+    // ============================================================
+    // Pour appliquer ces règles:
+    // 1. Allez sur https://console.firebase.google.com
+    // 2. Sélectionnez votre projet
+    // 3. Allez dans Firestore Database → Rules
+    // 4. Copiez-collez ces règles
+    // 5. Cliquez sur "Publish"
+    // ============================================================
+    
+    // Helper: Vérifier si l'utilisateur est connecté
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper: Vérifier si c'est le propriétaire du document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Helper: Vérifier le rôle admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    }
+    
+    // ============================================================
+    // 👥 UTILISATEURS
+    // ============================================================
+    match /users/{userId} {
+      // Lecture: soi-même ou admin
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Création: utilisateur authentifié (pour l'inscription)
+      allow create: if isAuthenticated();
+      
+      // Mise à jour: soi-même ou admin
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Suppression: admin uniquement
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================================
+    // 💳 ABONNEMENTS
+    // ============================================================
+    match /subscriptions/{subscriptionId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isAuthenticated() && 
+                    (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Création: utilisateur authentifié (pour payer)
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Mise à jour: admin uniquement
+      allow update: if isAdmin();
+      
+      // Suppression: admin uniquement
+      allow delete: if isAdmin();
+      
+      // IMPORTANT: Permettre la lecture de tous les abonnements pour les admins
+      allow list: if isAdmin();
+    }
+    
+    // ============================================================
+    // 💰 TRANSACTIONS
+    // ============================================================
+    match /transactions/{transactionId} {
+      // Lecture: propriétaire ou admin
+      allow read: if isAuthenticated() && 
+                    (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Création: utilisateur authentifié
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Mise à jour/Suppression: admin uniquement
+      allow update, delete: if isAdmin();
+      
+      // Liste pour admin
+      allow list: if isAdmin();
+    }
+    
+    // ============================================================
+    // 📚 COURS
+    // ============================================================
+    match /courses/{courseId} {
+      allow read: if true; // Cours publics lisibles par tous
+      allow write: if isAdmin();
+    }
+    
+    // ============================================================
+    // 📧 MESSAGES
+    // ============================================================
+    match /messages/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin() || 
+                              resource.data.senderId == request.auth.uid;
+    }
+    
+    // ============================================================
+    // 🏫 ÉCOLES
+    // ============================================================
+    match /schools/{schoolId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || 
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'school';
+    }
+    
+    // ============================================================
+    // 🔐 CODES 2FA
+    // ============================================================
+    match /2fa_codes/{codeId} {
+      allow read, write: if isAuthenticated() && 
+                           resource.data.userId == request.auth.uid;
+    }
+    
+    // ============================================================
+    // 📱 AUTRES COLLECTIONS
+    // ============================================================
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+                              resource.data.authorId == request.auth.uid;
+    }
+    
+    match /chats/{chatId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    match /privateMessages/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    match /studyGroups/{groupId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /homework/{homeworkId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    match /bookings/{bookingId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    match /lottery/{lotteryId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /sms_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+    }
+    
+    match /adminInvites/{inviteId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ============================================================
+    // 💼 PORTEFEUILLES ET RETRAITS
+    // ============================================================
+    match /teacher_wallets/{walletId} {
+      allow read: if isOwner(walletId) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    match /platform_wallet/{docId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /withdraw_requests/{requestId} {
+      allow read: if isAuthenticated() && 
+                    (resource.data.teacherId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+    
+    match /profTransactions/{transId} {
+      allow read: if isAuthenticated() && 
+                    (resource.data.teacherId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+    
+    // ============================================================
+    // 🛒 ACHATS
+    // ============================================================
+    match /purchases/{purchaseId} {
+      allow read: if isAuthenticated() && 
+                    (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+  }
+}

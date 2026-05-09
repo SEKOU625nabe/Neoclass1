@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Neoclass — Abonnements & Paiement</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#f2f4f9;--bg-card:#ffffff;--bg-2:#eef0f7;--bg-hover:#e8eaf4;--text:#0d1b2a;--text-2:#52657a;--text-3:#9aacba;--border:#dde3ee;--border-2:#c8d2e0;--sh0:0 1px 4px rgba(13,27,42,.05);--sh1:0 4px 16px rgba(13,27,42,.08);--sh2:0 10px 36px rgba(13,27,42,.12);--r:20px;--rsm:12px;--rmd:16px;--font:'DM Sans',sans-serif;--fdis:'Sora',sans-serif;--orange:#FF6200;--orange-d:#D95200;--orange-bg:#FFF3EE;--orange-br:#FFD0B3;--mtn:#FFCA00;--mtn-d:#C99F00;--mtn-bg:#FFFBE6;--mtn-br:#FFE97A;--ok:#0eb87a;--ok-bg:#eafaf4;--err:#e84040;--err-bg:#fef0f0;--info:#3b80f6;--info-bg:#eff5ff;--warn:#f59e0b;--warn-bg:#fffbeb;--pri:#6358f5;--pri-l:#8079f8;--pri-bg:#f0efff;--free-c:#0ea5e9;--free-bg:#f0f9ff;--start-c:#8b5cf6;--start-bg:#f5f3ff;--pro-c:#f97316;--pro-bg:#fff7ed;--elite-c:#f59e0b;--elite-bg:#fef9e7}
+[data-theme="dark"]{--bg:#09090f;--bg-card:#111119;--bg-2:#161622;--bg-hover:#1e1e2e;--text:#eef2f8;--text-2:#8898aa;--text-3:#4a5568;--border:#1e263a;--border-2:#283344;--sh0:0 1px 4px rgba(0,0,0,.3);--sh1:0 4px 16px rgba(0,0,0,.4);--sh2:0 10px 36px rgba(0,0,0,.5);--orange-bg:rgba(255,98,0,.12);--orange-br:rgba(255,98,0,.3);--mtn-bg:rgba(255,202,0,.08);--mtn-br:rgba(255,202,0,.25);--ok-bg:rgba(14,184,122,.1);--err-bg:rgba(232,64,64,.1);--info-bg:rgba(59,128,246,.1);--warn-bg:rgba(245,158,11,.08);--pri-bg:rgba(99,88,245,.12);--free-bg:rgba(14,165,233,.1);--start-bg:rgba(139,92,246,.1);--pro-bg:rgba(249,115,22,.1);--elite-bg:rgba(245,158,11,.1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none;background:none}input,select{font-family:var(--font);outline:none}
+.wrap{max-width:960px;margin:0 auto;padding:28px 18px 80px}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:32px}
+.page-title{font-family:var(--fdis);font-size:1.65rem;font-weight:700;line-height:1.2}
+.page-title em{font-style:normal;color:var(--pri)}
+.page-sub{font-size:.88rem;color:var(--text-2);margin-top:4px}
+.theme-btn{display:flex;align-items:center;gap:7px;padding:9px 15px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-2);font-size:.83rem;font-weight:500;transition:all .2s;flex-shrink:0}
+.theme-btn:hover{background:var(--bg-hover);border-color:var(--border-2)}
+.tabs{display:flex;gap:3px;background:var(--bg-2);border-radius:13px;padding:4px;margin-bottom:30px;border:1px solid var(--border)}
+.tab{flex:1;padding:10px 6px;border-radius:10px;font-size:.82rem;font-weight:500;color:var(--text-2);transition:all .2s;text-align:center;cursor:pointer}
+.tab.on{background:var(--bg-card);color:var(--text);box-shadow:var(--sh0);font-weight:600}
+.plans-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+@media(max-width:720px){.plans-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.plans-grid{grid-template-columns:1fr}}
+.plan{border-radius:var(--rmd);border:2px solid var(--border);padding:20px 16px;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);background:var(--bg-card);position:relative;overflow:hidden}
+.plan:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.plan.sel-free{border-color:var(--free-c);background:var(--free-bg);box-shadow:0 6px 24px rgba(14,165,233,.18)}
+.plan.sel-start{border-color:var(--start-c);background:var(--start-bg);box-shadow:0 6px 24px rgba(139,92,246,.18)}
+.plan.sel-pro{border-color:var(--pro-c);background:var(--pro-bg);box-shadow:0 6px 24px rgba(249,115,22,.18)}
+.plan.sel-elite{border-color:var(--elite-c);background:var(--elite-bg);box-shadow:0 6px 24px rgba(245,158,11,.25)}
+.plan-ribbon{position:absolute;top:0;right:0;font-size:.65rem;font-weight:700;padding:4px 10px;border-bottom-left-radius:10px;letter-spacing:.3px}
+.plan-ribbon.hot{background:var(--pro-c);color:#fff}
+.plan-ribbon.best{background:var(--elite-c);color:#5c3400}
+.plan-badge{display:inline-flex;align-items:center;gap:5px;font-size:.73rem;font-weight:700;padding:4px 10px;border-radius:20px;margin-bottom:10px}
+.badge-free{background:var(--free-bg);color:var(--free-c);border:1px solid rgba(14,165,233,.25)}
+.badge-start{background:var(--start-bg);color:var(--start-c);border:1px solid rgba(139,92,246,.25)}
+.badge-pro{background:var(--pro-bg);color:var(--pro-c);border:1px solid rgba(249,115,22,.25)}
+.badge-elite{background:var(--elite-bg);color:var(--elite-c);border:1px solid rgba(245,158,11,.3)}
+.plan-name{font-family:var(--fdis);font-size:1rem;font-weight:700;margin-bottom:2px}
+.plan-price{font-family:var(--fdis);font-size:1.4rem;font-weight:800;margin:8px 0}
+.plan-price sub{font-size:.72rem;font-weight:400;color:var(--text-2)}
+.plan-period{font-size:.73rem;color:var(--text-2);margin-bottom:12px}
+.plan-sep{height:1px;background:var(--border);margin:10px 0}
+.feat{display:flex;align-items:flex-start;gap:7px;font-size:.78rem;color:var(--text-2);margin-bottom:5px;line-height:1.4}
+.feat-ok{color:var(--ok);font-size:.85rem;flex-shrink:0;margin-top:1px}
+.feat-no{color:var(--text-3);font-size:.85rem;flex-shrink:0;margin-top:1px}
+.plan-savings{display:inline-block;margin-top:10px;padding:3px 9px;background:var(--ok-bg);color:var(--ok);border-radius:20px;font-size:.7rem;font-weight:700}
+.check-wrap{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;background:var(--ok);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.check-wrap svg{width:12px;height:12px;stroke:#fff;stroke-width:2.5;fill:none}
+.plan.sel-free .check-wrap,.plan.sel-start .check-wrap,.plan.sel-pro .check-wrap,.plan.sel-elite .check-wrap{opacity:1}
+.sec-head{font-family:var(--fdis);font-size:.92rem;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.sec-head::after{content:'';flex:1;height:1px;background:var(--border)}
+.op-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px}
+@media(max-width:560px){.op-grid{grid-template-columns:1fr}}
+.op{border-radius:var(--rmd);border:2px solid var(--border);padding:20px 16px;cursor:pointer;transition:all .25s;background:var(--bg-card);position:relative}
+.op:hover{transform:translateY(-2px);box-shadow:var(--sh1)}
+.op.sel-orange{border-color:var(--orange);background:var(--orange-bg);box-shadow:0 6px 24px rgba(255,98,0,.2)}
+.op.sel-mtn{border-color:var(--mtn);background:var(--mtn-bg);box-shadow:0 6px 24px rgba(255,202,0,.25)}
+.op .check-wrap{top:10px;right:10px}
+.op.sel-orange .check-wrap,.op.sel-mtn .check-wrap{opacity:1}
+.op-logo{font-size:2rem;margin-bottom:8px;display:block}
+.op-name{font-family:var(--fdis);font-size:1rem;font-weight:700}
+.op-name.orange{color:var(--orange)}
+.op-name.mtn{color:var(--mtn-d)}
+.op-sub{font-size:.78rem;color:var(--text-2);margin-top:3px;line-height:1.4}
+.op-tag{display:inline-block;margin-top:9px;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700}
+.op-tag.orange{background:var(--orange-bg);color:var(--orange-d);border:1px solid var(--orange-br)}
+.op-tag.mtn{background:var(--mtn-bg);color:#7a5c00;border:1px solid var(--mtn-br)}
+.card{background:var(--bg-card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh0);padding:26px;margin-bottom:20px}
+.lbl{display:block;font-size:.8rem;font-weight:600;color:var(--text-2);margin-bottom:6px;letter-spacing:.15px}
+.inp{width:100%;padding:12px 15px;border-radius:11px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:var(--font);font-size:.93rem;transition:all .2s}
+.inp:focus{outline:none;border-color:var(--pri);box-shadow:0 0 0 3px rgba(99,88,245,.1)}
+.inp.of:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,98,0,.1)}
+.inp.mf:focus{border-color:var(--mtn);box-shadow:0 0 0 3px rgba(255,202,0,.2)}
+.inp-hint{font-size:.74rem;color:var(--text-3);margin-top:4px}
+.field{margin-bottom:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.row2{grid-template-columns:1fr}}
+.phone-wrap{display:flex;gap:8px}
+.phone-pre{display:flex;align-items:center;gap:7px;padding:12px 13px;border-radius:11px;border:1.5px solid var(--border);background:var(--bg);font-size:.9rem;font-weight:600;white-space:nowrap;flex-shrink:0}
+.promo-row{display:flex;gap:8px;margin-bottom:0}
+.promo-row .inp{flex:1}
+.promo-ok{display:flex;align-items:center;gap:6px;padding:10px 13px;background:var(--ok-bg);border:1.5px solid var(--ok);border-radius:11px;font-size:.8rem;font-weight:600;color:var(--ok);margin-top:6px}
+.summary{background:var(--bg-2);border-radius:var(--rmd);padding:16px 18px;border:1px solid var(--border);margin-bottom:18px}
+.sum-row{display:flex;justify-content:space-between;font-size:.85rem;padding:6px 0}
+.sum-lbl{color:var(--text-2)}
+.sum-val{font-weight:500}
+.sum-total{border-top:1.5px solid var(--border);margin-top:6px;padding-top:11px;font-family:var(--fdis);font-weight:700;font-size:1.05rem}
+.sum-disc{color:var(--ok)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:12px;font-family:var(--font);font-size:.93rem;font-weight:600;cursor:pointer;border:none;transition:all .25s;width:100%}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.55;pointer-events:none}
+.btn-orange{background:linear-gradient(135deg,var(--orange),var(--orange-d));color:#fff;box-shadow:0 5px 18px rgba(255,98,0,.3)}
+.btn-orange:hover{box-shadow:0 8px 28px rgba(255,98,0,.4)}
+.btn-mtn{background:linear-gradient(135deg,var(--mtn),var(--mtn-d));color:#1a1000;box-shadow:0 5px 18px rgba(255,202,0,.3)}
+.btn-mtn:hover{box-shadow:0 8px 28px rgba(255,202,0,.4)}
+.btn-pri{background:linear-gradient(135deg,var(--pri),var(--pri-l));color:#fff;box-shadow:0 5px 18px rgba(99,88,245,.28)}
+.btn-pri:hover{box-shadow:0 8px 28px rgba(99,88,245,.38)}
+.btn-free{background:linear-gradient(135deg,var(--free-c),#0284c7);color:#fff;box-shadow:0 5px 18px rgba(14,165,233,.28)}
+.btn-ghost{background:var(--bg);color:var(--text-2);border:1.5px solid var(--border)}
+.btn-ghost:hover{background:var(--bg-hover);transform:none}
+.btn-sm{padding:9px 16px;font-size:.82rem;border-radius:9px;width:auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:.5}}
+.spin{width:19px;height:19px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;flex-shrink:0}
+.steps-box{border-radius:var(--r);border:2px solid var(--border);padding:22px;background:var(--bg-card);animation:fadeUp .35s ease}
+.steps-top{display:flex;align-items:center;gap:13px;margin-bottom:18px}
+.steps-ico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.steps-ico.orange{background:var(--orange-bg)}
+.steps-ico.mtn{background:var(--mtn-bg)}
+.steps-ttl{font-family:var(--fdis);font-weight:700;font-size:.97rem}
+.steps-sub{font-size:.78rem;color:var(--text-2);margin-top:2px}
+.ussd-code{background:#0d1117;border-radius:11px;padding:14px 16px;font-family:'Courier New',monospace;font-size:.93rem;color:#39d353;letter-spacing:.5px;margin:12px 0;position:relative}
+.ussd-code::after{content:'USSD';position:absolute;top:7px;right:12px;font-size:.6rem;color:#39d35355;letter-spacing:2px}
+.slist{display:flex;flex-direction:column}
+.sitem{display:flex;gap:14px;padding:11px 0;position:relative}
+.sitem:not(:last-child)::after{content:'';position:absolute;left:15px;top:42px;bottom:0;width:2px;background:var(--border)}
+.snum{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;position:relative;z-index:1}
+.snum.orange{background:var(--orange-bg);color:var(--orange-d);border:2px solid var(--orange-br)}
+.snum.mtn{background:var(--mtn-bg);color:#7a5c00;border:2px solid var(--mtn-br)}
+.snum.done{background:var(--ok);color:#fff;border-color:var(--ok)}
+.stxt{font-size:.86rem;font-weight:500;color:var(--text)}
+.sdet{font-size:.76rem;color:var(--text-2);margin-top:2px}
+.success-box{text-align:center;padding:36px 20px;animation:fadeUp .45s ease}
+.suc-ico{width:76px;height:76px;border-radius:50%;background:var(--ok-bg);border:3px solid var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:2.2rem;animation:pop .5s cubic-bezier(.34,1.56,.64,1) forwards}
+.suc-ttl{font-family:var(--fdis);font-size:1.4rem;font-weight:700;margin-bottom:7px}
+.suc-sub{color:var(--text-2);font-size:.88rem;line-height:1.65}
+.receipt{background:var(--bg-2);border-radius:14px;padding:16px;text-align:left;margin:22px auto;max-width:360px;border:1px solid var(--border)}
+.rec-row{display:flex;justify-content:space-between;font-size:.83rem;padding:6px 0;border-bottom:1px dashed var(--border)}
+.rec-row:last-child{border:none;font-weight:700;font-size:.9rem}
+.rec-lbl{color:var(--text-2)}
+.sub-banner{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 55%,#a855f7 100%);border-radius:var(--r);padding:22px 26px;color:#fff;position:relative;overflow:hidden;margin-bottom:24px}
+.sub-banner::before{content:'';position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06);top:-50px;right:-30px}
+.sub-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sub-plan{font-family:var(--fdis);font-size:1.05rem;font-weight:700}
+.sub-badge{background:rgba(255,255,255,.18);padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;border:1px solid rgba(255,255,255,.22)}
+.sub-exp{font-size:.8rem;opacity:.8;margin-bottom:12px}
+.sub-bar{height:5px;background:rgba(255,255,255,.18);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.sub-fill{height:100%;background:rgba(255,255,255,.88);border-radius:3px}
+.sub-stats{display:flex;gap:22px}
+.sub-sv{font-family:var(--fdis);font-size:1.15rem;font-weight:700}
+.sub-sl{font-size:.73rem;opacity:.7;margin-top:1px}
+.alert{border-radius:10px;padding:12px 14px;font-size:.81rem;display:flex;gap:10px;align-items:flex-start;margin-bottom:16px}
+.alert-ico{font-size:.95rem;flex-shrink:0;margin-top:1px}
+.al-info{background:var(--info-bg);border:1px solid rgba(59,128,246,.2);color:#1d4ed8}
+.al-warn{background:var(--warn-bg);border:1px solid rgba(245,158,11,.25);color:#92400e}
+.al-ok{background:var(--ok-bg);border:1px solid rgba(14,184,122,.25);color:#065f46}
+[data-theme="dark"] .al-info{color:#93c5fd}[data-theme="dark"] .al-warn{color:#fde68a}[data-theme="dark"] .al-ok{color:#6ee7b7}
+.sec-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px;padding-top:16px;border-top:1px dashed var(--border)}
+.sec-badge{display:flex;align-items:center;gap:5px;font-size:.71rem;color:var(--text-3)}
+.sec-dot{width:6px;height:6px;background:var(--ok);border-radius:50%}
+.tx-list{display:flex;flex-direction:column;gap:9px}
+.tx{display:flex;align-items:center;gap:13px;padding:13px 15px;background:var(--bg-card);border-radius:var(--rmd);border:1px solid var(--border);transition:background .2s}
+.tx:hover{background:var(--bg-hover)}
+.tx-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:.88rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-date{font-size:.73rem;color:var(--text-3);margin-top:1px}
+.tx-amt{font-weight:700;font-size:.93rem;white-space:nowrap}
+.tx-amt.debit{color:var(--err)}
+.tx-amt.free-tx{color:var(--ok)}
+.tx-stat{font-size:.69rem;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
+.ts-ok{background:var(--ok-bg);color:var(--ok)}
+.ts-pend{background:#fef3c7;color:#92400e}
+.ts-fail{background:var(--err-bg);color:var(--err)}
+.comp-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:8px}
+.comp-table th{padding:10px 12px;text-align:center;font-weight:600;border-bottom:2px solid var(--border)}
+.comp-table td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--border)}
+.comp-table td:first-child{text-align:left;font-weight:500;color:var(--text-2)}
+.comp-table tr:last-child td{border-bottom:none}
+.comp-table tr:hover td{background:var(--bg-hover)}
+.tick{color:var(--ok);font-size:1rem}
+.cross{color:var(--text-3);font-size:1rem}
+.partial{color:var(--warn);font-size:.78rem;font-weight:600}
+.comp-head-free{color:var(--free-c);font-family:var(--fdis)}
+.comp-head-start{color:var(--start-c);font-family:var(--fdis)}
+.comp-head-pro{color:var(--pro-c);font-family:var(--fdis)}
+.comp-head-elite{color:var(--elite-c);font-family:var(--fdis)}
+.free-limit{background:linear-gradient(135deg,rgba(14,165,233,.08),rgba(14,165,233,.03));border:1.5px solid rgba(14,165,233,.2);border-radius:var(--rmd);padding:18px;margin-bottom:20px}
+.free-limit-title{font-family:var(--fdis);font-size:.9rem;font-weight:700;color:var(--free-c);margin-bottom:12px}
+.lbar-item{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.lbar-label{font-size:.78rem;color:var(--text-2);min-width:130px}
+.lbar-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.lbar-fill{height:100%;border-radius:4px;transition:width .8s ease}
+.lbar-val{font-size:.75rem;font-weight:700;min-width:36px;text-align:right}
+.faq{border-radius:var(--rmd);border:1px solid var(--border);overflow:hidden;margin-bottom:8px;background:var(--bg-card)}
+.faq-q{padding:13px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.86rem;font-weight:500;transition:background .2s}
+.faq-q:hover{background:var(--bg-hover)}
+.faq-ar{transition:transform .2s;color:var(--text-3);font-size:.8rem}
+.faq.open .faq-ar{transform:rotate(180deg)}
+.faq-a{display:none;padding:0 15px 13px;font-size:.8rem;color:var(--text-2);line-height:1.65}
+.faq.open .faq-a{display:block}
+.toast-wrap{position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:9px;pointer-events:none}
+.toast{background:var(--bg-card);border-radius:12px;padding:13px 16px;box-shadow:var(--sh2);display:flex;align-items:center;gap:11px;max-width:320px;border:1px solid var(--border);animation:fadeUp .3s ease;pointer-events:all;font-size:.85rem}
+.toast.tok{border-left:4px solid var(--ok)}
+.toast.ter{border-left:4px solid var(--err)}
+.toast.tin{border-left:4px solid var(--info)}
+</style>
+</head>
+<body>
+<div class="toast-wrap" id="toastWrap"></div>
+<div class="wrap">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Abonnements <em>Neoclass</em></div>
+      <div class="page-sub">Choisissez le plan qui correspond à votre apprentissage</div>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <span id="themeIco">🌙</span><span id="themeLabel">Mode sombre</span>
+    </button>
+  </div>
+
+  <div id="subBanner" style="display:none" class="sub-banner">
+    <div class="sub-top">
+      <div class="sub-plan" id="sBPlan">Plan Pro</div>
+      <div class="sub-badge" id="sBadge">✓ Actif</div>
+    </div>
+    <div class="sub-exp" id="sBExp">Expire le —</div>
+    <div class="sub-bar"><div class="sub-fill" id="sBFill" style="width:70%"></div></div>
+    <div class="sub-stats">
+      <div><div class="sub-sv" id="sBDays">—</div><div class="sub-sl">jours restants</div></div>
+      <div><div class="sub-sv" id="sBCourses">—</div><div class="sub-sl">cours accès</div></div>
+      <div><div class="sub-sv" id="sBOp">—</div><div class="sub-sl">opérateur</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('plans',this)">📦 Plans</button>
+    <button class="tab" onclick="switchTab('pay',this)">💳 Payer</button>
+    <button class="tab" onclick="switchTab('history',this)">📋 Historique</button>
+    <button class="tab" onclick="switchTab('compare',this)">⚖️ Comparer</button>
+    <button class="tab" onclick="switchTab('help',this)">❓ Aide</button>
+  </div>
+
+  <!-- TAB PLANS -->
+  <div id="tab-plans">
+    <div class="sec-head">Choisissez votre plan</div>
+    <div class="plans-grid">
+      <div class="plan" id="plan-free" onclick="selectPlan('free')">
+        <div class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="plan-badge badge-free">🎓 Gratuit</div>
+        <div class="plan-name">Découverte</div>
+        <div class="plan-price">0 <sub>GNF</sub></div>
+        <div class="plan-period">Pour toujours · Accès limité</div>
+        <div class="plan-sep"></div>
+        <div class="feat"><span class="feat-ok">✓</span>3 cours gratuits</div>
+        <div class="feat"><span class="feat-ok">✓</span>5 leçons / jour max</div>
+        <div class="feat"><span class="feat-ok">✓</span>Darx AI — 10 questions/j</div>
+        <div class="feat"><span class="feat-ok">✓</span>Gamification basique</div>
+        <div class="feat"><span class="feat-no">✗</span>Certificats</div>
+        <div class="feat"><span class="feat-no">✗</span>Mode offline</div>
+        <div class="feat"><span class="feat-no">✗</span>Live streaming</div>
+      </div>
+      <div class="plan" id="plan-start" onclick="selectPlan('start')">
+        <div class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="plan-badge badge-start">🚀 Starter</div>
+        <div class="plan-name">Essentiel</div>
+        <div class="plan-price">20 000 <sub>GNF</sub></div>
+        <div class="plan-period">Par mois · Renouvelable</div>
+        <div class="plan-sep"></div>
+        <div class="feat"><span class="feat-ok">✓</span>15 cours au choix</div>
+        <div class="feat"><span class="feat-ok">✓</span>Leçons illimitées</div>
+        <div class="feat"><span class="feat-ok">✓</span>Darx AI — 50 questions/j</div>
+        <div class="feat"><span class="feat-ok">✓</span>Certificats basiques</div>
+        <div class="feat"><span class="feat-ok">✓</span>Missions quotidiennes</div>
+        <div class="feat"><span class="feat-no">✗</span>Mode offline</div>
+        <div class="feat"><span class="feat-no">✗</span>Live streaming</div>
+      </div>
+      <div class="plan" id="plan-pro" onclick="selectPlan('pro')">
+        <div class="plan-ribbon hot">⭐ Populaire</div>
+        <div class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="plan-badge badge-pro">🔥 Pro</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">50 000 <sub>GNF</sub></div>
+        <div class="plan-period">Par mois · Tout inclus</div>
+        <div class="plan-sep"></div>
+        <div class="feat"><span class="feat-ok">✓</span>Tous les cours</div>
+        <div class="feat"><span class="feat-ok">✓</span>Darx AI illimité</div>
+        <div class="feat"><span class="feat-ok">✓</span>Mode offline complet</div>
+        <div class="feat"><span class="feat-ok">✓</span>Certificats officiels</div>
+        <div class="feat"><span class="feat-ok">✓</span>Live streaming</div>
+        <div class="feat"><span class="feat-ok">✓</span>Guildes & tournois</div>
+        <div class="feat"><span class="feat-ok">✓</span>Support prioritaire</div>
+      </div>
+      <div class="plan" id="plan-elite" onclick="selectPlan('elite')">
+        <div class="plan-ribbon best">👑 Meilleure offre</div>
+        <div class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="plan-badge badge-elite">👑 Élite</div>
+        <div class="plan-name">Pro Annuel</div>
+        <div class="plan-price">420 000 <sub>GNF</sub></div>
+        <div class="plan-period">Par an · soit 35 000/mois</div>
+        <div class="plan-sep"></div>
+        <div class="feat"><span class="feat-ok">✓</span>Tout du plan Pro</div>
+        <div class="feat"><span class="feat-ok">✓</span>Badge exclusif 👑</div>
+        <div class="feat"><span class="feat-ok">✓</span>Accès bêta fonctionnalités</div>
+        <div class="feat"><span class="feat-ok">✓</span>Tutorat 1h/mois</div>
+        <div class="feat"><span class="feat-ok">✓</span>Parrainage premium</div>
+        <span class="plan-savings">🎉 Économisez 180 000 GNF/an</span>
+      </div>
+    </div>
+    <div class="free-limit" id="freeLimitBox" style="display:none">
+      <div class="free-limit-title">📊 Vos limites — Plan Gratuit</div>
+      <div class="lbar-item"><span class="lbar-label">Cours débloqués</span><div class="lbar-track"><div class="lbar-fill" style="width:100%;background:var(--free-c)"></div></div><span class="lbar-val" style="color:var(--free-c)">3/3</span></div>
+      <div class="lbar-item"><span class="lbar-label">Leçons aujourd'hui</span><div class="lbar-track"><div class="lbar-fill" style="width:60%;background:var(--warn)"></div></div><span class="lbar-val" style="color:var(--warn)">3/5</span></div>
+      <div class="lbar-item"><span class="lbar-label">Questions Darx AI</span><div class="lbar-track"><div class="lbar-fill" style="width:70%;background:var(--pri)"></div></div><span class="lbar-val" style="color:var(--pri)">7/10</span></div>
+    </div>
+    <div id="planCTA" style="max-width:420px;margin:0 auto">
+      <div class="alert al-info"><span class="alert-ico">👆</span><span>Sélectionnez un plan ci-dessus pour continuer</span></div>
+    </div>
+  </div>
+
+  <!-- TAB PAYER -->
+  <div id="tab-pay" style="display:none">
+    <div id="payPlanSummary" class="alert al-info" style="margin-bottom:20px">
+      <span class="alert-ico">📦</span>
+      <span id="payPlanSummaryText">Aucun plan sélectionné — allez dans l'onglet Plans</span>
+    </div>
+    <div id="opSection">
+      <div class="sec-head">Sélectionner l'opérateur</div>
+      <div class="op-grid">
+        <div class="op" id="op-orange" onclick="selectOp('orange')">
+          <div class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="op-logo">🟠</span>
+          <div class="op-name orange">Orange Money</div>
+          <div class="op-sub">Paiement instantané depuis votre compte Orange Money Guinea</div>
+          <span class="op-tag orange">USSD *144# · Rapide · Sûr</span>
+        </div>
+        <div class="op" id="op-mtn" onclick="selectOp('mtn')">
+          <div class="check-wrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="op-logo">🟡</span>
+          <div class="op-name mtn">MTN MoMo</div>
+          <div class="op-sub">Paiement via MTN Mobile Money Guinea — confirmation SMS</div>
+          <span class="op-tag mtn">USSD *155# · Fiable</span>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="payFormCard">
+      <div class="sec-head">Vos informations</div>
+      <div class="field"><label class="lbl">Nom complet</label><input class="inp" type="text" id="fName" placeholder="Mamadou Diallo" autocomplete="name"/></div>
+      <div class="field" id="phoneField">
+        <label class="lbl">Numéro Mobile Money</label>
+        <div class="phone-wrap"><div class="phone-pre" id="phonePre">🟠 +224</div><input class="inp of" type="tel" id="fPhone" placeholder="62X XX XX XX" maxlength="9" oninput="this.value=this.value.replace(/\D/g,'').slice(0,9)" style="flex:1"/></div>
+        <div class="inp-hint" id="phoneHint">Numéro associé à votre compte Orange Money</div>
+      </div>
+      <div class="row2">
+        <div class="field" style="margin:0"><label class="lbl">Email (reçu)</label><input class="inp" type="email" id="fEmail" placeholder="votre@email.com"/></div>
+        <div class="field" style="margin:0"><label class="lbl">Code parrainage</label><input class="inp" type="text" id="fRef" placeholder="NEO-XXXXXX" oninput="this.value=this.value.toUpperCase()"/></div>
+      </div>
+      <div class="field" style="margin-top:16px">
+        <label class="lbl">Code promotionnel</label>
+        <div class="promo-row"><input class="inp" type="text" id="fPromo" placeholder="ex: GUINEE2025" oninput="this.value=this.value.toUpperCase()"/><button class="btn btn-ghost btn-sm" onclick="applyPromo()" style="width:auto;margin-left:8px">Appliquer</button></div>
+        <div id="promoRes" style="display:none;margin-top:6px"></div>
+      </div>
+      <div class="summary" id="orderSummary">
+        <div class="sum-row"><span class="sum-lbl">Plan</span><span class="sum-val" id="sPlan">—</span></div>
+        <div class="sum-row"><span class="sum-lbl">Opérateur</span><span class="sum-val" id="sOp">—</span></div>
+        <div class="sum-row" id="sDiscRow" style="display:none"><span class="sum-lbl">Réduction</span><span class="sum-val sum-disc" id="sDisc">—</span></div>
+        <div class="sum-row sum-total"><span>Total</span><span id="sTotal">0 GNF</span></div>
+      </div>
+      <div class="alert al-info" id="payInfoAlert"><span class="alert-ico">ℹ️</span><span id="payInfoTxt">Sélectionnez un plan et un opérateur pour continuer.</span></div>
+      <button class="btn btn-orange" id="payBtn" onclick="startPayment()"><span id="payBtnTxt">💳 Procéder au paiement</span></button>
+      <div class="sec-row">
+        <div class="sec-badge"><div class="sec-dot"></div> Paiement sécurisé</div>
+        <div class="sec-badge"><div class="sec-dot"></div> Chiffrement SSL</div>
+        <div class="sec-badge"><div class="sec-dot"></div> Sans frais cachés</div>
+        <div class="sec-badge"><div class="sec-dot"></div> Remboursable 24h</div>
+      </div>
+    </div>
+    <div id="ussdBox" style="display:none;margin-bottom:20px"></div>
+    <div id="successBox" style="display:none" class="card"></div>
+  </div>
+
+  <!-- TAB HISTORIQUE -->
+  <div id="tab-history" style="display:none">
+    <div class="sec-head">Transactions récentes</div>
+    <div class="tx-list" id="txList"></div>
+    <div style="text-align:center;margin-top:18px"><button class="btn btn-ghost btn-sm" onclick="loadMore()">Charger plus</button></div>
+  </div>
+
+  <!-- TAB COMPARER -->
+  <div id="tab-compare" style="display:none">
+    <div class="sec-head">Comparaison des plans</div>
+    <div class="card" style="overflow-x:auto">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;color:var(--text-2)">Fonctionnalité</th>
+            <th><div class="comp-head-free">🎓 Gratuit</div><div style="font-size:.7rem;color:var(--text-3);font-weight:400">0 GNF</div></th>
+            <th><div class="comp-head-start">🚀 Starter</div><div style="font-size:.7rem;color:var(--text-3);font-weight:400">20 000/mois</div></th>
+            <th><div class="comp-head-pro">🔥 Pro</div><div style="font-size:.7rem;color:var(--text-3);font-weight:400">50 000/mois</div></th>
+            <th><div class="comp-head-elite">👑 Élite</div><div style="font-size:.7rem;color:var(--text-3);font-weight:400">420 000/an</div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Accès aux cours</td><td><span class="partial">3 cours</span></td><td><span class="partial">15 cours</span></td><td><span class="tick">✓</span> Tous</td><td><span class="tick">✓</span> Tous</td></tr>
+          <tr><td>Leçons par jour</td><td><span class="partial">5 max</span></td><td><span class="tick">∞</span></td><td><span class="tick">∞</span></td><td><span class="tick">∞</span></td></tr>
+          <tr><td>Darx AI</td><td><span class="partial">10/jour</span></td><td><span class="partial">50/jour</span></td><td><span class="tick">∞</span></td><td><span class="tick">∞</span></td></tr>
+          <tr><td>Certificats</td><td><span class="cross">✗</span></td><td><span class="partial">Basiques</span></td><td><span class="tick">✓</span> Officiels</td><td><span class="tick">✓</span> Officiels</td></tr>
+          <tr><td>Mode offline</td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Live streaming</td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Guildes & tournois</td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Gamification XP</td><td><span class="partial">Basique</span></td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td><td><span class="tick">✓</span></td></tr>
+          <tr><td>Support</td><td>Communauté</td><td>Email</td><td>Prioritaire</td><td>Dédié</td></tr>
+          <tr><td>Tutorat perso</td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="tick">✓</span> 1h/mois</td></tr>
+          <tr><td>Badge exclusif 👑</td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="cross">✗</span></td><td><span class="tick">✓</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align:center;margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="selectPlan('start');switchTab('plans',document.querySelectorAll('.tab')[0])">Choisir Starter →</button>
+      <button class="btn btn-pri btn-sm" onclick="selectPlan('pro');switchTab('plans',document.querySelectorAll('.tab')[0])">Choisir Pro →</button>
+      <button class="btn btn-sm" style="background:var(--elite-c);color:#3a1c00;width:auto;padding:9px 16px;font-size:.82rem;border-radius:9px" onclick="selectPlan('elite');switchTab('plans',document.querySelectorAll('.tab')[0])">Choisir Élite →</button>
+    </div>
+  </div>
+
+  <!-- TAB AIDE -->
+  <div id="tab-help" style="display:none">
+    <div class="sec-head">Guides de paiement</div>
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--orange-bg);display:flex;align-items:center;justify-content:center;font-size:1.4rem">🟠</div>
+        <div><div style="font-family:var(--fdis);font-weight:700;font-size:.95rem">Orange Money Guinea</div><div style="font-size:.78rem;color:var(--text-2)">*144# · Réseau Orange GN</div></div>
+      </div>
+      <div class="ussd-code">*144*4*NEOCLASS224*[MONTANT]#</div>
+      <div class="slist">
+        <div class="sitem"><div class="snum orange">1</div><div><div class="stxt">Composez <b>*144#</b> depuis votre mobile Orange</div></div></div>
+        <div class="sitem"><div class="snum orange">2</div><div><div class="stxt">Choisissez <b>"Paiement marchand"</b> (option 4)</div></div></div>
+        <div class="sitem"><div class="snum orange">3</div><div><div class="stxt">Entrez le code <b>NEOCLASS224</b> et le montant</div></div></div>
+        <div class="sitem"><div class="snum orange">4</div><div><div class="stxt">Entrez votre <b>PIN Orange Money</b> et confirmez</div></div></div>
+        <div class="sitem"><div class="snum done">✓</div><div><div class="stxt">SMS reçu → accès activé sous 5 min</div></div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:13px;margin-bottom:16px">
+        <div style="width:44px;height:44px;border-radius:12px;background:var(--mtn-bg);display:flex;align-items:center;justify-content:center;font-size:1.4rem">🟡</div>
+        <div><div style="font-family:var(--fdis);font-weight:700;font-size:.95rem">MTN Mobile Money Guinea</div><div style="font-size:.78rem;color:var(--text-2)">*155# · Réseau MTN GN</div></div>
+      </div>
+      <div class="ussd-code">*155*2*NEOCLASS*[MONTANT]#</div>
+      <div class="slist">
+        <div class="sitem"><div class="snum mtn">1</div><div><div class="stxt">Composez <b>*155#</b> depuis votre mobile MTN</div></div></div>
+        <div class="sitem"><div class="snum mtn">2</div><div><div class="stxt">Sélectionnez <b>"Payer facture"</b> (option 3)</div></div></div>
+        <div class="sitem"><div class="snum mtn">3</div><div><div class="stxt">Entrez le code marchand <b>NEOCLASS</b></div></div></div>
+        <div class="sitem"><div class="snum mtn">4</div><div><div class="stxt">Validez avec votre <b>PIN MoMo</b></div></div></div>
+        <div class="sitem"><div class="snum done">✓</div><div><div class="stxt">Confirmation → accès immédiat</div></div></div>
+      </div>
+    </div>
+    <div class="sec-head">Questions fréquentes</div>
+    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Le plan gratuit expire-t-il ? <span class="faq-ar">▼</span></div><div class="faq-a">Non, le plan gratuit est permanent. Vous gardez 3 cours et 5 leçons/jour pour toujours, sans expiration.</div></div>
+    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Paiement prélevé mais accès non activé ? <span class="faq-ar">▼</span></div><div class="faq-a">Patientez 5 à 10 min. Si le problème persiste : WhatsApp <b>+224 620 000 000</b> avec votre SMS de transaction. Activation ou remboursement garanti 24h.</div></div>
+    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Peut-on passer du Gratuit au Starter / Pro ? <span class="faq-ar">▼</span></div><div class="faq-a">Oui, à tout moment. Votre progression (XP, badges, streaks) est entièrement conservée.</div></div>
+    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Remboursement possible ? <span class="faq-ar">▼</span></div><div class="faq-a">Oui dans les <b>24 heures</b> si vous n'avez pas encore accédé aux cours payants. Contactez le support avec la preuve de paiement.</div></div>
+    <div class="faq"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Y a-t-il des frais de transaction ? <span class="faq-ar">▼</span></div><div class="faq-a">Aucun frais Neoclass. Votre opérateur peut appliquer de légères fraises USSD (0 à 200 GNF).</div></div>
+    <div style="text-align:center;margin-top:26px">
+      <p style="font-size:.83rem;color:var(--text-2);margin-bottom:13px">Besoin d'aide ?</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="toast('WhatsApp: +224 620 000 000','info')">💬 WhatsApp</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('Email: support@neoclass.gn','info')">📧 Email</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ====== ÉTAT ====== */
+const S={plan:null,op:null,price:0,months:0,promo:false,promoDiscount:0,step:'idle',txPage:1};
+const PLANS={
+  free: {name:'Plan Gratuit',    price:0,      months:0,  period:'permanent',  courses:'3 cours', ai:'10/j'},
+  start:{name:'Plan Starter',   price:20000,  months:1,  period:'par mois',   courses:'15 cours',ai:'50/j'},
+  pro:  {name:'Plan Pro',       price:50000,  months:1,  period:'par mois',   courses:'Tous',    ai:'Illimité'},
+  elite:{name:'Plan Élite Annuel',price:420000,months:12,period:'par an',     courses:'Tous',    ai:'Illimité'},
+};
+const PROMOS={'GUINEE2025':25,'BIENVENUE':15,'NEORENTRE':20,'ETUDIANT':10};
+
+/* ====== THÈME ====== */
+function toggleTheme(){const d=document.documentElement,dk=d.dataset.theme==='dark';d.dataset.theme=dk?'light':'dark';document.getElementById('themeIco').textContent=dk?'🌙':'☀️';document.getElementById('themeLabel').textContent=dk?'Mode sombre':'Mode clair';}
+
+/* ====== TABS ====== */
+function switchTab(name,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  ['plans','pay','history','compare','help'].forEach(t=>{const el=document.getElementById('tab-'+t);if(el)el.style.display=t===name?'block':'none';});
+  if(name==='history')renderHistory();
+  if(name==='pay')syncPayTab();
+}
+
+/* ====== PLANS ====== */
+function selectPlan(pid){
+  S.plan=pid;S.price=PLANS[pid].price;S.months=PLANS[pid].months;
+  document.querySelectorAll('.plan').forEach(c=>c.className=c.className.replace(/\bsel-\w+/g,'').trim());
+  document.getElementById('plan-'+pid).classList.add('sel-'+pid);
+  updateCTA();syncPayTab();if(S.promo)applyPromo(true);
+}
+
+function updateCTA(){
+  const cta=document.getElementById('planCTA'),fBox=document.getElementById('freeLimitBox');
+  if(!S.plan){cta.innerHTML=`<div class="alert al-info"><span class="alert-ico">👆</span><span>Sélectionnez un plan ci-dessus pour continuer</span></div>`;fBox.style.display='none';return;}
+  if(S.plan==='free'){
+    fBox.style.display='block';
+    cta.innerHTML=`<div class="alert al-ok"><span class="alert-ico">✅</span><span>Plan <b>Gratuit</b> sélectionné — accès immédiat !</span></div><button class="btn btn-free" onclick="activateFree()">🎓 Activer le plan Gratuit</button>`;
+  } else {
+    fBox.style.display='none';
+    const p=PLANS[S.plan];
+    cta.innerHTML=`<div class="alert al-info" style="margin-bottom:12px"><span class="alert-ico">📦</span><span><b>${p.name}</b> — ${p.price.toLocaleString('fr-GN')} GNF ${p.period}</span></div><button class="btn btn-pri" onclick="switchTab('pay',document.querySelectorAll('.tab')[1])">💳 Procéder au paiement →</button>`;
+  }
+}
+
+function activateFree(){
+  S.step='success';
+  const sb=document.getElementById('subBanner');sb.style.display='block';
+  document.getElementById('sBPlan').textContent='🎓 Plan Gratuit';
+  document.getElementById('sBadge').textContent='✓ Actif';
+  document.getElementById('sBExp').textContent='Valide pour toujours';
+  document.getElementById('sBFill').style.width='100%';
+  document.getElementById('sBDays').textContent='∞';
+  document.getElementById('sBCourses').textContent='3';
+  document.getElementById('sBOp').textContent='Gratuit';
+  toast('🎉 Accès gratuit activé !','ok');
+  addTx({id:'NCFREE-'+Date.now().toString().slice(-6),plan:'Plan Gratuit',amount:0,op:'free',date:today(),status:'ok'});
+}
+
+/* ====== SYNC ONGLET PAIEMENT ====== */
+function syncPayTab(){
+  const p=S.plan?PLANS[S.plan]:null;
+  const txt=document.getElementById('payPlanSummaryText');
+  const opSec=document.getElementById('opSection');
+  const phoneF=document.getElementById('phoneField');
+  if(!p){txt.textContent='Aucun plan sélectionné — allez dans l\'onglet Plans';opSec.style.display='block';phoneF.style.display='block';}
+  else if(S.plan==='free'){txt.innerHTML='<b>Plan Gratuit</b> sélectionné — aucun paiement requis !';opSec.style.display='none';phoneF.style.display='none';}
+  else{txt.innerHTML=`<b>${p.name}</b> — <b>${p.price.toLocaleString('fr-GN')} GNF</b> ${p.period}`;opSec.style.display='block';phoneF.style.display='block';}
+  updateSummary();updatePayBtn();
+}
+
+/* ====== OPÉRATEUR ====== */
+function selectOp(op){
+  S.op=op;
+  document.querySelectorAll('.op').forEach(c=>c.className=c.className.replace(/\bsel-\w+/g,'').trim());
+  document.getElementById('op-'+op).classList.add('sel-'+op);
+  const pre=document.getElementById('phonePre'),inp=document.getElementById('fPhone'),hint=document.getElementById('phoneHint');
+  if(op==='orange'){pre.textContent='🟠 +224';inp.className='inp of';inp.placeholder='6XX XX XX XX';hint.textContent='Numéro associé à votre compte Orange Money';}
+  else{pre.textContent='🟡 +224';inp.className='inp mf';inp.placeholder='67X XX XX XX';hint.textContent='Numéro associé à votre compte MTN MoMo';}
+  updateSummary();updatePayBtn();
+}
+
+/* ====== RÉSUMÉ ====== */
+function updateSummary(){
+  const p=S.plan?PLANS[S.plan]:null;
+  document.getElementById('sPlan').textContent=p?p.name:'—';
+  document.getElementById('sOp').textContent=S.op?(S.op==='orange'?'🟠 Orange Money':'🟡 MTN MoMo'):'—';
+  let total=S.price;
+  if(S.promo&&total>0){const disc=Math.round(total*S.promoDiscount/100);total-=disc;document.getElementById('sDiscRow').style.display='flex';document.getElementById('sDisc').textContent='-'+disc.toLocaleString('fr-GN')+' GNF';}
+  else{document.getElementById('sDiscRow').style.display='none';}
+  document.getElementById('sTotal').textContent=total>0?total.toLocaleString('fr-GN')+' GNF':(S.plan==='free'?'0 GNF (Gratuit)':'0 GNF');
+}
+
+function updatePayBtn(){
+  const btn=document.getElementById('payBtn'),txt=document.getElementById('payBtnTxt');
+  if(S.plan==='free'){btn.className='btn btn-free';txt.textContent='🎓 Activer le plan Gratuit';}
+  else if(S.op==='orange'){btn.className='btn btn-orange';txt.textContent='🟠 Payer avec Orange Money';}
+  else if(S.op==='mtn'){btn.className='btn btn-mtn';txt.textContent='🟡 Payer avec MTN MoMo';}
+  else{btn.className='btn btn-pri';txt.textContent='💳 Procéder au paiement';}
+  const alertTxt=document.getElementById('payInfoTxt');
+  if(S.plan==='free')alertTxt.textContent='Accès gratuit immédiat — aucun paiement requis.';
+  else if(!S.op)alertTxt.textContent='Sélectionnez un opérateur de paiement pour continuer.';
+  else alertTxt.innerHTML=`Après paiement, composez <b>${S.op==='orange'?'*144#':'*155#'}</b> pour confirmer. Accès activé sous 5 min.`;
+}
+
+/* ====== PROMO ====== */
+function applyPromo(silent=false){
+  const code=document.getElementById('fPromo').value.trim().toUpperCase();
+  const res=document.getElementById('promoRes');
+  if(!code){if(!silent)toast('Entrez un code promotionnel','err');return;}
+  if(PROMOS[code]){S.promo=true;S.promoDiscount=PROMOS[code];res.style.display='block';res.innerHTML=`<div class="promo-ok">✅ Code <b>${code}</b> appliqué — ${PROMOS[code]}% de réduction !</div>`;if(!silent)toast(`Code "${code}" : -${PROMOS[code]}% 🎉`,'ok');}
+  else{S.promo=false;S.promoDiscount=0;res.style.display='block';res.innerHTML=`<div style="color:var(--err);font-size:.78rem;margin-top:5px">❌ Code invalide ou expiré</div>`;if(!silent)toast('Code invalide','err');}
+  updateSummary();
+}
+
+/* ====== VALIDATION ====== */
+function validate(){
+  if(!S.plan){toast('Sélectionnez un plan','err');return false;}
+  if(S.plan==='free')return true;
+  if(!S.op){toast('Sélectionnez un opérateur','err');return false;}
+  const name=document.getElementById('fName').value.trim();
+  const phone=document.getElementById('fPhone').value.trim();
+  if(name.length<3){toast('Entrez votre nom complet','err');return false;}
+  if(phone.length<8){toast('Numéro de téléphone invalide','err');return false;}
+  if(S.op==='orange'&&!['61','62','63','64','65','66', '67', '68', '69', '70'].some(p=>phone.startsWith(p))){toast('Ce numéro ne correspond pas à Orange Guinea','err');return false;}
+  if(S.op==='mtn'&&!['61','62','63','64','65','66', '67', '68', '69', '70'].some(p=>phone.startsWith(p))){toast('Ce numéro ne correspond pas à MTN Guinea','err');return false;}
+  return true;
+}
+
+/* ====== PAIEMENT ====== */
+async function startPayment(){
+  if(!validate()||S.step==='processing')return;
+  if(S.plan==='free'){activateFree();return;}
+  const btn=document.getElementById('payBtn'),txt=document.getElementById('payBtnTxt');
+  S.step='processing';btn.disabled=true;
+  txt.innerHTML=`<div class="spin"></div> Traitement…`;
+  const name=document.getElementById('fName').value.trim(),phone=document.getElementById('fPhone').value.trim(),email=document.getElementById('fEmail').value.trim();
+  let total=S.price;if(S.promo)total-=Math.round(total*S.promoDiscount/100);
+  const payload={name,phone,email,amount:total,planName:PLANS[S.plan].name};
+  try{
+    const result=S.op==='orange'?await apiOrange(payload):await apiMTN(payload);
+    if(result.success){showUSSD(result,total);if(result.demo)setTimeout(()=>showSuccess(total,payload),12000);}
+    else throw new Error();
+  }catch(e){toast('Erreur réseau — réessayez','err');S.step='idle';btn.disabled=false;updatePayBtn();}
+  // Dans la fonction showSuccess(), ajoute :
+setTimeout(() => {
+  window.location.href = 'Neoclass3.html?paid=true&plan=' + S.plan;
+}, 3000);
+}
+
+/* ====== API ORANGE MONEY GUINEA ====== */
+async function apiOrange(p){
+  /*
+   * ═══════════════════════════════════════════════════════════════
+   *  ORANGE MONEY GUINEA — INTÉGRATION API
+   *  Portail développeur : https://developer.orange.com
+   * ───────────────────────────────────────────────────────────────
+   *  POUR ACTIVER :
+   *  1. Créer compte sur developer.orange.com
+   *  2. Créer une Application → activer "Orange Money Webpay GN"
+   *  3. Récupérer : client_id + client_secret
+   *
+   *  GÉNÉRER UN TOKEN :
+   *  POST https://api.orange.com/oauth/v3/token
+   *  Headers: Authorization: Basic base64(client_id:client_secret)
+   *  Body: grant_type=client_credentials
+   *  → { access_token, expires_in }
+   *
+   *  INITIER UN PAIEMENT :
+   *  POST https://api.orange.com/orange-money-webpay/gn/v1/webpayment
+   *  Headers: Authorization: Bearer {access_token}
+   *  Body: { merchant_key, currency:"GNF", order_id, amount,
+   *           return_url, cancel_url, notif_url,
+   *           lang:"fr", reference, customer_phone:"224XXXXXXXXX",
+   *           customer_name, customer_email }
+   *  → { pay_token, notif_token, payment_url }
+   *
+   *  VÉRIFIER STATUT :
+   *  GET https://api.orange.com/orange-money-webpay/gn/v1/webpayment/{order_id}
+   *  → { status: "PENDING"|"SUCCESSFUL"|"FAILED" }
+   *
+   *  REMPLACER ICI VOS CLÉS :
+   * ═══════════════════════════════════════════════════════════════ */
+  const BASE='https://api.orange.com/orange-money-webpay/gn/v1';
+  const TOKEN='VOTRE_ORANGE_ACCESS_TOKEN';    // ← REMPLACER
+  const MERCHANT='VOTRE_MERCHANT_KEY_ORANGE'; // ← REMPLACER (fourni par Orange Business Guinea)
+  const orderId='NEO-'+Date.now();
+  try{
+    const r=await fetch(`${BASE}/webpayment`,{method:'POST',headers:{'Authorization':`Bearer ${TOKEN}`,'Content-Type':'application/json'},
+      body:JSON.stringify({merchant_key:MERCHANT,currency:'GNF',order_id:orderId,amount:p.amount,
+        return_url:location.origin+'/payment/success',cancel_url:location.origin+'/payment/cancel',
+        notif_url:'https://api.neoclass.gn/webhooks/orange',lang:'fr',
+        reference:`Abonnement Neoclass - ${p.planName}`,customer_phone:'224'+p.phone,customer_name:p.name,customer_email:p.email})});
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    return{success:true,pay_token:d.pay_token,ussd:`*144*4*${MERCHANT}*${p.amount}#`};
+  }catch(e){
+    // MODE DÉMO automatique si clés API non configurées
+    return{success:true,demo:true,pay_token:'DEMO-OM-'+Date.now(),ussd:`*144*4*NEOCLASS224*${p.amount}#`};
+  }
+}
+
+/* ====== API MTN MOMO GUINEA ====== */
+async function apiMTN(p){
+  /*
+   * ═══════════════════════════════════════════════════════════════
+   *  MTN MOBILE MONEY GUINEA — INTÉGRATION API
+   *  Portail développeur : https://momodeveloper.mtn.com
+   *  Portail Guinea      : https://momoguinee.mtn.com
+   * ───────────────────────────────────────────────────────────────
+   *  ÉTAPES D'INTÉGRATION :
+   *  1. Créer compte → souscrire au produit "Collection"
+   *     → obtenir Ocp-Apim-Subscription-Key
+   *
+   *  2. Créer un API User :
+   *     POST /v1_0/apiuser
+   *     Headers: X-Reference-Id:{UUID}, Ocp-Apim-Subscription-Key:{key}
+   *     Body: { providerCallbackHost:"neoclass.gn" }
+   *
+   *  3. Créer API Key :
+   *     POST /v1_0/apiuser/{userId}/apikey
+   *     → { apiKey }
+   *
+   *  4. Obtenir Access Token :
+   *     POST /collection/token/
+   *     Headers: Authorization: Basic base64(userId:apiKey)
+   *              Ocp-Apim-Subscription-Key:{key}
+   *     → { access_token }
+   *
+   *  5. Request to Pay :
+   *     POST /collection/v1_0/requesttopay
+   *     Headers: Authorization: Bearer {access_token}
+   *              X-Reference-Id:{UUID unique}
+   *              X-Target-Environment: production
+   *              X-Callback-Url: https://api.neoclass.gn/webhooks/mtn
+   *              Ocp-Apim-Subscription-Key:{key}
+   *     Body: { amount:"50000", currency:"GNF",
+   *             externalId:"NEO-1234",
+   *             payer:{ partyIdType:"MSISDN", partyId:"224XXXXXXXXX" },
+   *             payerMessage:"Abonnement Neoclass",
+   *             payeeNote:"Neoclass Guinea" }
+   *     → HTTP 202 Accepted
+   *
+   *  6. Vérifier statut :
+   *     GET /collection/v1_0/requesttopay/{X-Reference-Id}
+   *     → { status:"PENDING"|"SUCCESSFUL"|"FAILED" }
+   *
+   *  REMPLACER ICI VOS CLÉS :
+   * ═══════════════════════════════════════════════════════════════ */
+  const BASE='https://proxy.momoapi.mtn.com/collection';
+  const TOKEN='VOTRE_MTN_ACCESS_TOKEN';         // ← REMPLACER
+  const SUB_KEY='VOTRE_MTN_SUBSCRIPTION_KEY';   // ← REMPLACER
+  const refId=typeof crypto.randomUUID==='function'?crypto.randomUUID():'REF-'+Date.now();
+  try{
+    const r=await fetch(`${BASE}/v1_0/requesttopay`,{method:'POST',headers:{
+      'Authorization':`Bearer ${TOKEN}`,'X-Reference-Id':refId,'X-Target-Environment':'production',
+      'X-Callback-Url':'https://api.neoclass.gn/webhooks/mtn','Ocp-Apim-Subscription-Key':SUB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({amount:String(p.amount),currency:'GNF',externalId:'NEO-'+Date.now(),
+        payer:{partyIdType:'MSISDN',partyId:'224'+p.phone},
+        payerMessage:`Abonnement Neoclass - ${p.planName}`,payeeNote:'Neoclass Guinea'})});
+    if(r.status!==202&&r.status!==200)throw new Error(r.status);
+    return{success:true,ref_id:refId,ussd:`*155*2*NEOCLASS*${p.amount}#`};
+  }catch(e){
+    return{success:true,demo:true,ref_id:refId,ussd:`*155*2*NEOCLASS*${p.amount}#`};
+  }
+}
+
+/* ====== AFFICHER ÉTAPES USSD ====== */
+function showUSSD(result,amount){
+  const isO=S.op==='orange';
+  const box=document.getElementById('ussdBox');
+  box.style.display='block';
+  box.innerHTML=`
+    <div class="steps-box" style="border-color:${isO?'var(--orange)':'var(--mtn)'}">
+      <div class="steps-top">
+        <div class="steps-ico ${S.op}">${isO?'🟠':'🟡'}</div>
+        <div><div class="steps-ttl">Validez votre paiement</div><div class="steps-sub">${isO?'Orange Money':'MTN MoMo'} — ${amount.toLocaleString('fr-GN')} GNF</div></div>
+      </div>
+      <div class="alert al-warn"><span class="alert-ico">📱</span><span>Composez maintenant depuis votre téléphone ${isO?'Orange':'MTN'} :</span></div>
+      <div class="ussd-code">${result.ussd}</div>
+      <div class="slist">
+        <div class="sitem"><div class="snum ${S.op}">1</div><div><div class="stxt">Composez <b>${result.ussd}</b> et appuyez sur Appel</div></div></div>
+        <div class="sitem"><div class="snum ${S.op}">2</div><div><div class="stxt">Vérifiez : bénéficiaire <b>NEOCLASS</b>, montant <b>${amount.toLocaleString('fr-GN')} GNF</b></div></div></div>
+        <div class="sitem"><div class="snum ${S.op}">3</div><div><div class="stxt">Entrez votre <b>PIN ${isO?'Orange Money':'MoMo'}</b> et confirmez</div></div></div>
+        <div class="sitem"><div class="snum done">↻</div><div><div class="stxt">En attente de confirmation…</div><div class="sdet">Ref: ${result.pay_token||result.ref_id}</div></div></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="btn btn-${isO?'orange':'mtn'}" style="flex:1" onclick="simConfirm(${amount})">✓ J'ai payé — Activer l'accès</button>
+        <button class="btn btn-ghost" style="flex:.38" onclick="cancelPay()">Annuler</button>
+      </div>
+      ${result.demo?'<p style="text-align:center;font-size:.7rem;color:var(--text-3);margin-top:10px">⚠️ Mode démo — configurez vos clés API pour la production</p>':''}
+    </div>`;
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function simConfirm(amount){
+  toast('Vérification en cours…','info');
+  setTimeout(()=>{const name=document.getElementById('fName').value.trim(),phone=document.getElementById('fPhone').value.trim();showSuccess(amount,{name,phone,planName:PLANS[S.plan].name});},1600);
+}
+
+/* ====== SUCCÈS ====== */
+function showSuccess(amount,p){
+  S.step='success';
+  const txId='NC'+Date.now().toString().slice(-8),d=today(),plan=PLANS[S.plan];
+  const expire=new Date();expire.setMonth(expire.getMonth()+(S.months||1));
+  const expStr=expire.toLocaleDateString('fr-GN',{year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('subBanner').style.display='block';
+  document.getElementById('sBPlan').textContent=plan.name;
+  document.getElementById('sBadge').textContent='✓ Actif';
+  document.getElementById('sBExp').textContent=`Expire le ${expStr}`;
+  document.getElementById('sBFill').style.width='100%';
+  document.getElementById('sBDays').textContent=S.months>=12?'365':(S.months||1)*30+'';
+  document.getElementById('sBCourses').textContent=plan.courses;
+  document.getElementById('sBOp').textContent=S.op==='orange'?'Orange':'MTN';
+  document.getElementById('ussdBox').style.display='none';
+  const sb=document.getElementById('successBox');
+  sb.style.display='block';
+  sb.innerHTML=`<div class="success-box"><div class="suc-ico">✓</div><div class="suc-ttl">Paiement confirmé !</div><div class="suc-sub">Votre <b>${plan.name}</b> est actif.<br>SMS envoyé au +224${p.phone}.</div>
+    <div class="receipt">
+      <div class="rec-row"><span class="rec-lbl">Plan</span><span>${plan.name}</span></div>
+      <div class="rec-row"><span class="rec-lbl">Montant</span><span>${amount.toLocaleString('fr-GN')} GNF</span></div>
+      <div class="rec-row"><span class="rec-lbl">Opérateur</span><span>${S.op==='orange'?'🟠 Orange Money':'🟡 MTN MoMo'}</span></div>
+      <div class="rec-row"><span class="rec-lbl">Numéro</span><span>+224 ${p.phone}</span></div>
+      <div class="rec-row"><span class="rec-lbl">Date</span><span>${d}</span></div>
+      <div class="rec-row"><span class="rec-lbl">Référence</span><span>${txId}</span></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-pri btn-sm" onclick="window.print&&window.print()">🖨 Imprimer le reçu</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetForm()">Nouveau paiement</button>
+    </div></div>`;
+  addTx({id:txId,plan:plan.name,amount,op:S.op||'orange',date:d,status:'ok'});
+  sb.scrollIntoView({behavior:'smooth',block:'start'});
+  toast('🎉 Accès Neoclass activé !','ok');
+}
+
+function cancelPay(){S.step='idle';document.getElementById('ussdBox').style.display='none';document.getElementById('payBtn').disabled=false;updatePayBtn();toast('Paiement annulé','info');}
+
+function resetForm(){
+  S.step='idle';S.promo=false;S.promoDiscount=0;
+  document.getElementById('successBox').style.display='none';document.getElementById('ussdBox').style.display='none';
+  document.getElementById('promoRes').style.display='none';document.getElementById('fPromo').value='';
+  document.getElementById('fName').value='';document.getElementById('fPhone').value='';document.getElementById('fEmail').value='';
+  document.getElementById('payBtn').disabled=false;updatePayBtn();updateSummary();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ====== HISTORIQUE ====== */
+let txs=[
+  {id:'NC78523412',plan:'Plan Pro',amount:50000,op:'orange',date:'15 Juin 2025',status:'ok'},
+  {id:'NC78411009',plan:'Plan Starter',amount:20000,op:'mtn',date:'14 Mai 2025',status:'ok'},
+  {id:'NC78309221',plan:'Plan Pro',amount:50000,op:'orange',date:'14 Avr 2025',status:'fail'},
+  {id:'NCFREE-PRE',plan:'Plan Gratuit',amount:0,op:'free',date:'1 Mar 2025',status:'ok'},
+];
+function addTx(tx){txs.unshift(tx);}
+function renderHistory(){
+  const list=document.getElementById('txList');
+  const slice=txs.slice(0,S.txPage*6);
+  list.innerHTML=slice.length===0?'<div style="text-align:center;padding:40px;color:var(--text-3)">Aucune transaction</div>'
+    :slice.map(tx=>`<div class="tx">
+      <div class="tx-ico" style="background:${tx.op==='orange'?'var(--orange-bg)':tx.op==='mtn'?'var(--mtn-bg)':'var(--free-bg)'}">${tx.op==='orange'?'🟠':tx.op==='mtn'?'🟡':'🎓'}</div>
+      <div class="tx-info"><div class="tx-name">${tx.plan}</div><div class="tx-date">${tx.date} · Réf: ${tx.id}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <div class="tx-amt ${tx.amount===0?'free-tx':'debit'}">${tx.amount===0?'Gratuit':'-'+tx.amount.toLocaleString('fr-GN')+' GNF'}</div>
+        <span class="tx-stat ${tx.status==='ok'?'ts-ok':tx.status==='pend'?'ts-pend':'ts-fail'}">${tx.status==='ok'?'✓ Payé':tx.status==='pend'?'⏳ Attente':'✗ Échoué'}</span>
+      </div></div>`).join('');
+}
+function loadMore(){S.txPage++;renderHistory();}
+
+/* ====== UTILITAIRES ====== */
+function today(){return new Date().toLocaleDateString('fr-GN',{year:'numeric',month:'long',day:'numeric'});}
+function toast(msg,type='info'){
+  const w=document.getElementById('toastWrap'),icons={ok:'✅',err:'❌',info:'ℹ️'};
+  const t=document.createElement('div');t.className=`toast t${type==='ok'?'ok':type==='err'?'er':'in'}`;
+  t.innerHTML=`<span style="font-size:1rem">${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  w.appendChild(t);setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},3500);
+}
+document.addEventListener('DOMContentLoaded',()=>selectPlan('pro'));
+</script>
+</body>
+</html>
