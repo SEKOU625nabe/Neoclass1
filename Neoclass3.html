@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Neoclass – Apprends, Gagne, Évolue</title>
+  <title>Nafy – Apprends, Gagne, Évolue</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
   <style>
@@ -18604,7 +18604,9 @@ Réponds en JSON valide:
       
       const ad = getRandomAd();
       return `
-        <div class="ad-banner" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-hover));border:1px solid var(--border);border-radius:12px;padding:15px;margin:15px 0;display:flex;align-items:center;gap:15px;cursor:pointer;" onclick="trackAdClick(${ad.id})">
+       // Assure-toi que ce bloc HTML est bien retourné (return) ou assigné à une variable avec des backticks (`)
+         return `
+        <div class="ad-banner" style="background:linear-gradient(135deg,var(--bg-card),var(--bg-hover));border:1px solid var(--border);border-radius:12px;padding:15px;margin:15px 0;display:flex;align-items:center;gap:15px;cursor:pointer;" onclick="trackAdClick('${ad.id}')">
           <div style="font-size:2.5rem;">${ad.img}</div>
           <div style="flex:1;">
             <strong style="color:var(--primary);">${ad.title}</strong>
@@ -18612,14 +18614,17 @@ Réponds en JSON valide:
           </div>
           <span style="font-size:.7rem;color:var(--text-secondary);opacity:0.5;">Publicité</span>
         </div>
-      `;
+    `;
+}
+
+function showInterstitialAd(callback) {
+    if (!shouldShowAds()) {
+        if (callback) callback();
+        return;
     }
     
-    function showInterstitialAd(callback) {
-      if(!shouldShowAds()) {
-        if(callback) callback();
-        return;
-      }
+    // Le reste de la logique de ta fonction va ici...
+} // <-- Il manquait cette accolade pour fermer la fonction
       
       const ad = getRandomAd();
       
@@ -29907,8 +29912,7 @@ async function loadProfRevenueSources() {
       liveSessions++;
     });
     
-    div.innerHTML = `
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
+    div.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
         <div class="stat-card">
           <div class="flex items-center gap-2 mb-2">
             <span style="font-size:1.5rem;">📚</span>
