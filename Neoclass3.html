@@ -3704,6 +3704,275 @@ body.has-school-banner .school-banner {
   <!-- <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics-compat.js"></script> -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
+  <!-- ============================================================
+       🏫 NEOCLASS ÉCOLE — DESIGN SYSTEM (préfixe .sch-)
+       Namespace isolé : n'altère aucun style existant.
+       Chrome (fonds, textes, bordures) = tokens de l'app → suit
+       automatiquement les thèmes clair / sombre / neon / ocean…
+       Couleurs sémantiques (statuts, séries de graphiques) = stables,
+       pour que « payé » reste vert dans tous les thèmes.
+       ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style id="sch-design-system">
+    :root{
+      /* Palette sémantique École — invariante par thème */
+      --sch-ok:#10b981;        --sch-ok-soft:rgba(16,185,129,.12);
+      --sch-warn:#f59e0b;      --sch-warn-soft:rgba(245,158,11,.14);
+      --sch-bad:#ef4444;       --sch-bad-soft:rgba(239,68,68,.12);
+      --sch-info:#3b82f6;      --sch-info-soft:rgba(59,130,246,.12);
+      --sch-violet:#7c5cff;    --sch-violet-soft:rgba(124,92,255,.12);
+      --sch-teal:#0ea5a4;      --sch-teal-soft:rgba(14,165,164,.12);
+      --sch-pink:#ec4899;      --sch-pink-soft:rgba(236,72,153,.12);
+      --sch-slate:#64748b;     --sch-slate-soft:rgba(100,116,139,.12);
+      /* Rythme */
+      --sch-r:14px; --sch-r-sm:10px; --sch-r-xs:8px;
+      --sch-gap:18px;
+      --sch-ring:0 0 0 3px rgba(124,92,255,.18);
+    }
+
+    /* ---------- Page ---------- */
+    .sch-page{max-width:1480px;margin:0 auto;padding-bottom:48px;}
+    .sch-page *{box-sizing:border-box;}
+
+    /* ---------- En-tête de page ---------- */
+    .sch-head{
+      display:flex;align-items:flex-start;justify-content:space-between;
+      gap:20px;flex-wrap:wrap;margin-bottom:24px;
+    }
+    .sch-head-id{display:flex;align-items:center;gap:16px;min-width:0;}
+    .sch-logo{
+      width:56px;height:56px;border-radius:14px;flex:0 0 56px;object-fit:cover;
+      background:linear-gradient(135deg,var(--sch-violet),var(--sch-teal));
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:800;font-size:1.35rem;letter-spacing:.5px;
+      box-shadow:0 6px 18px rgba(124,92,255,.28);
+    }
+    .sch-head h1{font-size:1.5rem;font-weight:800;line-height:1.2;margin:0;letter-spacing:-.02em;}
+    .sch-head-sub{
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+      margin-top:6px;font-size:.85rem;color:var(--text-secondary);
+    }
+    .sch-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+
+    /* ---------- Boutons ---------- */
+    .sch-btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:10px 16px;border-radius:var(--sch-r-sm);border:1px solid transparent;
+      font-family:inherit;font-size:.875rem;font-weight:600;line-height:1;
+      cursor:pointer;white-space:nowrap;transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease;
+      background:var(--bg-card);color:var(--text);border-color:var(--border);
+    }
+    .sch-btn:hover{background:var(--bg-hover);transform:translateY(-1px);}
+    .sch-btn:active{transform:translateY(0);}
+    .sch-btn:focus-visible{outline:none;box-shadow:var(--sch-ring);}
+    .sch-btn-primary{background:var(--sch-violet);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(124,92,255,.3);}
+    .sch-btn-primary:hover{background:#6a4ae6;color:#fff;}
+    .sch-btn-ghost{background:transparent;border-color:transparent;color:var(--text-secondary);}
+    .sch-btn-ghost:hover{background:var(--bg-hover);color:var(--text);}
+    .sch-btn-danger{background:var(--sch-bad);color:#fff;border-color:transparent;}
+    .sch-btn-danger:hover{background:#dc2626;color:#fff;}
+    .sch-btn-sm{padding:7px 12px;font-size:.8rem;border-radius:var(--sch-r-xs);}
+    .sch-btn-icon{width:38px;height:38px;padding:0;border-radius:var(--sch-r-sm);}
+    .sch-btn[disabled],.sch-btn[aria-disabled="true"]{opacity:.5;pointer-events:none;}
+
+    /* ---------- Sélecteurs de contexte (année, période, classe…) ---------- */
+    .sch-select{
+      appearance:none;-webkit-appearance:none;
+      padding:10px 34px 10px 14px;border-radius:var(--sch-r-sm);
+      border:1px solid var(--border);background:var(--bg-card);color:var(--text);
+      font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;
+      background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+      background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;
+      background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+      transition:border-color .15s ease,box-shadow .15s ease;
+    }
+    .sch-select:focus{outline:none;border-color:var(--sch-violet);box-shadow:var(--sch-ring);}
+
+    /* ---------- Cartes ---------- */
+    .sch-card{
+      background:var(--bg-card);border:1px solid var(--border);
+      border-radius:var(--sch-r);padding:20px;
+      box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.04);
+    }
+    .sch-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;}
+    .sch-card-title{font-size:.95rem;font-weight:700;margin:0;letter-spacing:-.01em;}
+    .sch-card-sub{font-size:.78rem;color:var(--text-secondary);margin:3px 0 0;font-weight:500;}
+
+    /* ---------- Titres de section ---------- */
+    .sch-sec{margin:32px 0 16px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+    .sch-sec h2{font-size:1.02rem;font-weight:800;margin:0;letter-spacing:-.01em;}
+    .sch-sec p{font-size:.8rem;color:var(--text-secondary);margin:0;}
+
+    /* ---------- Grille de KPI ---------- */
+    .sch-kpis{
+      display:grid;gap:var(--sch-gap);
+      grid-template-columns:repeat(auto-fill,minmax(212px,1fr));
+    }
+    .sch-kpi{
+      position:relative;overflow:hidden;
+      background:var(--bg-card);border:1px solid var(--border);
+      border-radius:var(--sch-r);padding:18px;
+      display:flex;flex-direction:column;gap:12px;
+      transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+    }
+    .sch-kpi::before{
+      content:'';position:absolute;inset:0 auto 0 0;width:3px;
+      background:var(--kpi-color,var(--sch-violet));opacity:.9;
+    }
+    .sch-kpi:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.08);border-color:var(--kpi-color,var(--sch-violet));}
+    .sch-kpi.is-clickable{cursor:pointer;}
+    .sch-kpi-top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .sch-kpi-ico{
+      width:36px;height:36px;border-radius:10px;flex:0 0 36px;
+      display:flex;align-items:center;justify-content:center;font-size:.95rem;
+      background:var(--kpi-soft,var(--sch-violet-soft));color:var(--kpi-color,var(--sch-violet));
+    }
+    .sch-kpi-label{font-size:.76rem;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;line-height:1.3;}
+    .sch-kpi-val{font-size:1.75rem;font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;}
+    .sch-kpi-val small{font-size:.9rem;font-weight:700;color:var(--text-secondary);margin-left:3px;}
+    .sch-kpi-foot{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text-secondary);font-weight:500;min-height:16px;}
+    .sch-kpi-delta{display:inline-flex;align-items:center;gap:3px;font-weight:700;}
+    .sch-kpi-delta.up{color:var(--sch-ok);} .sch-kpi-delta.down{color:var(--sch-bad);} .sch-kpi-delta.flat{color:var(--text-secondary);}
+
+    /* Jauge fine sous un KPI (taux de présence, recouvrement…) */
+    .sch-meter{height:5px;border-radius:99px;background:var(--border);overflow:hidden;}
+    .sch-meter>span{display:block;height:100%;border-radius:99px;background:var(--kpi-color,var(--sch-violet));transition:width .6s cubic-bezier(.4,0,.2,1);}
+
+    /* ---------- Bandeau d'actions prioritaires ---------- */
+    .sch-todo{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+    .sch-todo-item{
+      display:flex;align-items:center;gap:14px;padding:14px 16px;
+      border-radius:var(--sch-r-sm);border:1px solid var(--border);
+      background:var(--bg-card);cursor:pointer;text-align:left;width:100%;
+      font-family:inherit;color:var(--text);
+      transition:transform .15s ease,border-color .15s ease,background .15s ease;
+    }
+    .sch-todo-item:hover{transform:translateX(2px);border-color:var(--todo-color,var(--sch-violet));background:var(--bg-hover);}
+    .sch-todo-ico{
+      width:38px;height:38px;flex:0 0 38px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      background:var(--todo-soft);color:var(--todo-color);font-size:1rem;
+    }
+    .sch-todo-txt{flex:1;min-width:0;}
+    .sch-todo-txt strong{display:block;font-size:.88rem;font-weight:700;}
+    .sch-todo-txt span{display:block;font-size:.76rem;color:var(--text-secondary);margin-top:2px;}
+    .sch-todo-count{
+      font-size:.8rem;font-weight:800;padding:3px 9px;border-radius:99px;
+      background:var(--todo-soft);color:var(--todo-color);font-variant-numeric:tabular-nums;
+    }
+
+    /* ---------- Graphiques ---------- */
+    .sch-charts{display:grid;gap:var(--sch-gap);grid-template-columns:repeat(12,1fr);}
+    .sch-col-12{grid-column:span 12;} .sch-col-8{grid-column:span 8;}
+    .sch-col-6{grid-column:span 6;}   .sch-col-4{grid-column:span 4;}
+    .sch-chart-box{position:relative;height:260px;}
+    .sch-chart-box.tall{height:320px;}
+    .sch-chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+    .sch-chart-legend span{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;color:var(--text-secondary);font-weight:600;}
+    .sch-chart-legend i{width:9px;height:9px;border-radius:3px;flex:0 0 9px;}
+
+    /* ---------- Onglets ---------- */
+    .sch-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;scrollbar-width:none;}
+    .sch-tabs::-webkit-scrollbar{display:none;}
+    .sch-tab{
+      padding:11px 16px;border:none;background:none;cursor:pointer;
+      font-family:inherit;font-size:.86rem;font-weight:600;color:var(--text-secondary);
+      border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+      transition:color .15s ease,border-color .15s ease;
+    }
+    .sch-tab:hover{color:var(--text);}
+    .sch-tab.active{color:var(--sch-violet);border-bottom-color:var(--sch-violet);}
+
+    /* ---------- Barre d'outils / filtres ---------- */
+    .sch-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+    .sch-toolbar-spacer{flex:1;min-width:8px;}
+    .sch-search{position:relative;flex:1;min-width:200px;max-width:340px;}
+    .sch-search input{
+      width:100%;padding:10px 14px 10px 38px;border-radius:var(--sch-r-sm);
+      border:1px solid var(--border);background:var(--bg-card);color:var(--text);
+      font-family:inherit;font-size:.86rem;transition:border-color .15s ease,box-shadow .15s ease;
+    }
+    .sch-search input:focus{outline:none;border-color:var(--sch-violet);box-shadow:var(--sch-ring);}
+    .sch-search i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-secondary);font-size:.85rem;pointer-events:none;}
+
+    /* ---------- Puces de statut ---------- */
+    .sch-chip{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 10px;border-radius:99px;font-size:.73rem;font-weight:700;
+      white-space:nowrap;line-height:1.4;
+    }
+    .sch-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex:0 0 6px;}
+    .sch-chip-ok{background:var(--sch-ok-soft);color:var(--sch-ok);}
+    .sch-chip-warn{background:var(--sch-warn-soft);color:var(--sch-warn);}
+    .sch-chip-bad{background:var(--sch-bad-soft);color:var(--sch-bad);}
+    .sch-chip-info{background:var(--sch-info-soft);color:var(--sch-info);}
+    .sch-chip-mute{background:var(--sch-slate-soft);color:var(--sch-slate);}
+
+    /* ---------- Tableaux ---------- */
+    .sch-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--sch-r);background:var(--bg-card);}
+    table.sch-table{width:100%;border-collapse:collapse;font-size:.86rem;}
+    table.sch-table th{
+      text-align:left;padding:12px 16px;font-size:.73rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);
+      background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap;
+    }
+    table.sch-table td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:middle;}
+    table.sch-table tbody tr:last-child td{border-bottom:none;}
+    table.sch-table tbody tr:hover{background:var(--bg-hover);}
+    table.sch-table .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+
+    /* ---------- État vide ---------- */
+    .sch-empty{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:10px;padding:40px 24px;text-align:center;color:var(--text-secondary);
+    }
+    .sch-empty i{font-size:1.8rem;opacity:.35;}
+    .sch-empty strong{font-size:.92rem;color:var(--text);font-weight:700;}
+    .sch-empty p{font-size:.82rem;margin:0;max-width:380px;line-height:1.55;}
+
+    /* ---------- Chargement (squelettes) ---------- */
+    @keyframes schShimmer{to{background-position:-200% 0;}}
+    .sch-skel{
+      border-radius:6px;
+      background:linear-gradient(90deg,var(--border) 0%,var(--bg-hover) 50%,var(--border) 100%);
+      background-size:200% 100%;animation:schShimmer 1.4s linear infinite;
+    }
+    .sch-skel-line{height:11px;margin:7px 0;}
+
+    /* ---------- Bandeau d'information / configuration manquante ---------- */
+    .sch-note{
+      display:flex;align-items:flex-start;gap:12px;padding:13px 16px;
+      border-radius:var(--sch-r-sm);font-size:.82rem;line-height:1.55;
+      background:var(--sch-info-soft);color:var(--text);
+      border:1px solid rgba(59,130,246,.22);
+    }
+    .sch-note i{color:var(--sch-info);margin-top:2px;flex:0 0 auto;}
+    .sch-note.warn{background:var(--sch-warn-soft);border-color:rgba(245,158,11,.26);}
+    .sch-note.warn i{color:var(--sch-warn);}
+    .sch-note a{color:var(--sch-violet);font-weight:700;cursor:pointer;text-decoration:underline;}
+
+    /* ---------- Responsive ---------- */
+    @media(max-width:1200px){
+      .sch-col-8,.sch-col-6{grid-column:span 12;}
+      .sch-col-4{grid-column:span 6;}
+    }
+    @media(max-width:860px){
+      .sch-col-4{grid-column:span 12;}
+      .sch-kpis{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
+      .sch-kpi-val{font-size:1.45rem;}
+      .sch-head h1{font-size:1.25rem;}
+      .sch-chart-box{height:230px;}
+    }
+    @media(max-width:520px){
+      .sch-kpis{grid-template-columns:1fr 1fr;gap:12px;}
+      .sch-kpi{padding:14px;}
+      .sch-kpi-ico{display:none;}
+      .sch-head-actions{width:100%;}
+      .sch-head-actions .sch-select{flex:1;}
+    }
+  </style>
+
+
   <script>
     // ============================================================
     // FIREBASE CONFIG
@@ -10797,47 +11066,52 @@ Réponds en JSON:
         ];
         
       } else if(role==='school'){
+        // Hiérarchie École : 6 rubriques thématiques plutôt qu'une
+        // accumulation de boutons au même endroit. Chaque entrée pointe
+        // vers une page réellement enregistrée dans le routeur.
         groups = [
-          { id:'users', icon:'👥', label:'Utilisateurs', items:[
-            {icon:'🎓',label:t('registerStudent'),page:'school-students'},
-            {icon:'🧑‍🏫',label:t('registerTeacher'),page:'school-teachers'},
-            {icon:'👨‍👩‍👧',label:t('manageParents'),page:'school-parents'},
-            {icon:'✅',label:'Valider Profs',page:'prof-validation-admin'}
+          { id:'people', icon:'👥', label:'Communauté', items:[
+            {icon:'🎓',label:'Élèves',page:'school-students'},
+            {icon:'🧑‍🏫',label:'Enseignants',page:'school-teachers'},
+            {icon:'👨‍👩‍👧',label:'Parents',page:'school-parents'},
+            {icon:'🎩',label:'Dirigeants',page:'school-directors'},
+            {icon:'✅',label:'Valider les profs',page:'prof-validation-admin'}
+          ]},
+          { id:'structure', icon:'🏫', label:'Structure', items:[
+            {icon:'🏫',label:'Classes',page:'school-classes'},
+            {icon:'🚪',label:'Salles',page:'school-rooms'},
+            {icon:'📅',label:'Emploi du temps',page:'school-timetable'},
+            {icon:'🗓️',label:'Calendrier scolaire',page:'school-calendar'}
+          ]},
+          { id:'academic', icon:'📊', label:'Vie scolaire', items:[
+            {icon:'📝',label:'Notes à valider',page:'school-grades-entry'},
+            {icon:'📊',label:'Résultats & classements',page:'school-grades-results'},
+            {icon:'📄',label:'Bulletins',page:'school-bulletins'},
+            {icon:'📋',label:'Présences',page:'school-absences'},
+            {icon:'⚙️',label:'Règles de notation',page:'school-grades-config'},
+            {icon:'🎨',label:'Modèle de bulletin',page:'school-bulletin-config'}
+          ]},
+          { id:'finance', icon:'💰', label:'Finances', items:[
+            {icon:'📈',label:'Tableau de bord',page:'tableau-bord-finances'},
+            {icon:'💳',label:'Paiements',page:'school-payments'},
+            {icon:'🧾',label:'Scolarités',page:'gestion-scolarites'},
+            {icon:'👨‍🎓',label:'Élèves & soldes',page:'gestion-eleves'},
+            {icon:'🏷️',label:'Dépenses',page:'gestion-depenses'},
+            {icon:'🔔',label:'Relances',page:'gestion-notifications'}
           ]},
           { id:'pedagogy', icon:'📚', label:'Pédagogie', items:[
-            {icon:'📁',label:'Gestion Cours',page:'course-manager'},
-            {icon:'🎬',label:'Studio Cours Pro',page:'prof-course-studio'},
+            {icon:'📁',label:'Gestion des cours',page:'course-manager'},
+            {icon:'🎬',label:'Studio de cours',page:'prof-course-studio'},
             {icon:'📝',label:'Devoirs',page:'school-homework'},
             {icon:'📚',label:'Bibliothèque',page:'school-library'},
             {icon:'📄',label:'Documents',page:'school-documents-manager'},
             {icon:'🏅',label:'Badges',page:'school-badges'}
           ]},
-          { id:'grades', icon:'📊', label:'Notes & Bulletins', items:[
-            {icon:'⚙️',label:'Config Notes',page:'school-grades-config'},
-            {icon:'📝',label:'Notes à valider',page:'school-grades-entry'},
-            {icon:'📊',label:'Résultats',page:'school-grades-results'},
-            {icon:'📄',label:'Bulletins',page:'school-bulletins'}
-          ]},
-          { id:'finance', icon:'💰', label:'Finances V2', items:[
-            {icon:'👨‍🎓',label:'Gestion Élèves',page:'gestion-eleves'},
-            {icon:'💳',label:'Gestion Scolarités',page:'gestion-scolarites'},
-            {icon:'📈',label:'Tableau Bord',page:'tableau-bord-finances'},
-            {icon:'🏷️',label:'Gestion Dépenses',page:'gestion-depenses'},
-            {icon:'🔔',label:'Notifications',page:'gestion-notifications'}
-          ]},
-          { id:'admin', icon:'⚙️', label:'Administration', items:[
-            {icon:'💳',label:t('managePayments'),page:'school-payments'},
-            {icon:'📋',label:'Absences',page:'school-absences'},
-            {icon:'📊',label:'Analytics',page:'school-analytics'}
-          ]},
-          { id:'comm', icon:'📢', label:'Communication', items:[
-            {icon:'📢',label:t('schoolAnnounce'),page:'school-announce'},
-            {icon:'📬',label:t('inbox'),page:'inbox'},
-            {icon:'👨‍👩‍👧',label:'Réunions',page:'school-meetings'}
-          ]},
-          { id:'planning', icon:'📅', label:'Planning', items:[
-            {icon:'📅',label:t('timetable'),page:'school-timetable'},
-            {icon:'📅',label:'Calendrier',page:'school-calendar'}
+          { id:'comm', icon:'💬', label:'Communication', items:[
+            {icon:'📢',label:'Annonces',page:'school-announce'},
+            {icon:'📬',label:'Messages',page:'inbox'},
+            {icon:'👨‍👩‍👧',label:'Réunions',page:'school-meetings'},
+            {icon:'📊',label:'Statistiques',page:'school-analytics'}
           ]}
         ];
         
@@ -41378,6 +41652,1406 @@ function handleDocumentUpload(e) {
 <!-- 🏫 Admin Salles de Classe - Panel Admin -->
 <script src="./admin-classrooms-panel.js" defer></script>
 
+
+<!-- 🏫 Socle École v3 — données, tableau de bord, graphiques, salles -->
+<script id="sch-core-v3">
+// ============================================================
+// 🏫 NEOCLASS ÉCOLE — SOCLE v3
+// Phase 1 : agrégation des données, tableau de bord et graphiques.
+//
+// Ce bloc est volontairement autonome : il n'altère aucune fonction
+// existante, il en surcharge deux (renderDashboard, getSchoolDash) et
+// enregistre une page supplémentaire (school-rooms).
+//
+// Principe de fidélité : rien n'est inventé. Une donnée absente
+// s'affiche « — » avec l'action qui permet de la renseigner, jamais un
+// zéro trompeur.
+// ============================================================
+(function () {
+  'use strict';
+
+  // ------------------------------------------------------------
+  // Utilitaires
+  // ------------------------------------------------------------
+
+  const MOIS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function schoolId() {
+    return (typeof State !== 'undefined' && State.user) ? State.user.uid : null;
+  }
+
+  function devise() {
+    const p = (typeof State !== 'undefined' && State.profile) ? State.profile : {};
+    return p.currency || p.devise || 'GNF';
+  }
+
+  // Convertit un Timestamp Firestore, une Date ou une chaîne en Date.
+  function toDate(v) {
+    if (!v) return null;
+    if (v.toDate) { try { return v.toDate(); } catch (e) { return null; } }
+    if (v instanceof Date) return v;
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  // L'année scolaire démarre en septembre.
+  function anneeScolaire(d) {
+    d = d || new Date();
+    const y = d.getFullYear();
+    return d.getMonth() >= 8 ? (y + '-' + (y + 1)) : ((y - 1) + '-' + y);
+  }
+  function debutAnnee(label) { return new Date(parseInt(label, 10), 8, 1); }
+  function finAnnee(label) { return new Date(parseInt(label, 10) + 1, 7, 31, 23, 59, 59); }
+
+  function nombre(n) {
+    if (n == null || isNaN(n)) return '—';
+    return Math.round(n).toLocaleString('fr-FR');
+  }
+
+  // Montants compacts : un tableau de bord doit rester lisible.
+  function montant(n) {
+    if (n == null || isNaN(n)) return '—';
+    const a = Math.abs(n);
+    if (a >= 1e9) return (n / 1e9).toFixed(1).replace('.', ',') + ' Md';
+    if (a >= 1e6) return (n / 1e6).toFixed(1).replace('.', ',') + ' M';
+    if (a >= 1e4) return Math.round(n / 1e3).toLocaleString('fr-FR') + ' k';
+    return Math.round(n).toLocaleString('fr-FR');
+  }
+
+  function pourcent(n, d) {
+    if (n == null || isNaN(n)) return '—';
+    return n.toFixed(d == null ? 1 : d).replace('.', ',');
+  }
+
+  // Jours ouvrés (lundi → vendredi) entre deux dates, bornes incluses.
+  function joursOuvres(debut, fin) {
+    if (!debut || !fin || fin < debut) return 0;
+    let n = 0;
+    const d = new Date(debut.getFullYear(), debut.getMonth(), debut.getDate());
+    const stop = new Date(fin.getFullYear(), fin.getMonth(), fin.getDate());
+    while (d <= stop) {
+      const j = d.getDay();
+      if (j !== 0 && j !== 6) n++;
+      d.setDate(d.getDate() + 1);
+    }
+    return n;
+  }
+
+  // Les 12 derniers mois, du plus ancien au plus récent.
+  function derniersMois(n) {
+    const out = [];
+    const now = new Date();
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      out.push({ cle: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'), label: MOIS[d.getMonth()], debut: d, fin: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59) });
+    }
+    return out;
+  }
+  function cleMois(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function moyenne(tab) {
+    const v = tab.filter(function (x) { return typeof x === 'number' && !isNaN(x); });
+    if (!v.length) return null;
+    return v.reduce(function (a, b) { return a + b; }, 0) / v.length;
+  }
+
+  // ------------------------------------------------------------
+  // Couche de données
+  // ------------------------------------------------------------
+
+  const SchoolData = {
+    _cache: null,
+    _promesse: null,
+
+    invalider: function () { this._cache = null; this._promesse = null; },
+
+    charger: function (force) {
+      if (force) this.invalider();
+      if (this._cache) return Promise.resolve(this._cache);
+      if (this._promesse) return this._promesse;
+      this._promesse = this._lire();
+      return this._promesse;
+    },
+
+    _lire: function () {
+      const uid = schoolId();
+      if (!uid || typeof db === 'undefined') {
+        return Promise.resolve(this._vide(['session']));
+      }
+
+      const erreurs = [];
+      // Chaque lecture est isolée : une collection refusée par les règles
+      // de sécurité ou inexistante ne doit pas vider tout le tableau de bord.
+      function lire(nom, fn) {
+        return fn()
+          .then(function (snap) {
+            return snap.docs.map(function (d) {
+              const o = d.data() || {};
+              o.id = d.id;
+              return o;
+            });
+          })
+          .catch(function (e) {
+            console.warn('[École] ' + nom + ' : lecture impossible —', (e && (e.code || e.message)) || e);
+            erreurs.push(nom);
+            return [];
+          });
+      }
+
+      const S = db.collection('schools').doc(uid);
+      const self = this;
+
+      return Promise.all([
+        lire('élèves', function () { return S.collection('students').get(); }),
+        lire('comptes élèves', function () { return db.collection('users').where('schoolId', '==', uid).where('role', '==', 'student').get(); }),
+        lire('enseignants', function () { return db.collection('teachers').where('schoolId', '==', uid).get(); }),
+        lire('classes', function () { return db.collection('classes').where('schoolId', '==', uid).get(); }),
+        lire('salles', function () { return S.collection('rooms').get(); }),
+        lire('paiements', function () { return S.collection('payments').get(); }),
+        lire('frais de scolarité', function () { return S.collection('fees').get(); }),
+        lire('notes', function () { return db.collection('grades').where('schoolId', '==', uid).get(); }),
+        lire('absences', function () { return db.collection('absences').where('schoolId', '==', uid).get(); }),
+        lire('examens', function () { return db.collection('exams').where('schoolId', '==', uid).get(); }),
+        lire('bulletins', function () { return db.collection('bulletins').where('schoolId', '==', uid).get(); })
+      ]).then(function (r) {
+        const brut = {
+          eleves: self._fusionnerEleves(r[0], r[1]),
+          enseignants: r[2],
+          classes: r[3],
+          salles: r[4],
+          paiements: r[5],
+          frais: r[6],
+          notes: r[7],
+          absences: r[8],
+          examens: r[9],
+          bulletins: r[10],
+          erreurs: erreurs
+        };
+        self._cache = self._calculer(brut);
+        self._promesse = null;
+        return self._cache;
+      });
+    },
+
+    // Les élèves existent à deux endroits (sous-collection de l'école et
+    // collection users). On fusionne sans doublon, la sous-collection
+    // faisant foi car elle porte les informations administratives.
+    _fusionnerEleves: function (sous, users) {
+      const parCle = new Map();
+      users.forEach(function (u) {
+        parCle.set(u.uid || u.id, u);
+      });
+      sous.forEach(function (s) {
+        const cle = s.uid || s.id;
+        const existant = parCle.get(cle);
+        parCle.set(cle, existant ? Object.assign({}, existant, s) : s);
+      });
+      return Array.from(parCle.values());
+    },
+
+    _vide: function (erreurs) {
+      return this._calculer({
+        eleves: [], enseignants: [], classes: [], salles: [], paiements: [],
+        frais: [], notes: [], absences: [], examens: [], bulletins: [],
+        erreurs: erreurs || []
+      });
+    },
+
+    // ----------------------------------------------------------
+    // Calcul des indicateurs
+    // ----------------------------------------------------------
+    _calculer: function (d) {
+      const annee = anneeScolaire();
+      const debut = debutAnnee(annee);
+      const aujourdhui = new Date();
+      const config = (typeof State !== 'undefined' && State.profile && State.profile.gradesConfig) || {};
+      const noteMax = config.maxGrade || 20;
+
+      const m = {
+        brut: d,
+        annee: annee,
+        noteMax: noteMax,
+        erreurs: d.erreurs,
+        devise: devise()
+      };
+
+      // --- Effectifs ---
+      m.nbEleves = d.eleves.length;
+      m.nbEnseignants = d.enseignants.length;
+      m.nbClasses = d.classes.length;
+      // À défaut de salles déclarées, on compte les salles distinctes
+      // référencées par les classes.
+      const sallesClasses = new Set();
+      d.classes.forEach(function (c) {
+        const s = c.room || c.salle || c.roomName;
+        if (s) sallesClasses.add(String(s).trim());
+      });
+      m.nbSalles = d.salles.length || sallesClasses.size;
+      m.sallesDeduites = d.salles.length === 0 && sallesClasses.size > 0;
+
+      // --- Notes validées ---
+      const VALIDES = ['validated', 'locked', 'published'];
+      const notesValidees = d.notes.filter(function (g) {
+        return VALIDES.indexOf(g.status) !== -1;
+      });
+      m.nbNotesAValider = d.notes.filter(function (g) {
+        return g.status === 'submitted' || g.status === 'pending';
+      }).length;
+
+      // Toutes les notes individuelles, à plat.
+      const plat = [];
+      notesValidees.forEach(function (doc) {
+        (doc.grades || []).forEach(function (g) {
+          const v = parseFloat(g.grade != null ? g.grade : g.note);
+          if (isNaN(v)) return;
+          plat.push({
+            valeur: v,
+            matiere: doc.subject || doc.matiere || 'Non précisée',
+            periode: doc.period || doc.periode || '—',
+            classe: doc.className || doc.classe || doc.classId || null,
+            eleve: g.studentId || g.eleveId || null
+          });
+        });
+      });
+      m.notesPlat = plat;
+
+      // Coefficients définis par l'établissement.
+      const coefs = {};
+      (config.subjects || []).forEach(function (s) {
+        if (s && s.name) coefs[s.name] = parseFloat(s.coef) || 1;
+      });
+      function coef(matiere) { return coefs[matiere] || 1; }
+
+      if (plat.length) {
+        let sp = 0, sc = 0;
+        plat.forEach(function (n) { const c = coef(n.matiere); sp += n.valeur * c; sc += c; });
+        m.moyenneGenerale = sc ? sp / sc : null;
+      } else {
+        m.moyenneGenerale = null;
+      }
+
+      // --- Finances ---
+      const paiementsAnnee = d.paiements.filter(function (p) {
+        const dt = toDate(p.createdAt || p.date);
+        return dt && dt >= debut;
+      });
+      m.encaisse = paiementsAnnee.reduce(function (a, p) {
+        return a + (parseFloat(p.amount != null ? p.amount : p.montant) || 0);
+      }, 0);
+
+      // Montant attendu : barème par classe, sinon barème unique de l'école.
+      const baremeParClasse = {};
+      d.frais.forEach(function (f) {
+        const cle = f.classId || f.classeId;
+        const v = parseFloat(f.annualAmount != null ? f.annualAmount : f.montantAnnuel);
+        if (cle && !isNaN(v)) baremeParClasse[cle] = v;
+      });
+      const baremeDefaut = parseFloat(
+        (config.annualFee != null ? config.annualFee : (State.profile && State.profile.annualFee))
+      );
+
+      if (Object.keys(baremeParClasse).length || !isNaN(baremeDefaut)) {
+        m.attendu = d.eleves.reduce(function (a, e) {
+          const v = baremeParClasse[e.classId];
+          return a + (v != null ? v : (isNaN(baremeDefaut) ? 0 : baremeDefaut));
+        }, 0);
+        m.reste = Math.max(0, m.attendu - m.encaisse);
+        m.tauxRecouvrement = m.attendu ? (m.encaisse / m.attendu) * 100 : null;
+      } else {
+        // Aucun barème configuré : on ne peut rien déduire honnêtement.
+        m.attendu = null;
+        m.reste = null;
+        m.tauxRecouvrement = null;
+      }
+      m.fraisConfigures = m.attendu != null;
+
+      // --- Présence ---
+      // Faute d'un registre d'appel, le taux se déduit des absences
+      // enregistrées rapportées aux jours ouvrés écoulés.
+      const absencesAnnee = d.absences.filter(function (a) {
+        const dt = toDate(a.date || a.createdAt);
+        return dt && dt >= debut;
+      });
+      m.nbAbsences = absencesAnnee.length;
+      const ouvres = joursOuvres(debut, aujourdhui);
+      m.joursOuvres = ouvres;
+      if (d.absences.length === 0 || !m.nbEleves || !ouvres) {
+        // Zéro absence enregistrée ne veut pas dire 100 % de présence :
+        // cela veut dire que le suivi n'a pas commencé.
+        m.tauxPresence = null;
+        m.presenceSuivie = d.absences.length > 0;
+      } else {
+        const attendues = m.nbEleves * ouvres;
+        m.tauxPresence = Math.max(0, Math.min(100, (1 - m.nbAbsences / attendues) * 100));
+        m.presenceSuivie = true;
+      }
+
+      // --- Examens et bulletins ---
+      m.examensAVenir = d.examens.filter(function (e) {
+        const dt = toDate(e.date);
+        return dt && dt >= aujourdhui;
+      }).length;
+
+      const EN_ATTENTE = ['preparing', 'to_check', 'draft', 'pending'];
+      m.bulletinsEnAttente = d.bulletins.filter(function (b) {
+        return EN_ATTENTE.indexOf(b.status) !== -1;
+      }).length;
+      m.bulletinsPublies = d.bulletins.filter(function (b) { return b.status === 'published'; }).length;
+
+      // --- Enseignants en attente d'activation ---
+      m.enseignantsInvites = d.enseignants.filter(function (t) {
+        return t.status === 'invited' || t.invitationStatus === 'pending';
+      }).length;
+
+      // --- Séries pour les graphiques ---
+      m.series = this._series(d, m, coef);
+
+      return m;
+    },
+
+    _series: function (d, m, coef) {
+      const mois = derniersMois(12);
+      const s = {};
+
+      // 1. Évolution des inscriptions : nouveaux par mois + effectif cumulé.
+      const nouveaux = {};
+      mois.forEach(function (x) { nouveaux[x.cle] = 0; });
+      let avant = 0;
+      d.eleves.forEach(function (e) {
+        const dt = toDate(e.createdAt);
+        if (!dt) { avant++; return; }
+        const c = cleMois(dt);
+        if (nouveaux[c] != null) nouveaux[c]++;
+        else if (dt < mois[0].debut) avant++;
+      });
+      let cumul = avant;
+      s.inscriptions = {
+        labels: mois.map(function (x) { return x.label; }),
+        nouveaux: mois.map(function (x) { return nouveaux[x.cle]; }),
+        cumul: mois.map(function (x) { cumul += nouveaux[x.cle]; return cumul; }),
+        vide: d.eleves.length === 0
+      };
+
+      // 2. Évolution des résultats, par période de notation.
+      const parPeriode = {};
+      m.notesPlat.forEach(function (n) {
+        (parPeriode[n.periode] = parPeriode[n.periode] || []).push(n.valeur);
+      });
+      const periodes = Object.keys(parPeriode).sort();
+      s.resultats = {
+        labels: periodes,
+        valeurs: periodes.map(function (p) { return moyenne(parPeriode[p]); }),
+        vide: periodes.length === 0
+      };
+
+      // 3. Présence mensuelle.
+      const absParMois = {};
+      mois.forEach(function (x) { absParMois[x.cle] = 0; });
+      d.absences.forEach(function (a) {
+        const dt = toDate(a.date || a.createdAt);
+        if (!dt) return;
+        const c = cleMois(dt);
+        if (absParMois[c] != null) absParMois[c]++;
+      });
+      const now = new Date();
+      s.presence = {
+        labels: mois.map(function (x) { return x.label; }),
+        valeurs: mois.map(function (x) {
+          if (!m.nbEleves) return null;
+          const fin = x.fin > now ? now : x.fin;
+          const ouvres = joursOuvres(x.debut, fin);
+          if (!ouvres) return null;
+          return Math.max(0, Math.min(100, (1 - absParMois[x.cle] / (m.nbEleves * ouvres)) * 100));
+        }),
+        vide: d.absences.length === 0
+      };
+
+      // 4. Évolution des paiements.
+      const payParMois = {};
+      mois.forEach(function (x) { payParMois[x.cle] = 0; });
+      d.paiements.forEach(function (p) {
+        const dt = toDate(p.createdAt || p.date);
+        if (!dt) return;
+        const c = cleMois(dt);
+        if (payParMois[c] != null) payParMois[c] += (parseFloat(p.amount != null ? p.amount : p.montant) || 0);
+      });
+      s.paiements = {
+        labels: mois.map(function (x) { return x.label; }),
+        valeurs: mois.map(function (x) { return payParMois[x.cle]; }),
+        vide: d.paiements.length === 0
+      };
+
+      // 5. Payé / restant dû.
+      s.recouvrement = {
+        paye: m.encaisse,
+        reste: m.reste,
+        disponible: m.fraisConfigures
+      };
+
+      // 6. Performances par classe.
+      const parClasse = {};
+      m.notesPlat.forEach(function (n) {
+        if (!n.classe) return;
+        (parClasse[n.classe] = parClasse[n.classe] || []).push(n.valeur);
+      });
+      const classes = Object.keys(parClasse)
+        .map(function (c) { return { nom: c, moy: moyenne(parClasse[c]) }; })
+        .filter(function (x) { return x.moy != null; })
+        .sort(function (a, b) { return b.moy - a.moy; })
+        .slice(0, 12);
+      s.parClasse = {
+        labels: classes.map(function (x) { return x.nom; }),
+        valeurs: classes.map(function (x) { return x.moy; }),
+        vide: classes.length === 0
+      };
+
+      // 7. Performances par matière.
+      const parMatiere = {};
+      m.notesPlat.forEach(function (n) {
+        (parMatiere[n.matiere] = parMatiere[n.matiere] || []).push(n.valeur);
+      });
+      const matieres = Object.keys(parMatiere)
+        .map(function (x) { return { nom: x, moy: moyenne(parMatiere[x]) }; })
+        .filter(function (x) { return x.moy != null; })
+        .sort(function (a, b) { return b.moy - a.moy; })
+        .slice(0, 10);
+      s.parMatiere = {
+        labels: matieres.map(function (x) { return x.nom; }),
+        valeurs: matieres.map(function (x) { return x.moy; }),
+        vide: matieres.length === 0
+      };
+
+      return s;
+    }
+  };
+
+  // ------------------------------------------------------------
+  // Graphiques
+  // ------------------------------------------------------------
+
+  const COULEURS = {
+    violet: '#7c5cff', teal: '#0ea5a4', ok: '#10b981',
+    warn: '#f59e0b', bad: '#ef4444', info: '#3b82f6', slate: '#64748b'
+  };
+
+  const SchoolCharts = {
+    _instances: {},
+
+    detruireTout: function () {
+      const self = this;
+      Object.keys(this._instances).forEach(function (k) {
+        try { self._instances[k].destroy(); } catch (e) { /* déjà détruit */ }
+        delete self._instances[k];
+      });
+    },
+
+    disponible: function () { return typeof Chart !== 'undefined'; },
+
+    // Les couleurs de texte suivent le thème actif de l'application.
+    _theme: function () {
+      const cs = getComputedStyle(document.documentElement);
+      const txt = (cs.getPropertyValue('--text-secondary') || '#6b7280').trim();
+      const bord = (cs.getPropertyValue('--border') || '#e5e7eb').trim();
+      return { texte: txt, grille: bord };
+    },
+
+    _base: function () {
+      const t = this._theme();
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(17,24,39,.94)',
+            padding: 11,
+            cornerRadius: 8,
+            titleFont: { size: 12, weight: '700' },
+            bodyFont: { size: 12 },
+            displayColors: true,
+            boxPadding: 4
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            border: { color: t.grille },
+            ticks: { color: t.texte, font: { size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: t.grille },
+            border: { display: false },
+            ticks: { color: t.texte, font: { size: 11 }, padding: 6 }
+          }
+        }
+      };
+    },
+
+    _fusion: function (a, b) {
+      const out = JSON.parse(JSON.stringify(a));
+      (function f(cible, src) {
+        Object.keys(src).forEach(function (k) {
+          if (src[k] && typeof src[k] === 'object' && !Array.isArray(src[k])) {
+            cible[k] = cible[k] || {};
+            f(cible[k], src[k]);
+          } else { cible[k] = src[k]; }
+        });
+      })(out, b || {});
+      return out;
+    },
+
+    _degrade: function (ctx, couleur) {
+      const h = ctx.canvas.height || 240;
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, couleur + '44');
+      g.addColorStop(1, couleur + '03');
+      return g;
+    },
+
+    dessiner: function (id, type, data, options) {
+      if (!this.disponible()) return null;
+      const el = document.getElementById(id);
+      if (!el) return null;
+      if (this._instances[id]) {
+        try { this._instances[id].destroy(); } catch (e) { /* ignore */ }
+      }
+      try {
+        this._instances[id] = new Chart(el.getContext('2d'), {
+          type: type,
+          data: data,
+          options: this._fusion(this._base(), options || {})
+        });
+        return this._instances[id];
+      } catch (e) {
+        console.warn('[École] graphique « ' + id + ' » : ', e);
+        return null;
+      }
+    }
+  };
+
+  // ------------------------------------------------------------
+  // Exposition
+  // ------------------------------------------------------------
+  window.SchoolData = SchoolData;
+  window.SchoolCharts = SchoolCharts;
+  window.SchoolUtils = {
+    esc: esc, nombre: nombre, montant: montant, pourcent: pourcent,
+    toDate: toDate, anneeScolaire: anneeScolaire, devise: devise,
+    schoolId: schoolId, moyenne: moyenne, COULEURS: COULEURS, MOIS: MOIS
+  };
+})();
+
+// ============================================================
+// 🏫 NEOCLASS ÉCOLE — TABLEAU DE BORD
+// 10 indicateurs + 7 graphiques, alimentés par SchoolData.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const C = U.COULEURS;
+
+  function estEcole() {
+    return typeof State !== 'undefined' && State.profile && State.profile.role === 'school';
+  }
+
+  // ------------------------------------------------------------
+  // Fragments d'interface
+  // ------------------------------------------------------------
+
+  // Un indicateur. `valeur` à null affiche « — » : on ne maquille jamais
+  // une donnée absente en zéro.
+  function kpi(o) {
+    const cliquable = o.page ? ' is-clickable' : '';
+    const action = o.page ? ' onclick="navigate(\'' + o.page + '\')"' : '';
+    const vide = o.valeur === null || o.valeur === undefined;
+    const jauge = (o.jauge != null && !vide)
+      ? '<div class="sch-meter"><span style="width:' + Math.max(0, Math.min(100, o.jauge)) + '%"></span></div>'
+      : '';
+    return '' +
+      '<div class="sch-kpi' + cliquable + '" style="--kpi-color:' + o.couleur + ';--kpi-soft:' + o.couleur + '1f"' + action + '>' +
+        '<div class="sch-kpi-top">' +
+          '<span class="sch-kpi-label">' + U.esc(o.label) + '</span>' +
+          '<span class="sch-kpi-ico"><i class="fas ' + o.icone + '"></i></span>' +
+        '</div>' +
+        '<div class="sch-kpi-val">' + (vide ? '—' : U.esc(o.valeur)) +
+          (o.unite && !vide ? '<small>' + U.esc(o.unite) + '</small>' : '') +
+        '</div>' +
+        jauge +
+        '<div class="sch-kpi-foot">' + (o.note ? o.note : '') + '</div>' +
+      '</div>';
+  }
+
+  function action(o) {
+    return '' +
+      '<button class="sch-todo-item" style="--todo-color:' + o.couleur + ';--todo-soft:' + o.couleur + '1f" onclick="navigate(\'' + o.page + '\')">' +
+        '<span class="sch-todo-ico"><i class="fas ' + o.icone + '"></i></span>' +
+        '<span class="sch-todo-txt"><strong>' + U.esc(o.titre) + '</strong><span>' + U.esc(o.detail) + '</span></span>' +
+        (o.compte != null ? '<span class="sch-todo-count">' + U.nombre(o.compte) + '</span>' : '<i class="fas fa-chevron-right" style="color:var(--text-secondary);font-size:.8rem;"></i>') +
+      '</button>';
+  }
+
+  function carteGraphique(o) {
+    const corps = o.vide
+      ? '<div class="sch-empty"><i class="fas ' + (o.icone || 'fa-chart-line') + '"></i>' +
+        '<strong>' + U.esc(o.videTitre || 'Aucune donnée') + '</strong>' +
+        '<p>' + U.esc(o.videTexte || '') + '</p>' +
+        (o.videPage ? '<button class="sch-btn sch-btn-sm sch-btn-primary" onclick="navigate(\'' + o.videPage + '\')">' + U.esc(o.videAction || 'Commencer') + '</button>' : '') +
+        '</div>'
+      : '<div class="sch-chart-box' + (o.haut ? ' tall' : '') + '"><canvas id="' + o.id + '"></canvas></div>' +
+        (o.legende || '');
+
+    return '' +
+      '<div class="sch-card sch-col-' + o.col + '">' +
+        '<div class="sch-card-head"><div>' +
+          '<h3 class="sch-card-title">' + U.esc(o.titre) + '</h3>' +
+          (o.sous ? '<p class="sch-card-sub">' + U.esc(o.sous) + '</p>' : '') +
+        '</div>' + (o.coin || '') + '</div>' +
+        corps +
+      '</div>';
+  }
+
+  function legende(items) {
+    return '<div class="sch-chart-legend">' + items.map(function (i) {
+      return '<span><i style="background:' + i.c + '"></i>' + U.esc(i.t) + '</span>';
+    }).join('') + '</div>';
+  }
+
+  function squelette() {
+    let k = '';
+    for (let i = 0; i < 10; i++) {
+      k += '<div class="sch-kpi"><div class="sch-skel sch-skel-line" style="width:55%"></div>' +
+           '<div class="sch-skel" style="height:26px;width:70%"></div>' +
+           '<div class="sch-skel sch-skel-line" style="width:40%"></div></div>';
+    }
+    return '<div class="sch-kpis">' + k + '</div>' +
+      '<div class="sch-charts" style="margin-top:32px;">' +
+      '<div class="sch-card sch-col-8"><div class="sch-skel" style="height:240px"></div></div>' +
+      '<div class="sch-card sch-col-4"><div class="sch-skel" style="height:240px"></div></div>' +
+      '</div>';
+  }
+
+  // ------------------------------------------------------------
+  // Page
+  // ------------------------------------------------------------
+
+  const SchoolDashboard = {
+    render: function (app) {
+      if (!estEcole()) { navigate('dashboard'); return; }
+
+      const p = State.profile || {};
+      const nom = p.schoolName || p.fullName || 'Mon établissement';
+      const logo = p.schoolLogo || p.photoURL || '';
+      const initiales = nom.trim().split(/\s+/).slice(0, 2).map(function (m) { return m[0]; }).join('').toUpperCase();
+      const sl = getSidebarLinks('school');
+
+      app.innerHTML = '' +
+        '<div class="layout-dashboard">' +
+          '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + sl + '</aside>' +
+          '<main class="main-content animate-fade"><div class="sch-page">' +
+            '<header class="sch-head">' +
+              '<div class="sch-head-id">' +
+                (logo ? '<img class="sch-logo" src="' + U.esc(logo) + '" alt="" />'
+                      : '<div class="sch-logo">' + U.esc(initiales || 'ÉC') + '</div>') +
+                '<div>' +
+                  '<h1>' + U.esc(nom) + '</h1>' +
+                  '<div class="sch-head-sub">' +
+                    '<span><i class="fas fa-calendar-days"></i> Année ' + U.esc(U.anneeScolaire()) + '</span>' +
+                    '<span>·</span><span id="schMaj">Chargement…</span>' +
+                  '</div>' +
+                '</div>' +
+              '</div>' +
+              '<div class="sch-head-actions">' +
+                '<button class="sch-btn" onclick="SchoolDashboard.actualiser()" title="Recharger les données">' +
+                  '<i class="fas fa-rotate"></i> Actualiser</button>' +
+                '<button class="sch-btn sch-btn-primary" onclick="navigate(\'school-students\')">' +
+                  '<i class="fas fa-user-plus"></i> Inscrire un élève</button>' +
+              '</div>' +
+            '</header>' +
+            '<div id="schCorps">' + squelette() + '</div>' +
+          '</div></main>' +
+        '</div>';
+
+      if (window.innerWidth <= 768) {
+        const b = document.getElementById('sbToggle');
+        if (b) b.style.display = 'inline-flex';
+      }
+      this.charger();
+    },
+
+    actualiser: function () {
+      SchoolData.invalider();
+      const c = document.getElementById('schCorps');
+      if (c) c.innerHTML = squelette();
+      this.charger();
+    },
+
+    charger: function () {
+      const self = this;
+      SchoolCharts.detruireTout();
+      SchoolData.charger().then(function (m) {
+        const c = document.getElementById('schCorps');
+        if (!c) return;
+        c.innerHTML = self._corps(m);
+        const maj = document.getElementById('schMaj');
+        if (maj) maj.textContent = 'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        // Le rendu des graphiques attend que le DOM soit peint, sinon les
+        // canvas ont une hauteur nulle.
+        requestAnimationFrame(function () { self._graphiques(m); });
+      }).catch(function (e) {
+        console.error('[École] tableau de bord :', e);
+        const c = document.getElementById('schCorps');
+        if (c) {
+          c.innerHTML = '<div class="sch-note warn"><i class="fas fa-triangle-exclamation"></i>' +
+            '<div><strong>Impossible de charger les données.</strong><br>' + U.esc((e && e.message) || e) +
+            ' <a onclick="SchoolDashboard.actualiser()">Réessayer</a></div></div>';
+        }
+      });
+    },
+
+    _corps: function (m) {
+      const cur = m.devise;
+      let html = '';
+
+      // --- Avertissement si des collections sont inaccessibles ---
+      if (m.erreurs && m.erreurs.length) {
+        html += '<div class="sch-note warn" style="margin-bottom:20px;"><i class="fas fa-triangle-exclamation"></i>' +
+          '<div><strong>Données partiellement indisponibles.</strong><br>' +
+          'Ces informations n\'ont pas pu être lues : ' + U.esc(m.erreurs.join(', ')) +
+          '. Les indicateurs concernés sont incomplets.</div></div>';
+      }
+
+      // --- Indicateurs ---
+      html += '<div class="sch-kpis">';
+      html += kpi({
+        label: 'Élèves', icone: 'fa-user-graduate', couleur: C.violet,
+        valeur: U.nombre(m.nbEleves), page: 'school-students',
+        note: m.nbClasses ? ('≈ ' + Math.round(m.nbEleves / m.nbClasses) + ' par classe') : ''
+      });
+      html += kpi({
+        label: 'Enseignants', icone: 'fa-chalkboard-user', couleur: C.teal,
+        valeur: U.nombre(m.nbEnseignants), page: 'school-teachers',
+        note: m.enseignantsInvites ? ('<span class="sch-kpi-delta down">' + m.enseignantsInvites + ' en attente</span>') : ''
+      });
+      html += kpi({
+        label: 'Classes', icone: 'fa-school', couleur: C.info,
+        valeur: U.nombre(m.nbClasses), page: 'school-classes'
+      });
+      html += kpi({
+        label: 'Salles', icone: 'fa-door-open', couleur: C.slate,
+        valeur: U.nombre(m.nbSalles), page: 'school-rooms',
+        note: m.sallesDeduites ? 'déduites des classes' : ''
+      });
+      html += kpi({
+        label: 'Taux de présence', icone: 'fa-user-check',
+        couleur: m.tauxPresence == null ? C.slate : (m.tauxPresence >= 90 ? C.ok : m.tauxPresence >= 75 ? C.warn : C.bad),
+        valeur: m.tauxPresence == null ? null : U.pourcent(m.tauxPresence), unite: '%',
+        jauge: m.tauxPresence, page: 'school-absences',
+        note: m.tauxPresence == null ? 'Suivi non démarré' : (U.nombre(m.nbAbsences) + ' absences sur ' + U.nombre(m.joursOuvres) + ' j. ouvrés')
+      });
+      html += kpi({
+        label: 'Moyenne générale', icone: 'fa-square-poll-vertical',
+        couleur: m.moyenneGenerale == null ? C.slate : (m.moyenneGenerale >= m.noteMax / 2 ? C.ok : C.warn),
+        valeur: m.moyenneGenerale == null ? null : U.pourcent(m.moyenneGenerale, 2),
+        unite: '/' + m.noteMax,
+        jauge: m.moyenneGenerale == null ? null : (m.moyenneGenerale / m.noteMax) * 100,
+        page: 'school-grades-results',
+        note: m.notesPlat.length ? (U.nombre(m.notesPlat.length) + ' notes validées') : 'Aucune note validée'
+      });
+      html += kpi({
+        label: 'Frais encaissés', icone: 'fa-money-bill-trend-up', couleur: C.ok,
+        valeur: U.montant(m.encaisse), unite: cur, page: 'school-payments',
+        note: 'Depuis septembre'
+      });
+      html += kpi({
+        label: 'Restant à payer', icone: 'fa-hand-holding-dollar',
+        couleur: m.reste == null ? C.slate : (m.reste > 0 ? C.warn : C.ok),
+        valeur: m.reste == null ? null : U.montant(m.reste), unite: m.reste == null ? '' : cur,
+        jauge: m.tauxRecouvrement, page: 'gestion-scolarites',
+        note: m.fraisConfigures
+          ? ('Recouvrement ' + U.pourcent(m.tauxRecouvrement, 0) + ' %')
+          : 'Barème non configuré'
+      });
+      html += kpi({
+        label: 'Examens à venir', icone: 'fa-file-pen', couleur: C.info,
+        valeur: U.nombre(m.examensAVenir), page: 'school-calendar',
+        note: m.brut.examens.length ? '' : 'Aucun examen planifié'
+      });
+      html += kpi({
+        label: 'Bulletins en attente', icone: 'fa-file-circle-check',
+        couleur: m.bulletinsEnAttente ? C.warn : C.slate,
+        valeur: U.nombre(m.bulletinsEnAttente), page: 'school-bulletins',
+        note: m.bulletinsPublies ? (U.nombre(m.bulletinsPublies) + ' publiés') : ''
+      });
+      html += '</div>';
+
+      // --- Actions prioritaires ---
+      const actions = [];
+      if (m.nbNotesAValider) {
+        actions.push({ titre: 'Notes à valider', detail: 'Transmises par les enseignants', compte: m.nbNotesAValider, icone: 'fa-pen-to-square', couleur: C.violet, page: 'school-grades-entry' });
+      }
+      if (m.bulletinsEnAttente) {
+        actions.push({ titre: 'Bulletins à vérifier', detail: 'Avant validation et publication', compte: m.bulletinsEnAttente, icone: 'fa-file-lines', couleur: C.warn, page: 'school-bulletins' });
+      }
+      if (m.enseignantsInvites) {
+        actions.push({ titre: 'Enseignants non activés', detail: "Invitation envoyée, compte pas encore créé", compte: m.enseignantsInvites, icone: 'fa-user-clock', couleur: C.info, page: 'school-teachers' });
+      }
+      if (!m.fraisConfigures) {
+        actions.push({ titre: 'Configurer les frais de scolarité', detail: 'Nécessaire pour calculer les impayés', icone: 'fa-money-check-dollar', couleur: C.bad, page: 'gestion-scolarites' });
+      }
+      if (!m.presenceSuivie) {
+        actions.push({ titre: 'Démarrer le suivi des présences', detail: 'Aucune absence enregistrée à ce jour', icone: 'fa-clipboard-user', couleur: C.teal, page: 'school-absences' });
+      }
+      if (!m.nbClasses) {
+        actions.push({ titre: 'Créer vos classes', detail: 'Point de départ de toute la scolarité', icone: 'fa-school', couleur: C.violet, page: 'school-classes' });
+      }
+      if (actions.length) {
+        html += '<div class="sch-sec"><h2>À traiter</h2><p>Ce qui attend une décision de votre part</p></div>';
+        html += '<div class="sch-todo">' + actions.map(action).join('') + '</div>';
+      }
+
+      // --- Graphiques ---
+      html += '<div class="sch-sec"><h2>Vue d\'ensemble</h2><p>Évolution de l\'établissement sur les 12 derniers mois</p></div>';
+      html += '<div class="sch-charts">';
+
+      html += carteGraphique({
+        id: 'schGrInscriptions', col: 8, titre: 'Évolution des inscriptions',
+        sous: 'Nouvelles inscriptions et effectif total',
+        vide: m.series.inscriptions.vide, icone: 'fa-user-plus',
+        videTitre: 'Aucun élève inscrit',
+        videTexte: "Inscrivez vos premiers élèves pour suivre l'évolution des effectifs.",
+        videPage: 'school-students', videAction: 'Inscrire un élève',
+        legende: legende([{ c: C.violet, t: 'Effectif total' }, { c: C.teal, t: 'Nouvelles inscriptions' }])
+      });
+
+      html += carteGraphique({
+        id: 'schGrRecouvrement', col: 4, titre: 'Frais payés / impayés',
+        sous: m.fraisConfigures ? ('Sur ' + U.montant(m.attendu) + ' ' + cur + ' attendus') : 'Barème requis',
+        vide: !m.series.recouvrement.disponible, icone: 'fa-money-check-dollar',
+        videTitre: 'Barème non configuré',
+        videTexte: "Définissez le montant annuel de scolarité pour visualiser le taux de recouvrement.",
+        videPage: 'gestion-scolarites', videAction: 'Configurer',
+        legende: legende([{ c: C.ok, t: 'Encaissé' }, { c: C.warn, t: 'Restant dû' }])
+      });
+
+      html += carteGraphique({
+        id: 'schGrPaiements', col: 6, titre: 'Évolution des paiements',
+        sous: 'Montants encaissés par mois (' + cur + ')',
+        vide: m.series.paiements.vide, icone: 'fa-receipt',
+        videTitre: 'Aucun paiement enregistré',
+        videTexte: 'Les paiements saisis apparaîtront ici mois par mois.',
+        videPage: 'school-payments', videAction: 'Enregistrer un paiement'
+      });
+
+      html += carteGraphique({
+        id: 'schGrPresence', col: 6, titre: 'Présence des élèves',
+        sous: 'Taux mensuel, déduit des absences enregistrées',
+        vide: m.series.presence.vide, icone: 'fa-clipboard-user',
+        videTitre: 'Suivi des présences non démarré',
+        videTexte: "Aucune absence n'a encore été enregistrée : le taux de présence ne peut pas être calculé.",
+        videPage: 'school-absences', videAction: 'Enregistrer une absence'
+      });
+
+      html += carteGraphique({
+        id: 'schGrClasses', col: 6, titre: 'Performances par classe',
+        sous: 'Moyenne des notes validées, sur ' + m.noteMax,
+        vide: m.series.parClasse.vide, icone: 'fa-ranking-star',
+        videTitre: 'Pas encore de notes validées',
+        videTexte: 'Les moyennes par classe apparaîtront après validation des notes des enseignants.',
+        videPage: 'school-grades-entry', videAction: 'Voir les notes'
+      });
+
+      html += carteGraphique({
+        id: 'schGrMatieres', col: 6, titre: 'Performances par matière',
+        sous: 'Moyenne des notes validées, sur ' + m.noteMax,
+        vide: m.series.parMatiere.vide, icone: 'fa-book-open',
+        videTitre: 'Pas encore de notes validées',
+        videTexte: 'Les moyennes par matière apparaîtront après validation des notes.',
+        videPage: 'school-grades-config', videAction: 'Configurer les matières'
+      });
+
+      html += carteGraphique({
+        id: 'schGrResultats', col: 12, titre: 'Évolution des résultats',
+        sous: "Moyenne de l'établissement par période de notation",
+        vide: m.series.resultats.vide, icone: 'fa-chart-line',
+        videTitre: 'Aucun résultat consolidé',
+        videTexte: 'Une fois plusieurs périodes notées, la progression de l\'établissement apparaîtra ici.',
+        videPage: 'school-grades-results', videAction: 'Voir les résultats'
+      });
+
+      html += '</div>';
+
+      if (!SchoolCharts.disponible()) {
+        html += '<div class="sch-note" style="margin-top:20px;"><i class="fas fa-circle-info"></i>' +
+          '<div>La bibliothèque de graphiques n\'a pas pu être chargée (connexion ou blocage réseau). ' +
+          'Les indicateurs chiffrés ci-dessus restent exacts.</div></div>';
+      }
+
+      return html;
+    },
+
+    _graphiques: function (m) {
+      if (!SchoolCharts.disponible()) return;
+      const s = m.series;
+      const cur = m.devise;
+
+      // 1. Inscriptions : effectif cumulé (aire) + nouvelles (barres).
+      if (!s.inscriptions.vide) {
+        const el = document.getElementById('schGrInscriptions');
+        const ctx = el && el.getContext('2d');
+        SchoolCharts.dessiner('schGrInscriptions', 'bar', {
+          labels: s.inscriptions.labels,
+          datasets: [
+            {
+              type: 'line', label: 'Effectif total', data: s.inscriptions.cumul,
+              borderColor: C.violet, backgroundColor: ctx ? SchoolCharts._degrade(ctx, C.violet) : C.violet + '22',
+              borderWidth: 2.5, fill: true, tension: .35,
+              pointRadius: 0, pointHoverRadius: 5, pointBackgroundColor: C.violet, order: 0
+            },
+            {
+              type: 'bar', label: 'Nouvelles inscriptions', data: s.inscriptions.nouveaux,
+              backgroundColor: C.teal + 'cc', borderRadius: 4, barThickness: 'flex',
+              maxBarThickness: 22, order: 1
+            }
+          ]
+        });
+      }
+
+      // 2. Recouvrement.
+      if (s.recouvrement.disponible) {
+        SchoolCharts.dessiner('schGrRecouvrement', 'doughnut', {
+          labels: ['Encaissé', 'Restant dû'],
+          datasets: [{
+            data: [Math.max(0, s.recouvrement.paye), Math.max(0, s.recouvrement.reste)],
+            backgroundColor: [C.ok, C.warn], borderWidth: 0, hoverOffset: 6
+          }]
+        }, {
+          cutout: '68%',
+          scales: { x: { display: false }, y: { display: false } },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function (c) { return c.label + ' : ' + U.montant(c.parsed) + ' ' + cur; }
+              }
+            }
+          }
+        });
+      }
+
+      // 3. Paiements mensuels.
+      if (!s.paiements.vide) {
+        SchoolCharts.dessiner('schGrPaiements', 'bar', {
+          labels: s.paiements.labels,
+          datasets: [{
+            label: 'Encaissé', data: s.paiements.valeurs,
+            backgroundColor: C.ok + 'cc', borderRadius: 5, maxBarThickness: 30
+          }]
+        }, {
+          scales: { y: { ticks: { callback: function (v) { return U.montant(v); } } } },
+          plugins: {
+            tooltip: { callbacks: { label: function (c) { return U.montant(c.parsed.y) + ' ' + cur; } } }
+          }
+        });
+      }
+
+      // 4. Présence.
+      if (!s.presence.vide) {
+        const el = document.getElementById('schGrPresence');
+        const ctx = el && el.getContext('2d');
+        SchoolCharts.dessiner('schGrPresence', 'line', {
+          labels: s.presence.labels,
+          datasets: [{
+            label: 'Présence', data: s.presence.valeurs,
+            borderColor: C.teal, backgroundColor: ctx ? SchoolCharts._degrade(ctx, C.teal) : C.teal + '22',
+            borderWidth: 2.5, fill: true, tension: .35, spanGaps: true,
+            pointRadius: 0, pointHoverRadius: 5, pointBackgroundColor: C.teal
+          }]
+        }, {
+          scales: {
+            y: {
+              min: 0, max: 100,
+              ticks: { callback: function (v) { return v + ' %'; } }
+            }
+          },
+          plugins: {
+            tooltip: { callbacks: { label: function (c) { return U.pourcent(c.parsed.y) + ' % de présence'; } } }
+          }
+        });
+      }
+
+      // 5. Performances par classe (barres horizontales).
+      if (!s.parClasse.vide) {
+        SchoolCharts.dessiner('schGrClasses', 'bar', {
+          labels: s.parClasse.labels,
+          datasets: [{
+            label: 'Moyenne', data: s.parClasse.valeurs,
+            backgroundColor: s.parClasse.valeurs.map(function (v) {
+              return v >= m.noteMax / 2 ? C.ok + 'cc' : C.warn + 'cc';
+            }),
+            borderRadius: 5, maxBarThickness: 18
+          }]
+        }, {
+          indexAxis: 'y',
+          scales: {
+            x: { beginAtZero: true, max: m.noteMax, grid: { display: true } },
+            y: { grid: { display: false } }
+          },
+          plugins: {
+            tooltip: { callbacks: { label: function (c) { return U.pourcent(c.parsed.x, 2) + ' / ' + m.noteMax; } } }
+          }
+        });
+      }
+
+      // 6. Performances par matière (radar si assez d'axes, barres sinon).
+      if (!s.parMatiere.vide) {
+        const assez = s.parMatiere.labels.length >= 3;
+        if (assez) {
+          const t = SchoolCharts._theme();
+          SchoolCharts.dessiner('schGrMatieres', 'radar', {
+            labels: s.parMatiere.labels,
+            datasets: [{
+              label: 'Moyenne', data: s.parMatiere.valeurs,
+              borderColor: C.violet, backgroundColor: C.violet + '33',
+              borderWidth: 2, pointBackgroundColor: C.violet, pointRadius: 3
+            }]
+          }, {
+            scales: {
+              x: { display: false }, y: { display: false },
+              r: {
+                min: 0, max: m.noteMax,
+                grid: { color: t.grille }, angleLines: { color: t.grille },
+                pointLabels: { color: t.texte, font: { size: 11 } },
+                ticks: { display: false }
+              }
+            }
+          });
+        } else {
+          SchoolCharts.dessiner('schGrMatieres', 'bar', {
+            labels: s.parMatiere.labels,
+            datasets: [{
+              label: 'Moyenne', data: s.parMatiere.valeurs,
+              backgroundColor: C.violet + 'cc', borderRadius: 5, maxBarThickness: 40
+            }]
+          }, { scales: { y: { max: m.noteMax } } });
+        }
+      }
+
+      // 7. Évolution des résultats.
+      if (!s.resultats.vide) {
+        const el = document.getElementById('schGrResultats');
+        const ctx = el && el.getContext('2d');
+        SchoolCharts.dessiner('schGrResultats', 'line', {
+          labels: s.resultats.labels,
+          datasets: [{
+            label: 'Moyenne générale', data: s.resultats.valeurs,
+            borderColor: C.violet, backgroundColor: ctx ? SchoolCharts._degrade(ctx, C.violet) : C.violet + '22',
+            borderWidth: 3, fill: true, tension: .3,
+            pointRadius: 4, pointHoverRadius: 7, pointBackgroundColor: C.violet,
+            pointBorderColor: '#fff', pointBorderWidth: 2
+          }]
+        }, {
+          scales: { y: { min: 0, max: m.noteMax } },
+          plugins: {
+            tooltip: { callbacks: { label: function (c) { return U.pourcent(c.parsed.y, 2) + ' / ' + m.noteMax; } } }
+          }
+        });
+      }
+    }
+  };
+
+  window.SchoolDashboard = SchoolDashboard;
+
+  // ------------------------------------------------------------
+  // Branchement sur le routeur existant
+  // ------------------------------------------------------------
+
+  // renderPage reconstruit sa table de pages à chaque navigation en lisant
+  // les fonctions globales : réassigner suffit à prendre la main.
+  const _dashboardOrigine = window.renderDashboard;
+  window.renderDashboard = function (app) {
+    if (estEcole()) {
+      try { return SchoolDashboard.render(app); }
+      catch (e) {
+        console.error('[École] tableau de bord indisponible, retour à l\'ancienne version :', e);
+      }
+    }
+    return _dashboardOrigine.apply(this, arguments);
+  };
+
+  // getSchoolDash reste appelée par d'autres écrans : on la neutralise
+  // proprement plutôt que de la laisser produire l'ancienne mise en page.
+  window.getSchoolDash = function () {
+    return '<div class="sch-note"><i class="fas fa-circle-info"></i>' +
+      '<div>Le tableau de bord de l\'établissement a été refondu. ' +
+      '<a onclick="navigate(\'dashboard\')">L\'ouvrir</a></div></div>';
+  };
+})();
+
+// ============================================================
+// 🚪 NEOCLASS ÉCOLE — SALLES
+// Les salles n'existaient nulle part en base : l'indicateur « Nombre de
+// salles » n'aurait jamais pu afficher autre chose que zéro. Cette page
+// crée la collection schools/{id}/rooms et la rend gérable.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  let _salles = [];
+  let _classes = [];
+  let _filtre = '';
+
+  function estEcole() {
+    return typeof State !== 'undefined' && State.profile && State.profile.role === 'school';
+  }
+  function col() {
+    return db.collection('schools').doc(State.user.uid).collection('rooms');
+  }
+
+  const TYPES = [
+    { v: 'classe', t: 'Salle de classe' },
+    { v: 'labo', t: 'Laboratoire' },
+    { v: 'informatique', t: 'Salle informatique' },
+    { v: 'amphi', t: 'Amphithéâtre' },
+    { v: 'bibliotheque', t: 'Bibliothèque' },
+    { v: 'sport', t: 'Salle de sport' },
+    { v: 'autre', t: 'Autre' }
+  ];
+  function libelleType(v) {
+    const t = TYPES.filter(function (x) { return x.v === v; })[0];
+    return t ? t.t : 'Autre';
+  }
+
+  function render(app) {
+    if (!estEcole()) { navigate('dashboard'); return; }
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks('school') + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-door-open"></i></div>' +
+              '<div><h1>Salles</h1>' +
+              '<div class="sch-head-sub"><span id="schSallesRes">Chargement…</span></div></div>' +
+            '</div>' +
+            '<div class="sch-head-actions">' +
+              '<button class="sch-btn sch-btn-primary" onclick="SchoolRooms.ouvrirFormulaire()">' +
+                '<i class="fas fa-plus"></i> Ajouter une salle</button>' +
+            '</div>' +
+          '</header>' +
+          '<div class="sch-toolbar">' +
+            '<div class="sch-search"><i class="fas fa-magnifying-glass"></i>' +
+              '<input type="search" placeholder="Rechercher une salle…" oninput="SchoolRooms.filtrer(this.value)" />' +
+            '</div>' +
+          '</div>' +
+          '<div id="schSallesListe"><div class="sch-card"><div class="sch-skel" style="height:120px"></div></div></div>' +
+        '</div></main>' +
+      '</div>';
+
+    charger();
+  }
+
+  function charger() {
+    Promise.all([
+      col().get().catch(function (e) { console.warn('[École] salles :', e.code || e.message); return { docs: [] }; }),
+      db.collection('classes').where('schoolId', '==', State.user.uid).get()
+        .catch(function () { return { docs: [] }; })
+    ]).then(function (r) {
+      _salles = r[0].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _classes = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _salles.sort(function (a, b) { return String(a.name || '').localeCompare(String(b.name || ''), 'fr'); });
+      afficher();
+    });
+  }
+
+  function filtrees() {
+    if (!_filtre) return _salles;
+    const q = _filtre.toLowerCase();
+    return _salles.filter(function (s) {
+      return [s.name, s.building, libelleType(s.type)].join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  function afficher() {
+    const liste = filtrees();
+    const res = document.getElementById('schSallesRes');
+    if (res) {
+      const total = _salles.reduce(function (a, s) { return a + (parseInt(s.capacity, 10) || 0); }, 0);
+      res.textContent = _salles.length
+        ? (_salles.length + ' salle' + (_salles.length > 1 ? 's' : '') + (total ? ' · ' + total + ' places au total' : ''))
+        : 'Aucune salle enregistrée';
+    }
+
+    const el = document.getElementById('schSallesListe');
+    if (!el) return;
+
+    if (!liste.length) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-door-closed"></i>' +
+        '<strong>' + (_filtre ? 'Aucune salle ne correspond' : 'Aucune salle enregistrée') + '</strong>' +
+        '<p>' + (_filtre
+          ? 'Essayez un autre terme de recherche.'
+          : 'Déclarez vos salles pour pouvoir y affecter des classes et des enseignants.') + '</p>' +
+        (_filtre ? '' : '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="SchoolRooms.ouvrirFormulaire()"><i class="fas fa-plus"></i> Ajouter une salle</button>') +
+        '</div></div>';
+      return;
+    }
+
+    let html = '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+      '<th>Salle</th><th>Type</th><th>Bâtiment</th><th class="num">Capacité</th><th>Classe affectée</th><th></th>' +
+      '</tr></thead><tbody>';
+
+    liste.forEach(function (s) {
+      const classe = _classes.filter(function (c) { return c.id === s.classId; })[0];
+      html += '<tr>' +
+        '<td><strong>' + U.esc(s.name || '—') + '</strong></td>' +
+        '<td><span class="sch-chip sch-chip-info">' + U.esc(libelleType(s.type)) + '</span></td>' +
+        '<td>' + U.esc(s.building || '—') + '</td>' +
+        '<td class="num">' + (s.capacity ? U.esc(s.capacity) : '—') + '</td>' +
+        '<td>' + (classe
+          ? '<span class="sch-chip sch-chip-ok">' + U.esc(classe.name) + '</span>'
+          : '<span class="sch-chip sch-chip-mute">Libre</span>') + '</td>' +
+        '<td style="text-align:right;white-space:nowrap;">' +
+          '<button class="sch-btn sch-btn-sm sch-btn-ghost" title="Modifier" onclick="SchoolRooms.ouvrirFormulaire(\'' + s.id + '\')"><i class="fas fa-pen"></i></button>' +
+          '<button class="sch-btn sch-btn-sm sch-btn-ghost" title="Supprimer" onclick="SchoolRooms.supprimer(\'' + s.id + '\')"><i class="fas fa-trash"></i></button>' +
+        '</td></tr>';
+    });
+
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  }
+
+  function ouvrirFormulaire(id) {
+    const s = id ? _salles.filter(function (x) { return x.id === id; })[0] : null;
+    if (id && !s) { showToast('Salle introuvable', 'error'); return; }
+
+    const optionsType = TYPES.map(function (t) {
+      return '<option value="' + t.v + '"' + (s && s.type === t.v ? ' selected' : '') + '>' + t.t + '</option>';
+    }).join('');
+
+    const optionsClasse = '<option value="">— Aucune —</option>' + _classes.map(function (c) {
+      return '<option value="' + c.id + '"' + (s && s.classId === c.id ? ' selected' : '') + '>' + U.esc(c.name) + '</option>';
+    }).join('');
+
+    openModal('' +
+      '<h3 style="margin-bottom:18px;">' + (s ? 'Modifier la salle' : 'Nouvelle salle') + '</h3>' +
+      '<div class="form-group"><label>Nom de la salle *</label>' +
+        '<input class="form-input" id="schRoomName" placeholder="Salle A, Labo 2…" value="' + U.esc(s ? s.name : '') + '" /></div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Type</label><select class="form-input" id="schRoomType">' + optionsType + '</select></div>' +
+        '<div class="form-group"><label>Capacité</label>' +
+          '<input class="form-input" type="number" min="1" id="schRoomCap" value="' + U.esc(s && s.capacity ? s.capacity : '') + '" /></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Bâtiment</label>' +
+          '<input class="form-input" id="schRoomBuilding" value="' + U.esc(s ? s.building : '') + '" /></div>' +
+        '<div class="form-group"><label>Classe affectée</label><select class="form-input" id="schRoomClass">' + optionsClasse + '</select></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:20px;">' +
+        '<button class="sch-btn sch-btn-primary" style="flex:1" onclick="SchoolRooms.enregistrer(' + (s ? "'" + s.id + "'" : 'null') + ')">' +
+          '<i class="fas fa-check"></i> Enregistrer</button>' +
+        '<button class="sch-btn" onclick="closeModal()">Annuler</button>' +
+      '</div>');
+  }
+
+  function enregistrer(id) {
+    const nom = (document.getElementById('schRoomName').value || '').trim();
+    if (!nom) { showToast('Le nom de la salle est obligatoire', 'error'); return; }
+
+    const data = {
+      name: nom,
+      type: document.getElementById('schRoomType').value,
+      capacity: parseInt(document.getElementById('schRoomCap').value, 10) || null,
+      building: (document.getElementById('schRoomBuilding').value || '').trim(),
+      classId: document.getElementById('schRoomClass').value || '',
+      schoolId: State.user.uid,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    const op = id
+      ? col().doc(id).update(data)
+      : col().add(Object.assign({ createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data));
+
+    op.then(function () {
+      showToast(id ? 'Salle modifiée' : 'Salle ajoutée', 'success');
+      closeModal();
+      SchoolData.invalider();
+      charger();
+    }).catch(function (e) {
+      console.error('[École] enregistrement salle :', e);
+      showToast('Erreur : ' + (e.message || e), 'error');
+    });
+  }
+
+  function supprimer(id) {
+    const s = _salles.filter(function (x) { return x.id === id; })[0];
+    if (!s) return;
+    openModal('' +
+      '<h3>Supprimer la salle ?</h3>' +
+      '<p style="color:var(--text-secondary);margin:12px 0 20px;">' +
+        '« ' + U.esc(s.name) + ' » sera définitivement supprimée. Les classes qui y sont affectées ne seront pas supprimées.' +
+      '</p>' +
+      '<div style="display:flex;gap:10px;">' +
+        '<button class="sch-btn sch-btn-danger" style="flex:1" onclick="SchoolRooms.confirmerSuppression(\'' + id + '\')">Supprimer</button>' +
+        '<button class="sch-btn" onclick="closeModal()">Annuler</button>' +
+      '</div>');
+  }
+
+  function confirmerSuppression(id) {
+    col().doc(id).delete().then(function () {
+      showToast('Salle supprimée', 'success');
+      closeModal();
+      SchoolData.invalider();
+      charger();
+    }).catch(function (e) {
+      showToast('Erreur : ' + (e.message || e), 'error');
+    });
+  }
+
+  window.SchoolRooms = {
+    render: render,
+    ouvrirFormulaire: ouvrirFormulaire,
+    enregistrer: enregistrer,
+    supprimer: supprimer,
+    confirmerSuppression: confirmerSuppression,
+    filtrer: function (q) { _filtre = (q || '').trim(); afficher(); }
+  };
+  window.renderSchoolRooms = render;
+
+  // Enregistrement dans le routeur : renderPage lit les fonctions globales,
+  // mais la table `pages` est construite à l'intérieur de la fonction. On
+  // passe donc par navigate, comme le fait déjà neoclass-school-v2.js.
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      if (typeof pages !== 'undefined') pages['school-rooms'] = render;
+      const origine = window.navigate;
+      if (!origine || origine.__schoolRoomsPatch) return;
+      const patch = function (page, params) {
+        if (page === 'school-rooms') {
+          State.currentPage = 'school-rooms';
+          const app = document.getElementById('app');
+          if (app) { render(app); window.scrollTo(0, 0); }
+          return;
+        }
+        return origine.apply(this, arguments);
+      };
+      patch.__schoolRoomsPatch = true;
+      window.navigate = patch;
+    }, 1200);
+  });
+})();
+
+</script>
 </body>
 </html>
 

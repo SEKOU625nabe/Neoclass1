@@ -527,6 +527,18 @@ service cloud.firestore {
     match /events/{id}         { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
     match /schoolMeetings/{id} { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
     match /schoolMetrics/{id}  { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
+
+    // --- Collections introduites par la refonte Ecole ---
+    // Sans ces regles, le refus par defaut empeche le tableau de bord de
+    // lire ces collections et les indicateurs restent vides.
+
+    // Examens : consultables par toute la communaute de l ecole,
+    // modifiables par l etablissement et les enseignants.
+    match /exams/{id}     { allow read: if isAuth(); allow create: if willOwnSchool() || isEducator(); allow update, delete: if ownsSchool() || isEducator(); }
+
+    // Bulletins : l eleve concerne, son ecole et le corps enseignant.
+    // Seul l etablissement publie ; l eleve et le parent sont en lecture.
+    match /bulletins/{id} { allow read: if isAuth() && (owns("studentId") || ownsSchool() || isEducator() || isParent()); allow create: if willOwnSchool() || isEducator(); allow update, delete: if ownsSchool() || isAdmin(); }
     match /finance_team/{id}   { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
 
     // ========================================================
