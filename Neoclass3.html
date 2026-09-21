@@ -11059,7 +11059,13 @@ Réponds en JSON:
         // thématiques ; les 4 entrées qui renvoyaient à l'accueil
         // (Flashcards, Prédicteur de notes, Objectifs, Aventure) sont
         // retirées : aucune page ne leur correspondait.
-        directLinks.push({icon:'🎓',label:'Ma scolarité',page:'ma-scolarite'});
+        // « Ma scolarité » n'a de sens que pour un élève rattaché à un
+        // établissement : c'est l'école qui y dépose notes, bulletins et
+        // absences. Le rôle ne suffit pas comme test — on peut s'inscrire
+        // seul en choisissant « Élève » sans appartenir à aucune école.
+        if(State.profile && State.profile.schoolId){
+          directLinks.push({icon:'🎓',label:'Ma scolarité',page:'ma-scolarite'});
+        }
         groups = [
           { id:'learn', icon:'📚', label:'Apprendre', items:[
             {icon:'📚',label:'Mes cours',page:'cours-pro'},
@@ -12334,7 +12340,7 @@ Réponds en JSON:
         <!-- ⚡ ACCÈS RAPIDES -->
         <!-- Ma scolarite en premier : notes, bulletins, absences -->
         <div class="nc-quick">
-          ${ncQuickTile('fa-graduation-cap','Ma scolarité','nc-bg-violet',"navigate('ma-scolarite')")}
+          ${p.schoolId ? ncQuickTile('fa-graduation-cap','Ma scolarité','nc-bg-violet',"navigate('ma-scolarite')") : ''}
           ${ncQuickTile('fa-book-open','Mes cours','nc-bg-indigo',`navigate('${coursesPage}')`)}
           ${ncQuickTile('fa-pen-to-square','Exercices','nc-bg-green',"navigate('quizzes')")}
           ${ncQuickTile('fa-calendar-days','Emploi du temps','nc-bg-teal',"navigate('timetable')")}
@@ -45458,6 +45464,12 @@ function handleDocumentUpload(e) {
 
     const p = State.profile || {};
 
+    // Un élève indépendant n'a pas d'établissement : ni notes saisies par
+    // des professeurs, ni bulletin, ni relevé d'absences. Plutôt qu'une
+    // page vide, on explique ce qui manque et on renvoie vers ce qui le
+    // concerne vraiment.
+    if (!p.schoolId) { rendreSansEcole(app, p); return; }
+
     app.innerHTML = '' +
       '<div class="layout-dashboard">' +
         '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(p.role) + '</aside>' +
@@ -45489,6 +45501,45 @@ function handleDocumentUpload(e) {
       '</div>';
 
     charger();
+  }
+
+  // ------------------------------------------------------------
+  // Un élève indépendant n'a pas d'établissement : ni notes saisies par des
+  // professeurs, ni bulletin, ni relevé d'absences. Plutôt qu'une page vide,
+  // on explique ce qui manque et on renvoie vers ce qui le concerne.
+  function rendreSansEcole(app, p) {
+    const indep = p.role === 'indep_student';
+    const explication = indep
+      ? "En tant qu'élève indépendant, votre progression personnelle se trouve dans " +
+        "« Ma progression » : vos compétences, vos résultats de quiz et vos certificats."
+      : "Si votre école utilise NeoClass, demandez-lui de vous inscrire : votre compte " +
+        "sera alors rattaché et cet espace se remplira automatiquement.";
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(p.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-graduation-cap"></i></div>' +
+              '<div><h1>Ma scolarité</h1>' +
+              '<div class="sch-head-sub"><span>Espace réservé aux élèves inscrits par un établissement</span></div>' +
+            '</div></div>' +
+          '</header>' +
+          '<div class="sch-card"><div class="sch-empty">' +
+            '<i class="fas fa-school"></i>' +
+            '<strong>Vous n&rsquo;êtes rattaché à aucun établissement</strong>' +
+            '<p>Cet espace affiche les notes saisies par vos professeurs, les bulletins publiés ' +
+              'par votre école et vos absences. Il se remplit uniquement si un établissement ' +
+              'vous a inscrit sur NeoClass.<br><br>' + U.esc(explication) + '</p>' +
+            '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px;">' +
+              '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="navigate(&quot;competences&quot;)">' +
+                '<i class="fas fa-chart-line"></i> Ma progression</button>' +
+              '<button class="sch-btn sch-btn-sm" onclick="navigate(&quot;my-certificates&quot;)">' +
+                '<i class="fas fa-certificate"></i> Mes certificats</button>' +
+            '</div>' +
+          '</div></div>' +
+        '</div></main>' +
+      '</div>';
   }
 
   // ------------------------------------------------------------
