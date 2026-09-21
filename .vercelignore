@@ -12,14 +12,16 @@
 # Ils restent utilisables en local avec `npm start`.
 # ============================================================
 
-# --- Serveur Express (usage local uniquement) ---
-server.js
+# --- Outils de developpement non servis ---
 ai.js
-academic-structure.js
-subscription-system.js
-security-middleware.js
-course-publication.js
 validate-netlify.js
+
+# NOTE : server.js et ses modules (academic-structure, subscription-system,
+# security-middleware, course-publication) sont VOLONTAIREMENT conserves.
+# Les exclure faisait echouer la build : package.json les designait encore
+# comme point d entree. Ils sont inoffensifs — server.js exporte desormais
+# l app Express, donc si Vercel le construit malgre tout, le site fonctionne
+# au lieu de renvoyer un 500.
 
 # --- Dépendances et artefacts de build ---
 node_modules
