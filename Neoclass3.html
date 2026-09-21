@@ -3971,6 +3971,100 @@ body.has-school-banner .school-banner {
       .sch-head-actions .sch-select{flex:1;}
     }
   </style>
+  <style id="sch-bulletin-style">
+    /* ---------- Bulletin scolaire ---------- */
+    /* Le document garde un fond blanc et un texte noir dans tous les
+       thèmes : c'est une pièce officielle destinée à l'impression. */
+    .sch-bulletin{
+      background:#fff;color:#111;
+      border:1px solid #d4d4d8;border-radius:10px;
+      padding:24px;font-size:12px;line-height:1.45;
+      font-family:'Inter',system-ui,sans-serif;
+      box-shadow:0 2px 12px rgba(0,0,0,.08);
+    }
+    .sch-bul-tete{display:flex;align-items:center;gap:16px;padding-bottom:14px;border-bottom:2px solid #111;}
+    .sch-bul-logo{width:62px;height:62px;flex:0 0 62px;object-fit:contain;border-radius:8px;}
+    .sch-bul-logo-vide{
+      display:flex;align-items:center;justify-content:center;
+      background:#111;color:#fff;font-size:1.6rem;font-weight:800;
+    }
+    .sch-bul-titre{flex:1;text-align:center;}
+    .sch-bul-pays{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;}
+    .sch-bul-devise{font-size:9.5px;font-style:italic;color:#52525b;margin-top:1px;}
+    .sch-bul-ecole{font-size:15px;font-weight:800;margin-top:6px;text-transform:uppercase;letter-spacing:.02em;}
+    .sch-bul-adresse{font-size:10px;color:#52525b;margin-top:2px;}
+
+    .sch-bul-bandeau{
+      background:#111;color:#fff;text-align:center;
+      padding:7px 10px;margin:14px 0;border-radius:4px;
+      font-size:11.5px;font-weight:700;letter-spacing:.03em;
+    }
+
+    .sch-bul-ident{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+      margin-bottom:14px;
+    }
+    .sch-bul-ident>div{border:1px solid #e4e4e7;border-radius:6px;padding:7px 10px;}
+    .sch-bul-ident span{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#71717a;}
+    .sch-bul-ident strong{font-size:12.5px;font-weight:700;}
+
+    table.sch-bul-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+    table.sch-bul-table th{
+      background:#f4f4f5;border:1px solid #d4d4d8;padding:6px 8px;
+      font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;text-align:left;font-weight:700;
+    }
+    table.sch-bul-table td{border:1px solid #e4e4e7;padding:6px 8px;}
+    table.sch-bul-table .c{text-align:center;font-variant-numeric:tabular-nums;width:72px;}
+    table.sch-bul-table .a{color:#3f3f46;font-size:10.5px;}
+    table.sch-bul-table tfoot td{background:#fafafa;font-weight:700;}
+
+    .sch-bul-synthese{display:flex;gap:12px;margin-top:14px;align-items:stretch;}
+    .sch-bul-moy{
+      flex:0 0 190px;border:2px solid #111;border-radius:8px;
+      padding:10px 14px;display:flex;flex-direction:column;justify-content:center;
+    }
+    .sch-bul-moy span{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#71717a;}
+    .sch-bul-moy strong{font-size:27px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;}
+    .sch-bul-moy small{font-size:13px;color:#71717a;font-weight:700;}
+    .sch-bul-infos{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+    .sch-bul-infos>div{border:1px solid #e4e4e7;border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;}
+    .sch-bul-infos span{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#71717a;}
+    .sch-bul-infos strong{font-size:12.5px;font-weight:700;margin-top:2px;}
+
+    .sch-bul-appreciation{margin-top:14px;}
+    .sch-bul-appreciation>span{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#71717a;}
+    .sch-bul-zone{
+      border:1px solid #e4e4e7;border-radius:6px;padding:9px 11px;margin-top:4px;
+      min-height:42px;font-size:11.5px;outline:none;
+    }
+    .sch-bul-zone:focus{border-color:#111;}
+
+    .sch-bul-signatures{display:flex;gap:40px;margin-top:22px;}
+    .sch-bul-signatures>div{flex:1;text-align:center;}
+    .sch-bul-signatures span{font-size:10px;color:#52525b;}
+    .sch-bul-signatures i{display:block;border-bottom:1px solid #a1a1aa;margin-top:34px;}
+
+    /* ---------- Impression ---------- */
+    @media print{
+      body.sch-impression *{visibility:hidden !important;}
+      body.sch-impression #schBulletinImprimable,
+      body.sch-impression #schBulletinImprimable *{visibility:visible !important;}
+      body.sch-impression #schBulletinImprimable{
+        position:absolute;left:0;top:0;width:100%;
+        border:none;border-radius:0;box-shadow:none;padding:0;
+      }
+      body.sch-impression .sch-bul-zone{border-color:#d4d4d8;}
+      @page{size:A4 portrait;margin:14mm;}
+    }
+
+    @media(max-width:860px){
+      .sch-bul-ident{grid-template-columns:1fr;}
+      .sch-bul-synthese{flex-direction:column;}
+      .sch-bul-moy{flex:none;}
+      .sch-bul-infos{grid-template-columns:1fr 1fr;}
+    }
+  </style>
+
 
 
   <script>
@@ -11087,6 +11181,7 @@ Réponds en JSON:
             {icon:'📝',label:'Notes à valider',page:'school-grades-entry'},
             {icon:'📊',label:'Résultats & classements',page:'school-grades-results'},
             {icon:'📄',label:'Bulletins',page:'school-bulletins'},
+            {icon:'👁️',label:'Aperçu du bulletin',page:'school-bulletin-preview'},
             {icon:'📋',label:'Présences',page:'school-absences'},
             {icon:'⚙️',label:'Règles de notation',page:'school-grades-config'},
             {icon:'🎨',label:'Modèle de bulletin',page:'school-bulletin-config'}
@@ -11414,7 +11509,12 @@ Réponds en JSON:
         'admin-classrooms':renderAdminClassrooms,
         'admin-courses':renderAdminProCourses,
       };
-      try{(pages[page]||renderHome)(app);}
+      // Point d extension du routeur : les modules charges apres ce
+      // script (Ecole, Finances...) enregistrent leurs pages dans
+      // window.NC_PAGES au lieu de detourner navigate(), ce qui laissait
+      // certaines pages injoignables (school-directors notamment).
+      var _ncExtra = (window.NC_PAGES && window.NC_PAGES[page]) || null;
+      try{(_ncExtra||pages[page]||renderHome)(app);}
       catch(err){console.error(err);app.innerHTML=`<div class="auth-page"><div class="card text-center"><h2>Erreur</h2><p>${err.message}</p><button class="btn btn-primary mt-2" onclick="navigate('home')">Retour</button></div></div>`;}
     }
 
@@ -43028,27 +43128,522 @@ function handleDocumentUpload(e) {
   };
   window.renderSchoolRooms = render;
 
-  // Enregistrement dans le routeur : renderPage lit les fonctions globales,
-  // mais la table `pages` est construite à l'intérieur de la fonction. On
-  // passe donc par navigate, comme le fait déjà neoclass-school-v2.js.
+  // Enregistrement dans le routeur via le point d'extension NC_PAGES.
+  // Quatre pages du menu École n'étaient inscrites nulle part dans la table
+  // du routeur et dépendaient d'un détournement de navigate() :
+  // « Dirigeants » n'y était même pas traitée, le bouton ne faisait rien.
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['school-rooms'] = render;
   document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () {
-      if (typeof pages !== 'undefined') pages['school-rooms'] = render;
-      const origine = window.navigate;
-      if (!origine || origine.__schoolRoomsPatch) return;
-      const patch = function (page, params) {
-        if (page === 'school-rooms') {
-          State.currentPage = 'school-rooms';
-          const app = document.getElementById('app');
-          if (app) { render(app); window.scrollTo(0, 0); }
-          return;
-        }
-        return origine.apply(this, arguments);
+      var manquantes = {
+        'school-classes': 'renderSchoolClasses',
+        'school-directors': 'renderDirectorsManagement',
+        'school-bulletin-config': 'renderBulletinConfig',
+        'school-student-profile': 'renderStudentProfile'
       };
-      patch.__schoolRoomsPatch = true;
-      window.navigate = patch;
-    }, 1200);
+      Object.keys(manquantes).forEach(function (page) {
+        var fn = window[manquantes[page]];
+        if (typeof fn === 'function') window.NC_PAGES[page] = fn;
+        else console.warn('[École] page « ' + page + ' » : ' + manquantes[page] + ' introuvable.');
+      });
+    }, 600);
   });
+})();
+
+</script>
+
+<!-- 📄 Aperçu du bulletin -->
+<script id="sch-bulletin-v3">
+// ============================================================
+// 📄 NEOCLASS ÉCOLE — APERÇU DU BULLETIN
+// Choisir un élève et une période, saisir des notes, et voir
+// immédiatement le bulletin tel qu'il sera imprimé.
+//
+// Les notes réellement validées sont préchargées quand elles existent ;
+// sinon la grille reste vide et sert de simulation.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+
+  let _classes = [];
+  let _eleves = [];
+  let _notesReelles = [];
+  let _lignes = [];          // { matiere, coef, note, appreciation }
+  let _eleve = null;
+  let _periode = null;
+  let _charge = false;
+
+  function estEcole() {
+    return typeof State !== 'undefined' && State.profile && State.profile.role === 'school';
+  }
+  function cfg() {
+    return (State.profile && State.profile.gradesConfig) || {};
+  }
+  function noteMax() { return parseFloat(cfg().maxGrade) || 20; }
+  function notePassage() { return parseFloat(cfg().passingGrade) || 10; }
+
+  // Les périodes suivent le système choisi dans « Règles de notation ».
+  function periodes() {
+    const sys = cfg().periodSystem || 'trimester';
+    if (sys === 'semester') {
+      return [
+        { v: 'S1', t: '1er Semestre' },
+        { v: 'S2', t: '2e Semestre' },
+        { v: 'S3', t: '3e Semestre' }
+      ].slice(0, parseInt(cfg().periodCount, 10) || 2);
+    }
+    if (sys === 'monthly') {
+      return U.MOIS.map(function (m, i) {
+        return { v: 'M' + (i + 1), t: m.charAt(0).toUpperCase() + m.slice(1) };
+      });
+    }
+    return [
+      { v: 'T1', t: '1er Trimestre' },
+      { v: 'T2', t: '2e Trimestre' },
+      { v: 'T3', t: '3e Trimestre' }
+    ];
+  }
+  function libellePeriode(v) {
+    const p = periodes().filter(function (x) { return x.v === v; })[0];
+    return p ? p.t : v;
+  }
+
+  function matieresParDefaut() {
+    const s = cfg().subjects;
+    if (s && s.length) {
+      return s.map(function (x) { return { matiere: x.name, coef: parseFloat(x.coef) || 1 }; });
+    }
+    return [
+      { matiere: 'Mathématiques', coef: 4 },
+      { matiere: 'Français', coef: 4 },
+      { matiere: 'Sciences Physiques', coef: 3 },
+      { matiere: 'Sciences de la Vie', coef: 2 },
+      { matiere: 'Histoire-Géographie', coef: 2 },
+      { matiere: 'Anglais', coef: 2 },
+      { matiere: 'Éducation Physique', coef: 1 }
+    ];
+  }
+
+  // ------------------------------------------------------------
+  // Calculs
+  // ------------------------------------------------------------
+
+  function totaux() {
+    let coefs = 0, points = 0, notees = 0;
+    _lignes.forEach(function (l) {
+      const c = parseFloat(l.coef) || 0;
+      const n = parseFloat(l.note);
+      if (isNaN(n)) return;
+      coefs += c; points += n * c; notees++;
+    });
+    return {
+      coefs: coefs,
+      points: points,
+      notees: notees,
+      moyenne: coefs > 0 ? points / coefs : null
+    };
+  }
+
+  function mention(moy) {
+    const max = noteMax();
+    const r = (moy / max) * 20; // ramené sur 20 pour les seuils
+    if (r >= 16) return { t: 'Excellent', c: 'ok' };
+    if (r >= 14) return { t: 'Très bien', c: 'ok' };
+    if (r >= 12) return { t: 'Bien', c: 'ok' };
+    if (r >= 10) return { t: 'Assez bien', c: 'info' };
+    if (r >= 8) return { t: 'Insuffisant', c: 'warn' };
+    return { t: 'Très insuffisant', c: 'bad' };
+  }
+
+  function appreciationAuto(note) {
+    const n = parseFloat(note);
+    if (isNaN(n)) return '';
+    const r = (n / noteMax()) * 20;
+    if (r >= 16) return 'Excellent travail';
+    if (r >= 14) return 'Très bon travail';
+    if (r >= 12) return 'Bon travail';
+    if (r >= 10) return 'Travail satisfaisant';
+    if (r >= 8) return 'Doit fournir plus d\'efforts';
+    return 'Résultats très faibles, à renforcer';
+  }
+
+  // ------------------------------------------------------------
+  // Page
+  // ------------------------------------------------------------
+
+  function render(app) {
+    if (!estEcole()) { navigate('dashboard'); return; }
+
+    const ps = periodes();
+    _periode = _periode || ps[0].v;
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks('school') + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-file-lines"></i></div>' +
+              '<div><h1>Aperçu du bulletin</h1>' +
+              '<div class="sch-head-sub"><span>Saisissez des notes et voyez le rendu immédiatement</span></div></div>' +
+            '</div>' +
+            '<div class="sch-head-actions">' +
+              '<button class="sch-btn" onclick="SchoolBulletin.reinitialiser()"><i class="fas fa-eraser"></i> Vider</button>' +
+              '<button class="sch-btn" onclick="SchoolBulletin.exemple()"><i class="fas fa-wand-magic-sparkles"></i> Notes d\'exemple</button>' +
+              '<button class="sch-btn sch-btn-primary" onclick="SchoolBulletin.imprimer()"><i class="fas fa-print"></i> Imprimer / PDF</button>' +
+            '</div>' +
+          '</header>' +
+
+          '<div class="sch-card" style="margin-bottom:20px;">' +
+            '<div class="sch-toolbar" style="margin:0;">' +
+              '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Classe</label>' +
+                '<select class="sch-select" id="schBulClasse" onchange="SchoolBulletin.changerClasse(this.value)">' +
+                  '<option value="">Chargement…</option></select></div>' +
+              '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Élève</label>' +
+                '<select class="sch-select" id="schBulEleve" onchange="SchoolBulletin.changerEleve(this.value)">' +
+                  '<option value="">—</option></select></div>' +
+              '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Période</label>' +
+                '<select class="sch-select" id="schBulPeriode" onchange="SchoolBulletin.changerPeriode(this.value)">' +
+                  ps.map(function (p) {
+                    return '<option value="' + p.v + '"' + (p.v === _periode ? ' selected' : '') + '>' + p.t + '</option>';
+                  }).join('') +
+                '</select></div>' +
+              '<div class="sch-toolbar-spacer"></div>' +
+              '<button class="sch-btn sch-btn-sm sch-btn-ghost" onclick="navigate(\'school-grades-config\')">' +
+                '<i class="fas fa-gear"></i> Règles de notation</button>' +
+            '</div>' +
+            '<div class="sch-note" style="margin-top:16px;"><i class="fas fa-circle-info"></i>' +
+              '<div>Système de notation actuel : <strong>' +
+                ({ trimester: 'trimestriel (3 périodes)', semester: 'semestriel', monthly: 'mensuel' }[cfg().periodSystem || 'trimester']) +
+                '</strong>, notes sur <strong>' + noteMax() + '</strong>, moyenne de passage <strong>' + notePassage() + '</strong>. ' +
+                '<a onclick="navigate(\'school-grades-config\')">Modifier</a></div></div>' +
+          '</div>' +
+
+          '<div class="sch-charts">' +
+            '<div class="sch-card sch-col-6">' +
+              '<div class="sch-card-head"><div>' +
+                '<h3 class="sch-card-title">Saisie des notes</h3>' +
+                '<p class="sch-card-sub">Le bulletin se met à jour à chaque frappe</p>' +
+              '</div></div>' +
+              '<div id="schBulSaisie"></div>' +
+              '<div style="display:flex;gap:8px;margin-top:14px;">' +
+                '<input class="form-input" id="schBulNouvelleMat" placeholder="Ajouter une matière…" style="flex:2;" />' +
+                '<input class="form-input" id="schBulNouveauCoef" type="number" min="1" value="1" style="width:76px;" />' +
+                '<button class="sch-btn sch-btn-sm" onclick="SchoolBulletin.ajouterMatiere()"><i class="fas fa-plus"></i></button>' +
+              '</div>' +
+            '</div>' +
+            '<div class="sch-card sch-col-6" style="background:var(--bg);">' +
+              '<div class="sch-card-head"><div>' +
+                '<h3 class="sch-card-title">Aperçu</h3>' +
+                '<p class="sch-card-sub">Rendu réel à l\'impression</p>' +
+              '</div></div>' +
+              '<div id="schBulApercu"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div></main>' +
+      '</div>';
+
+    if (!_charge) charger(); else { remplirSelects(); dessiner(); }
+  }
+
+  function charger() {
+    Promise.all([
+      db.collection('classes').where('schoolId', '==', State.user.uid).get().catch(function () { return { docs: [] }; }),
+      db.collection('schools').doc(State.user.uid).collection('students').get().catch(function () { return { docs: [] }; }),
+      db.collection('grades').where('schoolId', '==', State.user.uid).get().catch(function () { return { docs: [] }; })
+    ]).then(function (r) {
+      _classes = r[0].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _eleves = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _notesReelles = r[2].docs.map(function (d) { return d.data() || {}; });
+      _charge = true;
+      if (!_lignes.length) _lignes = matieresParDefaut().map(function (m) {
+        return { matiere: m.matiere, coef: m.coef, note: '', appreciation: '' };
+      });
+      remplirSelects();
+      dessiner();
+    });
+  }
+
+  function remplirSelects() {
+    const sc = document.getElementById('schBulClasse');
+    if (sc) {
+      sc.innerHTML = '<option value="">Toutes les classes</option>' + _classes.map(function (c) {
+        return '<option value="' + c.id + '">' + U.esc(c.name) + '</option>';
+      }).join('');
+    }
+    remplirEleves('');
+  }
+
+  function remplirEleves(classId) {
+    const se = document.getElementById('schBulEleve');
+    if (!se) return;
+    const liste = classId ? _eleves.filter(function (e) { return e.classId === classId; }) : _eleves;
+    if (!liste.length) {
+      se.innerHTML = '<option value="">— Aucun élève —</option>';
+      _eleve = null;
+      return;
+    }
+    se.innerHTML = '<option value="">— Choisir —</option>' + liste.map(function (e) {
+      const nom = ((e.firstName || '') + ' ' + (e.lastName || '')).trim() || e.fullName || 'Sans nom';
+      return '<option value="' + e.id + '">' + U.esc(nom) + '</option>';
+    }).join('');
+  }
+
+  // Précharge les notes réellement validées pour l'élève et la période.
+  function prechargerNotesReelles() {
+    if (!_eleve) return false;
+    const cle = _eleve.uid || _eleve.id;
+    let trouve = false;
+    _notesReelles.forEach(function (doc) {
+      const per = doc.period || doc.periode;
+      if (per !== _periode) return;
+      if (['validated', 'locked', 'published'].indexOf(doc.status) === -1) return;
+      (doc.grades || []).forEach(function (g) {
+        if ((g.studentId || g.eleveId) !== cle) return;
+        const mat = doc.subject || doc.matiere;
+        const ligne = _lignes.filter(function (l) { return l.matiere === mat; })[0];
+        const v = parseFloat(g.grade != null ? g.grade : g.note);
+        if (isNaN(v)) return;
+        if (ligne) { ligne.note = v; ligne.appreciation = ligne.appreciation || appreciationAuto(v); }
+        else _lignes.push({ matiere: mat, coef: 1, note: v, appreciation: appreciationAuto(v) });
+        trouve = true;
+      });
+    });
+    return trouve;
+  }
+
+  // ------------------------------------------------------------
+  // Rendu
+  // ------------------------------------------------------------
+
+  function dessinerSaisie() {
+    const el = document.getElementById('schBulSaisie');
+    if (!el) return;
+    let h = '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+      '<th>Matière</th><th style="width:88px;">Note</th><th style="width:70px;">Coef</th><th>Appréciation</th><th style="width:34px;"></th>' +
+      '</tr></thead><tbody>';
+    _lignes.forEach(function (l, i) {
+      h += '<tr>' +
+        '<td><strong>' + U.esc(l.matiere) + '</strong></td>' +
+        '<td><input class="form-input" type="number" min="0" max="' + noteMax() + '" step="0.25" ' +
+          'style="padding:6px 8px;text-align:right;" value="' + U.esc(l.note) + '" ' +
+          'oninput="SchoolBulletin.majNote(' + i + ', this.value)" /></td>' +
+        '<td><input class="form-input" type="number" min="1" max="10" ' +
+          'style="padding:6px 8px;text-align:right;" value="' + U.esc(l.coef) + '" ' +
+          'oninput="SchoolBulletin.majCoef(' + i + ', this.value)" /></td>' +
+        '<td><input class="form-input" style="padding:6px 8px;" value="' + U.esc(l.appreciation) + '" ' +
+          'placeholder="auto" oninput="SchoolBulletin.majAppreciation(' + i + ', this.value)" /></td>' +
+        '<td><button class="sch-btn sch-btn-sm sch-btn-ghost" title="Retirer" ' +
+          'onclick="SchoolBulletin.retirer(' + i + ')"><i class="fas fa-xmark"></i></button></td>' +
+        '</tr>';
+    });
+    h += '</tbody></table></div>';
+    el.innerHTML = h;
+  }
+
+  function dessinerApercu() {
+    const el = document.getElementById('schBulApercu');
+    if (!el) return;
+
+    const p = State.profile || {};
+    const t = totaux();
+    const max = noteMax();
+    const nomEcole = p.schoolName || p.fullName || 'Établissement';
+    const logo = p.schoolLogo || '';
+    const nomEleve = _eleve
+      ? (((_eleve.firstName || '') + ' ' + (_eleve.lastName || '')).trim() || _eleve.fullName || '—')
+      : 'Élève de démonstration';
+    const classe = _eleve ? (_eleve.className || '—') : '—';
+    const matricule = _eleve ? (_eleve.studentId || '—') : '—';
+    const m = t.moyenne != null ? mention(t.moyenne) : null;
+    const admis = t.moyenne != null && t.moyenne >= notePassage();
+
+    let lignes = '';
+    _lignes.forEach(function (l) {
+      const n = parseFloat(l.note);
+      const aNote = !isNaN(n);
+      const c = parseFloat(l.coef) || 0;
+      lignes += '<tr>' +
+        '<td>' + U.esc(l.matiere) + '</td>' +
+        '<td class="c">' + (aNote ? U.pourcent(n, 2) : '—') + '</td>' +
+        '<td class="c">' + c + '</td>' +
+        '<td class="c">' + (aNote ? U.pourcent(n * c, 2) : '—') + '</td>' +
+        '<td class="a">' + U.esc(l.appreciation || (aNote ? appreciationAuto(n) : '')) + '</td>' +
+        '</tr>';
+    });
+
+    el.innerHTML = '' +
+      '<div class="sch-bulletin" id="schBulletinImprimable">' +
+        '<div class="sch-bul-tete">' +
+          (logo ? '<img src="' + U.esc(logo) + '" alt="" class="sch-bul-logo" />'
+                : '<div class="sch-bul-logo sch-bul-logo-vide">' + U.esc(nomEcole.trim()[0] || 'É') + '</div>') +
+          '<div class="sch-bul-titre">' +
+            '<div class="sch-bul-pays">République de Guinée</div>' +
+            '<div class="sch-bul-devise">Travail — Justice — Solidarité</div>' +
+            '<div class="sch-bul-ecole">' + U.esc(nomEcole) + '</div>' +
+            (p.schoolAddress ? '<div class="sch-bul-adresse">' + U.esc(p.schoolAddress) + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+
+        '<div class="sch-bul-bandeau">Bulletin de notes — ' + U.esc(libellePeriode(_periode)) +
+          ' — Année scolaire ' + U.esc(U.anneeScolaire()) + '</div>' +
+
+        '<div class="sch-bul-ident">' +
+          '<div><span>Élève</span><strong>' + U.esc(nomEleve) + '</strong></div>' +
+          '<div><span>Classe</span><strong>' + U.esc(classe) + '</strong></div>' +
+          '<div><span>Matricule</span><strong>' + U.esc(matricule) + '</strong></div>' +
+        '</div>' +
+
+        '<table class="sch-bul-table"><thead><tr>' +
+          '<th>Matière</th><th class="c">Note /' + max + '</th><th class="c">Coef.</th>' +
+          '<th class="c">Total</th><th class="a">Appréciation</th>' +
+        '</tr></thead><tbody>' + lignes + '</tbody>' +
+        '<tfoot><tr>' +
+          '<td>Totaux</td><td class="c">—</td><td class="c">' + t.coefs + '</td>' +
+          '<td class="c">' + U.pourcent(t.points, 2) + '</td><td class="a"></td>' +
+        '</tr></tfoot></table>' +
+
+        '<div class="sch-bul-synthese">' +
+          '<div class="sch-bul-moy">' +
+            '<span>Moyenne générale</span>' +
+            '<strong>' + (t.moyenne != null ? U.pourcent(t.moyenne, 2) : '—') + '<small>/' + max + '</small></strong>' +
+          '</div>' +
+          '<div class="sch-bul-infos">' +
+            '<div><span>Mention</span><strong>' + (m ? U.esc(m.t) : '—') + '</strong></div>' +
+            '<div><span>Matières notées</span><strong>' + t.notees + ' / ' + _lignes.length + '</strong></div>' +
+            '<div><span>Décision</span><strong>' +
+              (t.moyenne == null ? '—' : (admis ? 'Admis' : 'Non admis')) + '</strong></div>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="sch-bul-appreciation">' +
+          '<span>Appréciation générale du conseil de classe</span>' +
+          '<div contenteditable="true" class="sch-bul-zone">' +
+            (t.moyenne == null ? 'Saisissez les notes pour obtenir une appréciation.'
+              : (admis ? 'Ensemble satisfaisant. Poursuivez vos efforts.'
+                       : 'Résultats insuffisants. Un travail plus régulier est attendu.')) +
+          '</div>' +
+        '</div>' +
+
+        '<div class="sch-bul-signatures">' +
+          '<div><span>Le Professeur principal</span><i></i></div>' +
+          '<div><span>Le Chef d\'établissement</span><i></i></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function dessiner() { dessinerSaisie(); dessinerApercu(); }
+
+  // ------------------------------------------------------------
+  // Actions
+  // ------------------------------------------------------------
+
+  const API = {
+    render: render,
+
+    changerClasse: function (id) { remplirEleves(id); _eleve = null; dessinerApercu(); },
+
+    changerEleve: function (id) {
+      _eleve = _eleves.filter(function (e) { return e.id === id; })[0] || null;
+      if (_eleve) {
+        _lignes.forEach(function (l) { l.note = ''; l.appreciation = ''; });
+        const trouve = prechargerNotesReelles();
+        if (trouve) showToast('Notes validées chargées pour cette période', 'success');
+      }
+      dessiner();
+    },
+
+    changerPeriode: function (v) {
+      _periode = v;
+      if (_eleve) {
+        _lignes.forEach(function (l) { l.note = ''; l.appreciation = ''; });
+        prechargerNotesReelles();
+      }
+      dessiner();
+    },
+
+    majNote: function (i, v) {
+      if (!_lignes[i]) return;
+      const n = parseFloat(v);
+      _lignes[i].note = v === '' ? '' : (isNaN(n) ? '' : Math.max(0, Math.min(noteMax(), n)));
+      dessinerApercu();
+    },
+    majCoef: function (i, v) {
+      if (!_lignes[i]) return;
+      _lignes[i].coef = Math.max(1, parseFloat(v) || 1);
+      dessinerApercu();
+    },
+    majAppreciation: function (i, v) {
+      if (!_lignes[i]) return;
+      _lignes[i].appreciation = v;
+      dessinerApercu();
+    },
+
+    ajouterMatiere: function () {
+      const nom = (document.getElementById('schBulNouvelleMat').value || '').trim();
+      if (!nom) { showToast('Indiquez le nom de la matière', 'error'); return; }
+      const coef = Math.max(1, parseInt(document.getElementById('schBulNouveauCoef').value, 10) || 1);
+      _lignes.push({ matiere: nom, coef: coef, note: '', appreciation: '' });
+      document.getElementById('schBulNouvelleMat').value = '';
+      dessiner();
+    },
+
+    retirer: function (i) { _lignes.splice(i, 1); dessiner(); },
+
+    reinitialiser: function () {
+      _lignes.forEach(function (l) { l.note = ''; l.appreciation = ''; });
+      dessiner();
+    },
+
+    // Jeu de notes plausible, pour juger la mise en page sans rien saisir.
+    exemple: function () {
+      _lignes.forEach(function (l) {
+        const n = Math.round((6 + Math.random() * 12) * 4) / 4;
+        l.note = Math.min(noteMax(), n);
+        l.appreciation = appreciationAuto(l.note);
+      });
+      dessiner();
+      showToast('Notes d\'exemple générées', 'info');
+    },
+
+    imprimer: function () {
+      document.body.classList.add('sch-impression');
+      const fin = function () {
+        document.body.classList.remove('sch-impression');
+        window.removeEventListener('afterprint', fin);
+      };
+      window.addEventListener('afterprint', fin);
+      window.print();
+      setTimeout(fin, 1500);
+    }
+  };
+
+  window.SchoolBulletin = API;
+  window.renderSchoolBulletinPreview = render;
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['school-bulletin-preview'] = render;
+
+  // Le bouton « Générer tous les bulletins » de la page Bulletins appelait
+  // une fonction qui n'a jamais existé : il ne se passait rien au clic.
+  if (typeof window.generateAllBulletins !== 'function') {
+    window.generateAllBulletins = function () {
+      const sel = document.getElementById('bulletinClass');
+      const per = document.getElementById('bulletinPeriod');
+      const classId = sel ? sel.value : '';
+      const periode = per ? per.value : 'T1';
+      if (!classId) {
+        showToast('Choisissez d\'abord une classe', 'error');
+        return;
+      }
+      if (typeof sendAllBulletinsToClass === 'function') {
+        sendAllBulletinsToClass(classId, periode);
+      } else {
+        showToast('Génération groupée indisponible', 'error');
+      }
+    };
+  }
 })();
 
 </script>
