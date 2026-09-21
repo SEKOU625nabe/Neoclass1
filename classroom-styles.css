@@ -1,0 +1,458 @@
+/* ============================================================
+   🎓 STYLES DES SALLES DE CLASSE ET PROGRAMMES
+   ============================================================ */
+
+/* 🏫 CONTENEUR DE SALLE */
+.classroom-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+  animation: fadeIn 0.5s ease;
+}
+
+.classroom-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 32px 24px;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.classroom-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%);
+  border-radius: 50%;
+}
+
+.classroom-icon {
+  font-size: 3.5rem;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  animation: float 3s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+.classroom-info {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.classroom-info h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  color: inherit;
+}
+
+.classroom-info p {
+  font-size: 0.95rem;
+  opacity: 0.95;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* 📚 GRILLE DE COURS */
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  animation: slideUp 0.6s ease;
+}
+
+/* 📖 CARTE DE COURS */
+.course-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.course-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: currentColor;
+  transition: height 0.3s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+  border-color: var(--primary);
+}
+
+.course-card:hover::before {
+  height: 6px;
+}
+
+.course-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.course-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.course-info {
+  flex: 1;
+}
+
+.course-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--text);
+}
+
+.course-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.course-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.course-actions .btn {
+  flex: 1;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
+
+/* 🎓 CLASSROOMS GRID */
+.classrooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.classroom-quick-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.classroom-quick-item:hover {
+  background: rgba(108,99,255,0.05);
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.classroom-quick-icon {
+  font-size: 2rem;
+}
+
+.classroom-quick-info h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+}
+
+.classroom-quick-info p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ============================================================
+   ⚙️ PANNEAU D'ADMINISTRATION
+   ============================================================ */
+
+.admin-courses-panel {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.admin-courses-panel h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 24px 0;
+  color: var(--text);
+}
+
+.admin-classes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.admin-class-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-class-item:hover {
+  border-color: var(--primary);
+  background: rgba(108,99,255,0.05);
+  transform: translateY(-2px);
+}
+
+.admin-class-item > span {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.admin-class-item > div {
+  flex: 1;
+}
+
+.admin-class-item h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--text);
+}
+
+.admin-class-item p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.admin-class-item .btn {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+}
+
+/* ============================================================
+   ✏️ FORMULAIRE D'ÉDITION
+   ============================================================ */
+
+.edit-courses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-course-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 2fr 80px 100px;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.edit-course-row:hover {
+  background: rgba(108,99,255,0.02);
+  border-color: var(--primary);
+}
+
+.course-icon-input,
+.course-name-input,
+.course-desc-input,
+.course-color-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: var(--font);
+}
+
+.course-icon-input {
+  font-size: 1.3rem;
+  text-align: center;
+  padding: 6px 4px;
+}
+
+.course-icon-input:focus,
+.course-name-input:focus,
+.course-desc-input:focus,
+.course-color-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+}
+
+.course-color-input {
+  cursor: pointer;
+  padding: 4px;
+}
+
+.edit-course-row .btn-danger {
+  width: 100%;
+}
+
+/* ============================================================
+   📱 AFFICHAGE SALLE DE CLASSE MOBILE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .classroom-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+    padding: 24px 16px;
+  }
+
+  .classroom-info {
+    width: 100%;
+  }
+
+  .courses-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-course-row {
+    grid-template-columns: 40px 1fr 60px;
+    gap: 6px;
+  }
+
+  .course-name-input,
+  .course-desc-input {
+    display: none;
+  }
+
+  .edit-course-row .btn-danger {
+    grid-column: 3;
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   🎨 THÈME SOMBRE - AJUSTEMENTS
+   ============================================================ */
+
+body.dark-mode .classroom-header {
+  background: linear-gradient(135deg, #8b83ff, #6c63ff);
+  color: #ffffff;
+}
+
+body.dark-mode .course-card {
+  background: #12121f;
+  border-color: #2a2a40;
+}
+
+body.dark-mode .course-card:hover {
+  border-color: #fbbf24;
+}
+
+body.dark-mode .edit-course-row {
+  background: #1a1a2e;
+  border-color: #2a2a40;
+}
+
+body.dark-mode .course-icon-input,
+body.dark-mode .course-name-input,
+body.dark-mode .course-desc-input,
+body.dark-mode .course-color-input {
+  background: #12121f;
+  border-color: #2a2a40;
+  color: #ffffff;
+}
+
+body.dark-mode .course-icon-input:focus,
+body.dark-mode .course-name-input:focus,
+body.dark-mode .course-desc-input:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251,191,36,0.1);
+}
+
+body.dark-mode .admin-class-item {
+  background: #12121f;
+  border-color: #2a2a40;
+}
+
+body.dark-mode .admin-class-item:hover {
+  border-color: #fbbf24;
+  background: rgba(251,191,36,0.05);
+}
+
+/* ============================================================
+   ✨ ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.05);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

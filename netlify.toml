@@ -1,0 +1,229 @@
+# ============================================================
+# NETLIFY BUILD & DEPLOYMENT CONFIGURATION
+# 
+# 📍 Placement: c:\Users\HP\Desktop\neoclass\netlify.toml
+# 
+# Ce fichier configure:
+# ✅ Comment builder le site
+# ✅ Où héberger les fichiers
+# ✅ Redirects & rewrites
+# ✅ Sécurité (headers)
+# ✅ Fonctions serverless (API proxy)
+# ✅ Variables d'environnement
+# ============================================================
+
+[build]
+  # Commande de build (si vous avez un bundler)
+  # Sinon, laisser vide pour site statique
+  command = "echo 'Building Neoclass...'"
+  
+  # Dossier à publier sur Netlify
+  # Pour site statique: . (racine)
+  # Pour bundled: dist
+  publish = "."
+  
+  # Fonctions serverless
+  functions = "netlify/functions"
+
+[build.environment]
+  # Version Node.js
+  NODE_VERSION = "18.17.0"
+  
+  # npm version
+  NPM_VERSION = "9.6.0"
+
+# ============================================================
+# CONTEXTE DE BUILD (Dev vs Prod)
+# ============================================================
+
+[context.production]
+  command = "echo 'Production build'"
+  publish = "."
+  
+  [context.production.environment]
+    NODE_ENV = "production"
+    VITE_APP_ENV = "production"
+
+[context.staging]
+  command = "echo 'Staging build'"
+  publish = "."
+  
+  [context.staging.environment]
+    NODE_ENV = "staging"
+    VITE_APP_ENV = "staging"
+
+[context.branch-deploy]
+  command = "echo 'Branch deploy'"
+  publish = "."
+
+# ============================================================
+# REDIRECTS & REWRITES
+# ============================================================
+
+# Rediriger toutes les routes vers Neoclass3.html
+# Ceci permet aux SPA (Single Page App) de fonctionner
+[[redirects]]
+  from = "/*"
+  to = "/Neoclass3.html"
+  status = 200
+  force = false
+
+# Rediriger /pricing vers pricing-display.html
+[[redirects]]
+  from = "/pricing"
+  to = "/pricing-display.html"
+  status = 200
+
+# Rediriger /admin vers admin-pricing-panel.html
+[[redirects]]
+  from = "/admin-pricing"
+  to = "/admin-pricing-panel.html"
+  status = 200
+
+# Rediriger HTTP vers HTTPS (optionnel)
+[[redirects]]
+  from = "http://:host/*"
+  to = "https://:host/:splat"
+  status = 301
+  force = true
+
+# ============================================================
+# HEADERS DE SÉCURITÉ
+# ============================================================
+
+# Headers pour TOUS les fichiers
+[[headers]]
+  for = "/*"
+  
+  [headers.values]
+    # Empêcher les clics depuis d'autres sites (clickjacking)
+    X-Frame-Options = "SAMEORIGIN"
+    
+    # Empêcher les attaques XSS
+    X-XSS-Protection = "1; mode=block"
+    
+    # Empêcher MIME sniffing
+    X-Content-Type-Options = "nosniff"
+    
+    # Politique de sécurité de contenu
+    Content-Security-Policy = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com;"
+    
+    # Politique de référent
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # Politique de permisstions (features)
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Headers pour fichiers API (JSON)
+[[headers]]
+  for = "/api/*"
+  
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
+    Access-Control-Max-Age = "86400"
+
+# Headers pour fichiers statiques (CSS, JS)
+[[headers]]
+  for = "/*.{js,css}"
+  
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Headers pour HTML
+[[headers]]
+  for = "/*.html"
+  
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+# ============================================================
+# FONCTIONS SERVERLESS (API Proxy)
+# ============================================================
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Configuration spécifique des fonctions: réglages généraux ci-dessus.
+
+# ============================================================
+# VARIABLES D'ENVIRONNEMENT
+# 
+# À configurer dans Netlify Dashboard:
+# Site settings → Build & deploy → Environment
+# ============================================================
+
+[env.production]
+  # Firebase
+  VITE_FIREBASE_API_KEY = "@firebase_api_key"
+  VITE_FIREBASE_AUTH_DOMAIN = "neoclass-73b86.firebaseapp.com"
+  VITE_FIREBASE_PROJECT_ID = "neoclass-73b86"
+  VITE_FIREBASE_STORAGE_BUCKET = "neoclass-73b86.appspot.com"
+  VITE_FIREBASE_MESSAGING_SENDER_ID = "@firebase_sender_id"
+  VITE_FIREBASE_APP_ID = "@firebase_app_id"
+  
+  # Mistral AI
+  VITE_MISTRAL_API_KEY = "@mistral_api_key"
+  VITE_MISTRAL_AGENT_ID = "@mistral_agent_id"
+  VITE_MISTRAL_API_URL = "https://api.mistral.ai/v1/conversations"
+  
+  # App Config
+  VITE_APP_ENV = "production"
+  VITE_APP_VERSION = "2.0.0"
+  VITE_API_BASE_URL = "https://neoclass.netlify.app"
+  NODE_ENV = "production"
+
+[env.staging]
+  VITE_APP_ENV = "staging"
+  VITE_API_BASE_URL = "https://staging.neoclass.netlify.app"
+  NODE_ENV = "staging"
+
+# ============================================================
+# PLUGINS NETLIFY (optionnel)
+# ============================================================
+
+# Plugin pour compression automatique
+[[plugins]]
+  package = "netlify-plugin-no-more-404"
+
+# Plugin pour minification
+[[plugins]]
+  package = "netlify-plugin-minify-js"
+
+# ============================================================
+# LOGS & MONITORING
+# ============================================================
+
+[logs]
+  # Edge logs
+  edge = true
+  
+  # Function logs
+  functions = true
+
+# ============================================================
+# BRANCH CONFIGURATION (optionnel)
+# ============================================================
+
+# Production: branch "main"
+[context."main"]
+  environment = "production"
+  command = "echo 'Deploying from main branch'"
+
+# Staging: branch "develop"
+[context."develop"]
+  environment = "staging"
+  command = "echo 'Deploying from develop branch'"
+
+# ============================================================
+# NOTES D'UTILISATION
+# ============================================================
+
+# 1. Committer ce fichier: git add netlify.toml && git push
+# 2. Variables sensibles dans Netlify Dashboard (PAS dans ce fichier!)
+# 3. Format: @nom_variable = référence à variable d'env Netlify
+# 4. Redéployer après modifications: Deploys → Trigger deploy
+
+# ============================================================

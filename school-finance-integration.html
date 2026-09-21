@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neoclass - Gestion Financière Intégrée</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  background: #f8f9fa;
+  color: #333;
+}
+
+:root {
+  --primary: #1A3A6B;
+  --primary-light: #2563EB;
+  --accent: #C8A84B;
+  --success: #059669;
+  --danger: #DC2626;
+  --info: #2563EB;
+  --grey-100: #f8f9fa;
+  --grey-200: #e8edf5;
+  --grey-300: #d1d5db;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+}
+
+/* Layout */
+.container {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background: linear-gradient(180deg, var(--primary) 0%, #0f1f45 100%);
+  color: white;
+  padding: 20px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(26, 58, 107, 0.15);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-logo {
+  font-size: 28px;
+}
+
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nav-section {
+  margin-bottom: 25px;
+}
+
+.nav-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  user-select: none;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-item.active {
+  background: var(--accent);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-icon {
+  font-size: 18px;
+}
+
+/* Main Content */
+.main-content {
+  padding: 30px;
+  overflow-y: auto;
+}
+
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* KPI Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--primary);
+  transition: all 0.3s;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.kpi-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.kpi-change {
+  font-size: 12px;
+  color: var(--success);
+}
+
+.kpi-change.negative {
+  color: var(--danger);
+}
+
+/* Sections */
+.section {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--grey-200);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-action {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.section-action:hover {
+  background: var(--primary-light);
+}
+
+/* Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: var(--grey-100);
+  padding: 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.data-table tr:hover {
+  background: var(--grey-100);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background: #d1fae5;
+  color: var(--success);
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge-pending {
+  background: #dbeafe;
+  color: var(--info);
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: var(--danger);
+}
+
+/* Forms */
+.form-input, .form-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(26, 58, 107, 0.1);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text-primary);
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-light);
+}
+
+.btn-secondary {
+  background: var(--grey-200);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--border);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--grey-200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    height: 100vh;
+    z-index: 999;
+    transition: left 0.3s;
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header {
+    flex-direction: column;
+  }
+
+  .data-table {
+    font-size: 12px;
+  }
+
+  .modal-content {
+    width: 95%;
+  }
+}
+
+/* Alert */
+.alert {
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 13px;
+}
+
+.alert-success {
+  background: #d1fae5;
+  color: var(--success);
+  border: 1px solid #6ee7b7;
+}
+
+.alert-error {
+  background: #fee2e2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+}
+
+.alert-info {
+  background: #dbeafe;
+  color: var(--info);
+  border: 1px solid #93c5fd;
+}
+
+/* Status Indicator */
+.status-online {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  display: inline-block;
+}
+
+.status-offline {
+  background: var(--text-secondary);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">🎓</span>
+      <div>
+        <div class="sidebar-title">NEOCLASS</div>
+        <div style="font-size: 10px; color: rgba(255,255,255,0.6);">Finance Pro</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Gestion</div>
+      <div class="nav-item active" onclick="showSection('dashboard')">
+        <span class="nav-icon">📊</span>
+        <span>Tableau de bord</span>
+      </div>
+      <div class="nav-item" onclick="showSection('operations')">
+        <span class="nav-icon">💰</span>
+        <span>Opérations</span>
+      </div>
+      <div class="nav-item" onclick="showSection('budgets')">
+        <span class="nav-icon">📈</span>
+        <span>Budgets</span>
+      </div>
+      <div class="nav-item" onclick="showSection('team')">
+        <span class="nav-icon">👥</span>
+        <span>Équipe</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Rapports</div>
+      <div class="nav-item" onclick="showSection('reports')">
+        <span class="nav-icon">📋</span>
+        <span>Rapports</span>
+      </div>
+      <div class="nav-item" onclick="showSection('analytics')">
+        <span class="nav-icon">📉</span>
+        <span>Analyses</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-title">Paramètres</div>
+      <div class="nav-item" onclick="showSection('settings')">
+        <span class="nav-icon">⚙️</span>
+        <span>Paramètres</span>
+      </div>
+      <div class="nav-item" onclick="goBack()">
+        <span class="nav-icon">←</span>
+        <span>Retour école</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="section-view">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📊 Tableau de Bord Financier</div>
+          <div style="font-size: 13px; color: var(--text-secondary); margin-top: 5px;">
+            Bienvenue <span id="userName">Directeur</span> • Mise à jour en temps réel
+          </div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="refreshDashboard()">🔄 Actualiser</button>
+          <button class="btn btn-secondary" onclick="exportData()">📥 Exporter</button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">💵 Entrées (Mois)</div>
+          <div class="kpi-value" id="kpi-income">0 CFA</div>
+          <div class="kpi-change">+12% vs mois dernier</div>
+        </div>
+        <div class="kpi-card" style="border-left-color: var(--danger);">
+          <div class="kpi-label">📤 Sorties (Mois)</div>
+          <div class="kpi-value" id="kpi-expenses">0 CFA</div>
+          <div class="kpi-change negative">-8% vs mois dernier</div>
+        </div>
+        <div class="kpi-card" style="border-left-color: var(--success);">
+          <div class="kpi-label">💎 Solde Net</div>
+          <div class="kpi-value" id="kpi-balance">0 CFA</div>
+          <div class="kpi-change">Trésorerie saine</div>
+        </div>
+        <div class="kpi-card" style="border-left-color: var(--accent);">
+          <div class="kpi-label">📋 Opérations</div>
+          <div class="kpi-value" id="kpi-operations">0</div>
+          <div class="kpi-change">Ce mois</div>
+        </div>
+      </div>
+
+      <!-- Alert Budgets -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">⚠️ Alertes Budgétaires</div>
+        </div>
+        <div id="alerts-container">
+          <div class="empty-state">
+            <div>Aucune alerte</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dernières Opérations -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">🕐 Opérations Récentes</div>
+          <button class="section-action" onclick="showSection('operations')">Voir tout</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Montant</th>
+              <th>Catégorie</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody id="recent-operations">
+            <tr>
+              <td colspan="5" class="loading">
+                <span class="spinner"></span>Chargement des opérations...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Quick Stats -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+        <div class="section">
+          <div class="section-title" style="margin-bottom: 15px;">👥 Équipe</div>
+          <div style="font-size: 24px; color: var(--primary); font-weight: 700; margin-bottom: 5px;" id="team-count">0</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">Membres actifs</div>
+        </div>
+        <div class="section">
+          <div class="section-title" style="margin-bottom: 15px;">📊 Budgets</div>
+          <div style="font-size: 24px; color: var(--primary); font-weight: 700; margin-bottom: 5px;" id="budget-count">0</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">Budgets alloués</div>
+        </div>
+        <div class="section">
+          <div class="section-title" style="margin-bottom: 15px;">📋 Rapports</div>
+          <div style="font-size: 24px; color: var(--primary); font-weight: 700; margin-bottom: 5px;" id="report-count">0</div>
+          <div style="font-size: 12px; color: var(--text-secondary);">Rapports générés</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OPERATIONS SECTION -->
+    <section id="operations" class="section-view" style="display: none;">
+      <div class="page-header">
+        <div class="page-title">💰 Gestion des Opérations</div>
+        <button class="btn btn-primary" onclick="openModal('new-operation')">+ Ajouter une opération</button>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div style="display: flex; gap: 10px;">
+            <input type="text" class="form-input" placeholder="🔍 Rechercher..." id="operationSearch" oninput="filterOperations(this.value)" style="width: 250px; margin: 0;">
+            <select class="form-select" id="statusFilter" onchange="filterOperations()" style="width: 150px; margin: 0;">
+              <option value="">Tous les statuts</option>
+              <option value="pending">En attente</option>
+              <option value="approved">Approuvée</option>
+              <option value="validated">Validée</option>
+              <option value="completed">Complétée</option>
+            </select>
+          </div>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Montant</th>
+              <th>Catégorie</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="operations-list">
+            <tr>
+              <td colspan="6" class="loading">
+                <span class="spinner"></span>Chargement...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- BUDGETS SECTION -->
+    <section id="budgets" class="section-view" style="display: none;">
+      <div class="page-header">
+        <div class="page-title">📈 Gestion des Budgets</div>
+        <button class="btn btn-primary" onclick="openModal('new-budget')">+ Créer un budget</button>
+      </div>
+
+      <div id="budgets-container">
+        <div class="loading">
+          <span class="spinner"></span>Chargement des budgets...
+        </div>
+      </div>
+    </section>
+
+    <!-- TEAM SECTION -->
+    <section id="team" class="section-view" style="display: none;">
+      <div class="page-header">
+        <div class="page-title">👥 Gestion de l'Équipe</div>
+        <button class="btn btn-primary" onclick="openModal('new-member')">+ Ajouter un membre</button>
+      </div>
+
+      <div class="section">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Rôle</th>
+              <th>Email</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="team-list">
+            <tr>
+              <td colspan="5" class="loading">
+                <span class="spinner"></span>Chargement de l'équipe...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REPORTS SECTION -->
+    <section id="reports" class="section-view" style="display: none;">
+      <div class="page-header">
+        <div class="page-title">📋 Rapports Financiers</div>
+        <button class="btn btn-primary" onclick="generateReport()">+ Générer un rapport</button>
+      </div>
+
+      <div id="reports-container">
+        <div class="loading">
+          <span class="spinner"></span>Chargement des rapports...
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS SECTION -->
+    <section id="settings" class="section-view" style="display: none;">
+      <div class="page-title" style="margin-bottom: 30px;">⚙️ Paramètres Financiers</div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Informations de l'Établissement</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nom de l'établissement</label>
+          <input type="text" class="form-input" id="schoolName" placeholder="Nom de votre école">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Code établissement</label>
+          <input type="text" class="form-input" id="schoolCode" placeholder="Code unique">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Devise</label>
+          <select class="form-select" id="currency">
+            <option>CFA (Fr)</option>
+            <option>GNF (Guinée)</option>
+            <option>XOF (Franc CFA)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Enregistrer</button>
+      </div>
+
+      <div class="section" style="margin-top: 20px;">
+        <div class="section-header">
+          <div class="section-title">Actions Avancées</div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="syncFirebase()" style="margin-right: 10px;">🔄 Synchroniser Firebase</button>
+        <button class="btn btn-secondary" onclick="clearAllData()" style="background: var(--danger); color: white;">🗑️ Réinitialiser les données</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODALS -->
+
+<!-- Modal Opération -->
+<div class="modal" id="modal-new-operation">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Nouvelle Opération</span>
+      <button class="modal-close" onclick="closeModal('new-operation')">×</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="opType">
+        <option value="income">Entrée (Revenu)</option>
+        <option value="expense">Sortie (Dépense)</option>
+        <option value="transfer">Virement</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Montant</label>
+      <input type="number" class="form-input" id="opAmount" placeholder="0" min="0">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Catégorie</label>
+      <select class="form-select" id="opCategory">
+        <option>Frais de Scolarité</option>
+        <option>Autres Revenus</option>
+        <option>Salaires</option>
+        <option>Matériel</option>
+        <option>Maintenance</option>
+        <option>Électricité</option>
+        <option>Transport</option>
+        <option>Événements</option>
+        <option>Système IT</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="opDescription" placeholder="Détails..." style="min-height: 80px; resize: vertical;"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('new-operation')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveOperation()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Membre -->
+<div class="modal" id="modal-new-member">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Ajouter un Membre</span>
+      <button class="modal-close" onclick="closeModal('new-member')">×</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Nom Complet</label>
+      <input type="text" class="form-input" id="memberName" placeholder="Nom complet">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="memberEmail" placeholder="email@example.com">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Rôle</label>
+      <select class="form-select" id="memberRole">
+        <option value="admin-comptable">Admin Comptable</option>
+        <option value="directeur">Directeur Financier</option>
+        <option value="tresorier">Trésorier</option>
+        <option value="verificateur">Vérificateur</option>
+        <option value="coordinateur">Coordinateur</option>
+      </select>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('new-member')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveMember()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="modules/NeoclassFinanceSystem.js"></script>
+<script src="modules/FirebaseFinanceIntegration.js"></script>
+
+<script>
+// ============================================================
+// VARIABLES GLOBALES
+// ============================================================
+
+let currentSchoolId = null;
+let financeSystem = null;
+let firebaseIntegration = null;
+
+// ============================================================
+// INITIALISATION
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('🚀 Initialisation du tableau de bord financier...');
+
+  // Récupérer le schoolId (depuis localStorage ou parametres)
+  currentSchoolId = localStorage.getItem('neoclass_schoolId') || 'school_demo_001';
+  const schoolName = localStorage.getItem('neoclass_schoolName') || 'Ma École';
+
+  // Initialiser les systèmes
+  financeSystem = new NeoclassFinanceSystem(currentSchoolId, schoolName);
+  firebaseIntegration = new FirebaseFinanceIntegration(currentSchoolId, schoolName);
+
+  // Afficher le nom de l'utilisateur
+  document.getElementById('userName').textContent = localStorage.getItem('neoclass_userName') || 'Directeur';
+  document.getElementById('schoolName').value = schoolName;
+
+  // Charger les données du dashboard
+  await loadDashboardData();
+
+  console.log('✅ Tableau de bord initialisé');
+});
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+function showSection(sectionId) {
+  // Masquer toutes les sections
+  document.querySelectorAll('.section-view').forEach(section => {
+    section.style.display = 'none';
+  });
+
+  // Afficher la section sélectionnée
+  const section = document.getElementById(sectionId);
+  if (section) {
+    section.style.display = 'block';
+
+    // Mettre à jour la navigation active
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    event.currentTarget.classList.add('active');
+
+    // Charger les données si nécessaire
+    if (sectionId === 'operations') loadOperations();
+    else if (sectionId === 'budgets') loadBudgets();
+    else if (sectionId === 'team') loadTeam();
+    else if (sectionId === 'reports') loadReports();
+  }
+}
+
+function goBack() {
+  // Retourner à l'interface de l'école
+  window.location.href = '../public/index.html#/school-dashboard';
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+
+async function loadDashboardData() {
+  try {
+    // Charger les statistiques
+    const stats = await financeSystem.getFinancialStats('month');
+    document.getElementById('kpi-income').textContent = formatCurrency(stats.income);
+    document.getElementById('kpi-expenses').textContent = formatCurrency(stats.expenses);
+    document.getElementById('kpi-balance').textContent = formatCurrency(stats.balance);
+    document.getElementById('kpi-operations').textContent = stats.operationCount;
+
+    // Charger les opérations récentes
+    const operations = await financeSystem.getOperationsByCategory();
+    displayRecentOperations(operations.slice(0, 5));
+
+    // Charger les équipes et budgets
+    const team = await financeSystem.getRoleManager().getTeamByRole('all');
+    const budgets = await financeSystem.getBudgetManager().getBudgets();
+
+    document.getElementById('team-count').textContent = team.length;
+    document.getElementById('budget-count').textContent = budgets.length;
+    document.getElementById('report-count').textContent = '12';
+
+    // Charger les alertes
+    const alerts = await financeSystem.getBudgetManager().getAlertBudgets();
+    displayAlerts(alerts);
+
+  } catch (error) {
+    console.error('❌ Erreur chargement dashboard:', error);
+    showAlert('Erreur lors du chargement du dashboard', 'error');
+  }
+}
+
+function displayRecentOperations(operations) {
+  const tbody = document.getElementById('recent-operations');
+  tbody.innerHTML = '';
+
+  if (operations.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-state">
+          <div class="empty-icon">📭</div>
+          <div>Aucune opération trouvée</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  operations.forEach(op => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${new Date(op.createdAt).toLocaleDateString('fr-FR')}</td>
+      <td>${op.type === 'income' ? '💵' : '📤'} ${op.type}</td>
+      <td><strong>${formatCurrency(op.amount)}</strong></td>
+      <td>${op.category}</td>
+      <td><span class="badge badge-${getStatusClass(op.status)}">${op.status}</span></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function displayAlerts(alerts) {
+  const container = document.getElementById('alerts-container');
+  if (alerts.length === 0) {
+    container.innerHTML = '<div class="empty-state">Aucune alerte budget</div>';
+    return;
+  }
+
+  container.innerHTML = alerts.map(alert => `
+    <div class="alert alert-info">
+      ⚠️ <strong>${alert.name}</strong> est à ${alert.utilization}% d'utilisation
+    </div>
+  `).join('');
+}
+
+async function refreshDashboard() {
+  console.log('🔄 Actualisation du dashboard...');
+  await loadDashboardData();
+  showAlert('Dashboard actualisé', 'success');
+}
+
+// ============================================================
+// OPÉRATIONS
+// ============================================================
+
+async function loadOperations() {
+  try {
+    const operations = await financeSystem.getOperationManager().getAllOperations();
+    displayOperationsList(operations);
+  } catch (error) {
+    console.error('❌ Erreur chargement opérations:', error);
+  }
+}
+
+function displayOperationsList(operations) {
+  const tbody = document.getElementById('operations-list');
+  tbody.innerHTML = '';
+
+  operations.forEach(op => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${new Date(op.createdAt).toLocaleDateString('fr-FR')}</td>
+      <td>${op.description || 'N/A'}</td>
+      <td class="${op.type === 'income' ? 'success' : 'danger'}">${formatCurrency(op.amount)}</td>
+      <td>${op.category}</td>
+      <td><span class="badge badge-${getStatusClass(op.status)}">${op.status}</span></td>
+      <td>
+        <button class="btn btn-secondary" onclick="viewOperation('${op.id}')" style="font-size: 11px; padding: 5px 8px;">👁️ Voir</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+function filterOperations(search = '') {
+  // À implémenter
+}
+
+async function saveOperation() {
+  const type = document.getElementById('opType').value;
+  const amount = parseFloat(document.getElementById('opAmount').value);
+  const category = document.getElementById('opCategory').value;
+  const description = document.getElementById('opDescription').value;
+
+  if (!amount || amount <= 0) {
+    showAlert('Veuillez entrer un montant valide', 'error');
+    return;
+  }
+
+  try {
+    const opData = {
+      type,
+      amount,
+      category,
+      description,
+      status: 'pending',
+      createdAt: new Date(),
+      recordedBy: localStorage.getItem('neoclass_userName')
+    };
+
+    const opId = `op_${Date.now()}`;
+    await firebaseIntegration.saveOperation(opId, opData);
+
+    showAlert('Opération enregistrée avec succès', 'success');
+    closeModal('new-operation');
+    loadOperations();
+  } catch (error) {
+    console.error('❌ Erreur sauvegarde:', error);
+    showAlert('Erreur lors de l\'enregistrement', 'error');
+  }
+}
+
+// ============================================================
+// BUDGETS
+// ============================================================
+
+async function loadBudgets() {
+  try {
+    const budgets = await financeSystem.getBudgetManager().getBudgets();
+    displayBudgetsList(budgets);
+  } catch (error) {
+    console.error('❌ Erreur chargement budgets:', error);
+  }
+}
+
+function displayBudgetsList(budgets) {
+  const container = document.getElementById('budgets-container');
+  if (budgets.length === 0) {
+    container.innerHTML = '<div class="section empty-state"><div class="empty-icon">📭</div>Aucun budget créé</div>';
+    return;
+  }
+
+  container.innerHTML = budgets.map(budget => `
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">${budget.name}</div>
+        <div style="color: var(--text-secondary); font-size: 12px;">
+          Alloué: ${formatCurrency(budget.allocated)}
+        </div>
+      </div>
+      <div style="margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px;">
+          <span>Utilisation</span>
+          <span>${budget.utilization}%</span>
+        </div>
+        <div style="height: 6px; background: var(--grey-200); border-radius: 3px; overflow: hidden;">
+          <div style="height: 100%; background: ${budget.utilization > 80 ? 'var(--danger)' : 'var(--success)'}; width: ${budget.utilization}%;"></div>
+        </div>
+      </div>
+      <div style="font-size: 12px; color: var(--text-secondary);">
+        Dépensé: ${formatCurrency(budget.spent)} / ${formatCurrency(budget.allocated)}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// ÉQUIPE
+// ============================================================
+
+async function loadTeam() {
+  try {
+    const team = await firebaseIntegration.getTeamMembers();
+    displayTeamList(team);
+  } catch (error) {
+    console.error('❌ Erreur chargement équipe:', error);
+  }
+}
+
+function displayTeamList(team) {
+  const tbody = document.getElementById('team-list');
+  tbody.innerHTML = '';
+
+  if (team.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="empty-state">
+          <div>Aucun membre d'équipe</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  team.forEach(member => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${member.name}</td>
+      <td>${member.role}</td>
+      <td>${member.email || 'N/A'}</td>
+      <td><span class="status-online"></span> ${member.isActive ? 'Actif' : 'Inactif'}</td>
+      <td>
+        <button class="btn btn-secondary" onclick="editMember('${member.id}')" style="font-size: 11px; padding: 5px 8px;">✏️ Modifier</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+async function saveMember() {
+  const name = document.getElementById('memberName').value;
+  const email = document.getElementById('memberEmail').value;
+  const role = document.getElementById('memberRole').value;
+
+  if (!name || !email) {
+    showAlert('Veuillez remplir tous les champs', 'error');
+    return;
+  }
+
+  try {
+    const memberId = `member_${Date.now()}`;
+    const memberData = { name, email, role, isActive: true, createdAt: new Date() };
+
+    await firebaseIntegration.saveMember(memberId, memberData);
+
+    showAlert('Membre ajouté avec succès', 'success');
+    closeModal('new-member');
+    loadTeam();
+  } catch (error) {
+    console.error('❌ Erreur:', error);
+    showAlert('Erreur lors de l\'ajout', 'error');
+  }
+}
+
+// ============================================================
+// RAPPORTS
+// ============================================================
+
+async function loadReports() {
+  try {
+    const reports = await firebaseIntegration.getReports();
+    displayReportsList(reports);
+  } catch (error) {
+    console.error('❌ Erreur chargement rapports:', error);
+  }
+}
+
+function displayReportsList(reports) {
+  const container = document.getElementById('reports-container');
+  if (reports.length === 0) {
+    container.innerHTML = '<div class="section empty-state"><div class="empty-icon">📭</div>Aucun rapport généré</div>';
+    return;
+  }
+
+  container.innerHTML = reports.map(report => `
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">${report.name}</div>
+        <div style="color: var(--text-secondary); font-size: 12px;">
+          ${new Date(report.createdAt).toLocaleDateString('fr-FR')}
+        </div>
+      </div>
+      <div style="margin-bottom: 10px;">
+        <div style="font-size: 12px; color: var(--text-secondary);">
+          ${report.description || 'Rapport financier'}
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-secondary" onclick="downloadReport('${report.id}')" style="font-size: 11px; padding: 5px 8px;">📥 Télécharger</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function generateReport() {
+  try {
+    showAlert('Génération du rapport en cours...', 'info');
+    
+    const stats = await financeSystem.getFinancialStats('month');
+    const operations = await financeSystem.getOperationManager().getAllOperations();
+    
+    const reportId = `report_${Date.now()}`;
+    const reportData = {
+      name: `Rapport ${new Date().toLocaleDateString('fr-FR')}`,
+      type: 'executive_summary',
+      description: `Synthèse financière mensuelle`,
+      stats,
+      operationCount: operations.length,
+      generatedAt: new Date(),
+      generatedBy: localStorage.getItem('neoclass_userName')
+    };
+
+    await firebaseIntegration.saveReport(reportId, reportData);
+    showAlert('Rapport généré avec succès', 'success');
+    loadReports();
+  } catch (error) {
+    console.error('❌ Erreur génération:', error);
+    showAlert('Erreur lors de la génération', 'error');
+  }
+}
+
+// ============================================================
+// PARAMÈTRES
+// ============================================================
+
+async function saveSettings() {
+  const schoolName = document.getElementById('schoolName').value;
+  const schoolCode = document.getElementById('schoolCode').value;
+
+  localStorage.setItem('neoclass_schoolName', schoolName);
+  localStorage.setItem('neoclass_schoolCode', schoolCode);
+
+  showAlert('Paramètres enregistrés', 'success');
+}
+
+async function syncFirebase() {
+  try {
+    showAlert('Synchronisation Firebase en cours...', 'info');
+    const result = await firebaseIntegration.syncWithFirebase();
+    if (result) {
+      showAlert('Synchronisation réussie ✅', 'success');
+    }
+  } catch (error) {
+    console.error('❌ Erreur sync:', error);
+    showAlert('Erreur synchronisation', 'error');
+  }
+}
+
+async function exportData() {
+  try {
+    const data = await firebaseIntegration.exportAllData();
+    firebaseIntegration.exportToJSON(data);
+    showAlert('Données exportées', 'success');
+  } catch (error) {
+    console.error('❌ Erreur export:', error);
+    showAlert('Erreur lors de l\'export', 'error');
+  }
+}
+
+// ============================================================
+// MODAL UTILS
+// ============================================================
+
+function openModal(modalId) {
+  const modal = document.getElementById(`modal-${modalId}`);
+  if (modal) modal.classList.add('active');
+}
+
+function closeModal(modalId) {
+  const modal = document.getElementById(`modal-${modalId}`);
+  if (modal) modal.classList.remove('active');
+}
+
+// ============================================================
+// UTILITAIRES
+// ============================================================
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'XOF',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+function getStatusClass(status) {
+  const classes = {
+    'completed': 'success',
+    'approved': 'warning',
+    'pending': 'pending',
+    'rejected': 'danger',
+    'validated': 'success'
+  };
+  return classes[status] || 'pending';
+}
+
+function showAlert(message, type = 'info') {
+  // Créer une alerte temporaire
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type}`;
+  alertDiv.textContent = message;
+  
+  const mainContent = document.querySelector('.main-content');
+  mainContent.insertBefore(alertDiv, mainContent.firstChild);
+
+  setTimeout(() => alertDiv.remove(), 4000);
+}
+
+// À implémenter: viewOperation, editMember, downloadReport, clearAllData
+</script>
+
+</body>
+</html>

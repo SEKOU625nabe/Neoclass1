@@ -1,0 +1,127 @@
+rules_version = '2';
+
+// ============================================================
+// NEOCLASS — RÈGLES FIREBASE STORAGE
+// ============================================================
+// Sans ce fichier, Storage reste en mode par défaut (souvent
+// ouvert à tout utilisateur connecté, sans limite de taille) :
+// n'importe qui peut y déposer des fichiers arbitraires et faire
+// exploser la facture.
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function role() {
+      return isAuth()
+        ? firestore.get(/databases/(default)/documents/users/$(uid())).data.get('role', 'guest')
+        : 'guest';
+    }
+
+    function isAdmin() {
+      return role() in ['admin', 'superadmin'];
+    }
+
+    function isEducator() {
+      return role() in ['admin', 'superadmin', 'teacher', 'indep_teacher', 'school'];
+    }
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isVideo() {
+      return request.resource.contentType.matches('video/.*');
+    }
+
+    function isDocument() {
+      return request.resource.contentType.matches('application/pdf')
+          || request.resource.contentType.matches('image/.*');
+    }
+
+    function underMB(n) {
+      return request.resource.size < n * 1024 * 1024;
+    }
+
+    // --------------------------------------------------------
+    // Contenu de cours : publié par les éducateurs
+    // --------------------------------------------------------
+    match /courses/{userId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isEducator()
+                   && (isDocument() || isVideo())
+                   && underMB(200);
+      allow delete: if isEducator();
+    }
+
+    match /course_videos/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isEducator() && isVideo() && underMB(500);
+      allow delete: if isEducator();
+    }
+
+    match /course_docs/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isEducator() && isDocument() && underMB(50);
+      allow delete: if isEducator();
+    }
+
+    // --------------------------------------------------------
+    // Dépôts personnels : chacun dans son propre dossier
+    // --------------------------------------------------------
+    match /posts/{userId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAuth() && uid() == userId && isImage() && underMB(10);
+      allow delete: if isAuth() && (uid() == userId || isAdmin());
+    }
+
+    match /stories/{userId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAuth() && uid() == userId
+                   && (isImage() || isVideo()) && underMB(30);
+      allow delete: if isAuth() && (uid() == userId || isAdmin());
+    }
+
+    match /marketplace/{userId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAuth() && uid() == userId && isImage() && underMB(10);
+      allow delete: if isAuth() && (uid() == userId || isAdmin());
+    }
+
+    match /avatars/{userId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAuth() && uid() == userId && isImage() && underMB(5);
+      allow delete: if isAuth() && (uid() == userId || isAdmin());
+    }
+
+    // Aide aux exercices : fichiers nommés <uid>_<timestamp>_<nom>
+    match /exo_help/{fileName} {
+      allow read: if isAuth();
+      allow write: if isAuth() && fileName.matches(uid() + '_.*')
+                   && isDocument() && underMB(20);
+      allow delete: if isAuth() && (fileName.matches(uid() + '_.*') || isAdmin());
+    }
+
+    // Compétences / justificatifs
+    match /competency/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isDocument() && underMB(20);
+      allow delete: if isEducator();
+    }
+
+    // --------------------------------------------------------
+    // Refus par défaut
+    // --------------------------------------------------------
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

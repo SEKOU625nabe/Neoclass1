@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Intégration Documents & Publicités</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .card-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+        }
+
+        .card-btn:hover {
+            background: #5568d3;
+        }
+
+        .info-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .info-box h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .info-box p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #333;
+            margin-top: 10px;
+            overflow-x: auto;
+            border-left: 4px solid #667eea;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list i {
+            color: #667eea;
+            width: 20px;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .footer h3 {
+            margin-bottom: 15px;
+        }
+
+        .footer p {
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .role-badge.school {
+            background: #51cf66;
+        }
+
+        .role-badge.admin {
+            background: #ff922b;
+        }
+
+        .role-badge.parent {
+            background: #748ffc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- En-tête -->
+        <div class="header">
+            <h1>📚 Documents & Notifications</h1>
+            <p>Nouvelle intégration Neoclass - Gestion de documents et publicités ciblées</p>
+        </div>
+
+        <!-- Cartes d'accès -->
+        <div class="grid">
+            <!-- Gestion Documents -->
+            <a href="school-documents-manager.html" class="card">
+                <div class="card-icon"><i class="fas fa-book"></i></div>
+                <div class="card-title">Gestion des Documents</div>
+                <div class="card-desc">Organisez et partagez les documents de votre école par catégories</div>
+                <span class="role-badge school">🏫 Écoles</span>
+                <button class="card-btn" onclick="event.preventDefault(); window.location.href='school-documents-manager.html'">
+                    Accéder
+                </button>
+            </a>
+
+            <!-- Publicités Admin -->
+            <a href="admin-advertisements.html" class="card">
+                <div class="card-icon"><i class="fas fa-megaphone"></i></div>
+                <div class="card-title">Gestion des Publicités</div>
+                <div class="card-desc">Créez et envoyez des notifications ciblées à tous les utilisateurs</div>
+                <span class="role-badge admin">⚙️ Admin</span>
+                <button class="card-btn" onclick="event.preventDefault(); window.location.href='admin-advertisements.html'">
+                    Accéder
+                </button>
+            </a>
+
+            <!-- Documentation -->
+            <a href="GUIDE_DOCUMENTS_NOTIFICATIONS.md" class="card">
+                <div class="card-icon"><i class="fas fa-file-alt"></i></div>
+                <div class="card-title">Documentation</div>
+                <div class="card-desc">Guide complet d'intégration et d'utilisation</div>
+                <span class="role-badge">📖 Tous</span>
+                <button class="card-btn" onclick="event.preventDefault(); window.location.href='GUIDE_DOCUMENTS_NOTIFICATIONS.md'">
+                    Lire
+                </button>
+            </a>
+        </div>
+
+        <!-- Section Info -->
+        <div class="info-box">
+            <h2><i class="fas fa-lightbulb"></i> À Propos</h2>
+
+            <h3>🎯 Objectif</h3>
+            <p>
+                Cette nouvelle intégration ajoute deux fonctionnalités majeures au système Neoclass:
+            </p>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> <strong>Gestionnaire de Documents</strong> - Les écoles peuvent organiser et partager leurs documents</li>
+                <li><i class="fas fa-check"></i> <strong>Système de Publicités</strong> - L'admin peut envoyer des notifications ciblées</li>
+                <li><i class="fas fa-check"></i> <strong>Synchronisation en temps réel</strong> - Firestore + localStorage</li>
+                <li><i class="fas fa-check"></i> <strong>Analytics complets</strong> - Suivi des téléchargements et clics</li>
+            </ul>
+
+            <h3>📂 Gestionnaire de Documents</h3>
+            <p>
+                Les écoles peuvent créer des catégories personnalisables et ajouter des documents. 
+                Chaque document peut avoir une visibilité définie (école, parents, public).
+            </p>
+
+            <div class="code-block">
+// Exemple: Créer une catégorie
+documentManager.createCategory('Financier', 'Documents financiers de l\'école')
+  .then(category => console.log('Catégorie créée:', category))
+            </div>
+
+            <h3>📢 Système de Publicités</h3>
+            <p>
+                L'administrateur peut créer des publicités ciblées vers des audiences spécifiques 
+                (écoles, parents, professeurs, étudiants). Chaque publicité a un statut 
+                (brouillon, programmé, actif, terminé) et des statistiques (vues, clics, lectures).
+            </p>
+
+            <div class="code-block">
+// Exemple: Créer et publier une pub
+const ad = await notificationManager.createAdvertisement({
+  title: 'Nouvelle fonctionnalité',
+  content: 'Découvrez notre nouvelle système de paiement',
+  targetAudience: ['school', 'parent']
+});
+await notificationManager.publishAdvertisement(ad.id);
+            </div>
+
+            <h3>🔄 Synchronisation</h3>
+            <p>
+                Tous les documents et notifications sont synchronisés en temps réel avec Firestore. 
+                Un système de sauvegarde en localStorage permet le fonctionnement hors ligne.
+            </p>
+
+            <ul class="feature-list">
+                <li><i class="fas fa-cloud"></i> <strong>Firestore</strong> - Base de données principale</li>
+                <li><i class="fas fa-hard-drive"></i> <strong>localStorage</strong> - Synchronisation offline</li>
+                <li><i class="fas fa-sync-alt"></i> <strong>Auto-sync</strong> - Synchronisation automatique</li>
+                <li><i class="fas fa-shield-alt"></i> <strong>Sécurisé</strong> - Permissions par rôle</li>
+            </ul>
+        </div>
+
+        <!-- Sections par rôle -->
+        <div class="info-box">
+            <h2><i class="fas fa-users"></i> Rôles & Permissions</h2>
+
+            <h3>🏫 Écoles</h3>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Créer et gérer les catégories de documents</li>
+                <li><i class="fas fa-check"></i> Ajouter et organiser les documents</li>
+                <li><i class="fas fa-check"></i> Définir la visibilité (école, parents, public)</li>
+                <li><i class="fas fa-check"></i> Voir les statistiques de téléchargement</li>
+                <li><i class="fas fa-check"></i> Exporter les données en CSV</li>
+            </ul>
+
+            <h3>👥 Parents & Utilisateurs</h3>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Voir les documents partagés par leur école</li>
+                <li><i class="fas fa-check"></i> Recevoir les notifications publiques</li>
+                <li><i class="fas fa-check"></i> Télécharger les documents</li>
+                <li><i class="fas fa-check"></i> Marquer les notifications comme lues</li>
+            </ul>
+
+            <h3>⚙️ Administrateur</h3>
+            <ul class="feature-list">
+                <li><i class="fas fa-check"></i> Créer les publicités et notifications</li>
+                <li><i class="fas fa-check"></i> Cibler des audiences spécifiques</li>
+                <li><i class="fas fa-check"></i> Planifier les publicités</li>
+                <li><i class="fas fa-check"></i> Voir les analytics complètes</li>
+                <li><i class="fas fa-check"></i> Archiver les campagnes</li>
+                <li><i class="fas fa-check"></i> Exporter les rapports</li>
+            </ul>
+        </div>
+
+        <!-- Section Intégration -->
+        <div class="info-box">
+            <h2><i class="fas fa-plug"></i> Intégration Technique</h2>
+
+            <h3>Fichiers Créés</h3>
+            <ul class="feature-list">
+                <li><i class="fas fa-file"></i> <code>modules/DocumentManager.js</code> - Gestion des documents</li>
+                <li><i class="fas fa-file"></i> <code>modules/NotificationManager.js</code> - Gestion des notifications</li>
+                <li><i class="fas fa-file"></i> <code>school-documents-manager.html</code> - Interface école</li>
+                <li><i class="fas fa-file"></i> <code>admin-advertisements.html</code> - Interface admin</li>
+                <li><i class="fas fa-file"></i> <code>GUIDE_DOCUMENTS_NOTIFICATIONS.md</code> - Documentation</li>
+            </ul>
+
+            <h3>Collections Firestore</h3>
+            <div class="code-block">
+schools/{schoolId}/documents/ → Documents de l'école
+schools/{schoolId}/document_categories/ → Catégories
+advertisements/ → Publicités globales
+user_notifications/ → Notifications utilisateur
+            </div>
+
+            <h3>Intégration dans le Menu</h3>
+            <p>Pour ajouter les liens dans votre interface principale:</p>
+            <div class="code-block">
+&lt;!-- Pour les écoles --&gt;
+&lt;a href="school-documents-manager.html"&gt;
+  &lt;i class="fas fa-book"&gt;&lt;/i&gt; Gestion des Documents
+&lt;/a&gt;
+
+&lt;!-- Pour l'admin --&gt;
+&lt;a href="admin-advertisements.html"&gt;
+  &lt;i class="fas fa-megaphone"&gt;&lt;/i&gt; Publicités
+&lt;/a&gt;
+            </div>
+        </div>
+
+        <!-- Cas d'Usage -->
+        <div class="info-box">
+            <h2><i class="fas fa-star"></i> Cas d'Usage</h2>
+
+            <h3>📚 Cas 1: École partage des documents avec les parents</h3>
+            <p>
+                1. L'école crée une catégorie "Bulletins"<br>
+                2. Ajoute les bulletins des élèves<br>
+                3. Définit la visibilité à "Parents"<br>
+                4. Les parents reçoivent une notification<br>
+                5. Les parents peuvent télécharger les bulletins
+            </p>
+
+            <h3>📢 Cas 2: Admin notifie les écoles d'une mise à jour</h3>
+            <p>
+                1. Admin crée une pub: "Nouvelle fonctionnalité de paiement"<br>
+                2. Cible: Écoles<br>
+                3. Priorité: Normale<br>
+                4. Les écoles reçoivent la notification<br>
+                5. Admin voit les statistiques de lecture
+            </p>
+
+            <h3>⚠️ Cas 3: Alerte système urgente</h3>
+            <p>
+                1. Admin crée une pub: "Panne système imminente"<br>
+                2. Type: Avertissement<br>
+                3. Priorité: Urgente<br>
+                4. Cible: Tous les utilisateurs<br>
+                5. Les notifications apparaissent en priorité
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <h3>✨ Prêt à commencer?</h3>
+            <p>Choisissez votre interface en fonction de votre rôle:</p>
+            <div style="margin-top: 20px;">
+                <button onclick="window.location.href='school-documents-manager.html'" class="card-btn" style="margin: 5px;">
+                    <i class="fas fa-book"></i> Documents (École)
+                </button>
+                <button onclick="window.location.href='admin-advertisements.html'" class="card-btn" style="margin: 5px;">
+                    <i class="fas fa-megaphone"></i> Publicités (Admin)
+                </button>
+            </div>
+            <p style="margin-top: 20px; font-size: 13px; opacity: 0.8;">
+                Consultez le <a href="GUIDE_DOCUMENTS_NOTIFICATIONS.md" style="color: white; text-decoration: underline;">guide complet</a> 
+                pour plus d'informations
+            </p>
+        </div>
+    </div>
+</body>
+</html>

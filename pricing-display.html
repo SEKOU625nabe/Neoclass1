@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💳 Plans & Paiements | Neoclass</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        /* TRIAL BANNER */
+        .trial-banner {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .trial-banner h2 {
+            margin-bottom: 10px;
+        }
+
+        .trial-banner p {
+            font-size: 14px;
+        }
+
+        /* PRICING TABS */
+        .pricing-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .pricing-tab {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .pricing-tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .pricing-tab:hover {
+            transform: translateY(-2px);
+        }
+
+        /* PRICING GRID */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .pricing-card.popular {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .pricing-card h3 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+            margin-top: 20px;
+        }
+
+        .pricing-card .emoji {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 30px 0;
+            line-height: 1;
+        }
+
+        .price-currency {
+            font-size: 20px;
+            vertical-align: super;
+        }
+
+        .price-period {
+            font-size: 14px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .features {
+            text-align: left;
+            margin: 30px 0;
+            list-style: none;
+        }
+
+        .features li {
+            padding: 12px 0;
+            color: #666;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features li::before {
+            content: '✅';
+            font-size: 18px;
+        }
+
+        .trial-info {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 13px;
+            color: #92400e;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .cta-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .cta-button.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .cta-button.secondary:hover {
+            background: #f9f9f9;
+        }
+
+        /* FAQ */
+        .faq-section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-top: 50px;
+        }
+
+        .faq-section h2 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 20px;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .faq-answer {
+            color: #666;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .faq-answer.show {
+            display: block;
+        }
+
+        /* COMPARISON TABLE */
+        .comparison-table {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            margin-top: 50px;
+            overflow-x: auto;
+        }
+
+        .comparison-table h2 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            background: #f9f9f9;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #666;
+        }
+
+        table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        /* ALERTS */
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.popular {
+                transform: scale(1);
+            }
+
+            .pricing-card.popular:hover {
+                transform: translateY(-10px);
+            }
+
+            .price {
+                font-size: 36px;
+            }
+
+            .pricing-tabs {
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>🎓 Choisissez votre Plan</h1>
+            <p>Débloquez tout le potentiel de Neoclass</p>
+        </div>
+
+        <!-- TRIAL BANNER -->
+        <div class="trial-banner" id="trialBanner">
+            <h2>🎁 Premier mois GRATUIT</h2>
+            <p>Essayez Neoclass sans engagement. À partir du 2e mois, commencez à payer.</p>
+        </div>
+
+        <!-- ALERTS -->
+        <div id="alert" class="alert"></div>
+
+        <!-- USER TYPE SELECTOR -->
+        <div class="pricing-tabs" id="userTypeSelector">
+            <button class="pricing-tab active" onclick="selectUserType('student')">👨‍🎓 Élèves</button>
+            <button class="pricing-tab" onclick="selectUserType('school')">🏫 Écoles</button>
+            <button class="pricing-tab" onclick="selectUserType('parent')">👨‍👩‍👧 Parents</button>
+        </div>
+
+        <!-- PRICING CARDS -->
+        <div class="pricing-grid" id="pricingGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                Chargement des plans...
+            </div>
+        </div>
+
+        <!-- FAQ SECTION -->
+        <div class="faq-section">
+            <h2>❓ Questions Fréquentes</h2>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>➕</span> Puis-je annuler mon abonnement à tout moment?
+                </div>
+                <div class="faq-answer">
+                    Oui! Vous pouvez annuler votre abonnement à tout moment sans frais supplémentaires. Vous garderez accès à Neoclass jusqu'à la fin de votre période de facturation.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>➕</span> Est-ce que je peux changer de plan?
+                </div>
+                <div class="faq-answer">
+                    Absolument! Vous pouvez passer à un plan supérieur ou inférieur à tout moment. Les changements s'appliqueront au prochain cycle de facturation.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>➕</span> Comment fonctionne la période d'essai?
+                </div>
+                <div class="faq-answer">
+                    Le premier mois est complètement gratuit! Vous avez accès à toutes les fonctionnalités premium. À la fin du 30e jour, la facturation commencera automatiquement.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>➕</span> Puis-je obtenir une facture?
+                </div>
+                <div class="faq-answer">
+                    Bien sûr! Les factures sont automatiquement générées pour chaque paiement. Vous pouvez les télécharger depuis votre tableau de bord à tout moment.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>➕</span> Quels modes de paiement acceptez-vous?
+                </div>
+                <div class="faq-answer">
+                    Nous acceptons les cartes de crédit/débit (Visa, Mastercard), les virements bancaires, et les portefeuilles mobiles (Orange Money, Wave, etc.).
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPARISON TABLE -->
+        <div class="comparison-table">
+            <h2>📊 Comparaison des Plans</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fonctionnalité</th>
+                        <th>Gratuit</th>
+                        <th>Mensuel</th>
+                        <th>Trimestriel</th>
+                        <th>Annuel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Accès aux cours</td>
+                        <td>✅ Limité</td>
+                        <td>✅ Accès complet</td>
+                        <td>✅ Accès complet</td>
+                        <td>✅ Accès complet</td>
+                    </tr>
+                    <tr>
+                        <td>DARX IA</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Gamification</td>
+                        <td>✅ Basique</td>
+                        <td>✅ Complète</td>
+                        <td>✅ Complète</td>
+                        <td>✅ Complète</td>
+                    </tr>
+                    <tr>
+                        <td>Certificats</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Support prioritaire</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Accès hors ligne</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                        <td>✅</td>
+                    </tr>
+                    <tr>
+                        <td>Premium content</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>❌</td>
+                        <td>✅</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfXaLtx7XnLWVN2Pxq7z...",
+            authDomain: "neoclass-73b86.firebaseapp.com",
+            projectId: "neoclass-73b86",
+            storageBucket: "neoclass-73b86.appspot.com",
+            messagingSenderId: "123456789...",
+            appId: "1:123456789...",
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUserType = 'student';
+        let pricingData = {};
+
+        // ============================================================
+        // UI FUNCTIONS
+        // ============================================================
+
+        async function selectUserType(userType) {
+            currentUserType = userType;
+
+            // Update tabs
+            document.querySelectorAll('.pricing-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Load and display pricing
+            await loadPricing();
+        }
+
+        async function loadPricing() {
+            try {
+                const pricingDoc = await db.collection('settings').doc('pricing').get();
+                
+                if (!pricingDoc.exists) {
+                    showAlert('Erreur: Configuration de tarification non trouvée', 'error');
+                    return;
+                }
+
+                const pricing = pricingDoc.data();
+                const userPricing = pricing.prices ? pricing.prices[currentUserType] : getPriceDefaults();
+
+                renderPricingCards(userPricing);
+            } catch (error) {
+                showAlert(`Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        function getPriceDefaults() {
+            const defaults = {
+                student: {
+                    monthly: { price: 20000, name: 'Mensuel' },
+                    quarterly: { price: 50000, name: 'Trimestriel' },
+                    annual: { price: 200000, name: 'Annuel' },
+                },
+                school: {
+                    monthly: { price: 500000, name: 'Mensuel' },
+                    quarterly: { price: 1400000, name: 'Trimestriel' },
+                    annual: { price: 5000000, name: 'Annuel' },
+                },
+                parent: {
+                    monthly: { price: 15000, name: 'Mensuel' },
+                    quarterly: { price: 40000, name: 'Trimestriel' },
+                    annual: { price: 160000, name: 'Annuel' },
+                },
+            };
+            return defaults[currentUserType];
+        }
+
+        function renderPricingCards(userPricing) {
+            const grid = document.getElementById('pricingGrid');
+            const plans = ['monthly', 'quarterly', 'annual'];
+            const icons = { monthly: '📅', quarterly: '📆', annual: '🎁' };
+            const descriptions = {
+                monthly: 'Parfait pour tester',
+                quarterly: 'Meilleure valeur',
+                annual: 'Économies maximales',
+            };
+
+            grid.innerHTML = plans
+                .map((plan, index) => {
+                    const planData = userPricing[plan];
+                    const isPopular = plan === 'quarterly';
+
+                    return `
+                        <div class="pricing-card ${isPopular ? 'popular' : ''}">
+                            ${isPopular ? '<div class="popular-badge">⭐ POPULAIRE</div>' : ''}
+                            
+                            <div class="emoji">${icons[plan]}</div>
+                            <h3>${planData.name}</h3>
+                            <p style="color: #999; font-size: 14px; margin-bottom: 20px;">${descriptions[plan]}</p>
+                            
+                            <div class="price">
+                                <span class="price-currency">₣</span>${(planData.price).toLocaleString('fr-FR')}
+                            </div>
+                            <div class="price-period">
+                                ${plan === 'monthly' ? 'par mois' : plan === 'quarterly' ? 'par trimestre' : 'par an'}
+                            </div>
+                            
+                            <div class="trial-info">
+                                🎁 <strong>Premier mois gratuit</strong>
+                                <br>Puis ${(planData.price).toLocaleString('fr-FR')} ${plan === 'monthly' ? 'par mois' : plan === 'quarterly' ? 'par trimestre' : 'par an'}
+                            </div>
+                            
+                            <ul class="features">
+                                <li>Accès complet aux cours</li>
+                                <li>DARX IA activé</li>
+                                <li>Gamification complète</li>
+                                <li>Certificats validés</li>
+                                <li>Support prioritaire</li>
+                                ${plan !== 'monthly' ? '<li>Accès hors ligne</li>' : ''}
+                                ${plan === 'annual' ? '<li>Contenu premium</li>' : ''}
+                            </ul>
+                            
+                            <button class="cta-button" onclick="selectPlan('${plan}', ${planData.price})">
+                                Commencer - Premier mois gratuit
+                            </button>
+                        </div>
+                    `;
+                })
+                .join('');
+        }
+
+        async function selectPlan(planType, price) {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    showAlert('❌ Veuillez vous connecter d\'abord', 'error');
+                    return;
+                }
+
+                // Create subscription
+                await db.collection('subscriptions').add({
+                    userId: user.uid,
+                    userType: currentUserType,
+                    planType,
+                    price,
+                    status: 'trial', // Trial period first
+                    trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                    createdAt: new Date(),
+                    platform: 'web',
+                });
+
+                showAlert('✅ Abonnement créé! Vous êtes en période d\'essai.', 'success');
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 2000);
+            } catch (error) {
+                showAlert(`❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert show alert-${type}`;
+            setTimeout(() => alert.classList.remove('show'), 4000);
+        }
+
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            answer.classList.toggle('show');
+            const icon = element.querySelector('span');
+            icon.textContent = answer.classList.contains('show') ? '➖' : '➕';
+        }
+
+        // ============================================================
+        // INIT
+        // ============================================================
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadPricing();
+        });
+    </script>
+</body>
+</html>

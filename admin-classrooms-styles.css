@@ -1,0 +1,755 @@
+/**
+ * 🎨 STYLES - ADMIN PANEL SALLES DE CLASSE
+ * Styles pour admin-classrooms-panel.js
+ */
+
+/* ============================= */
+/* 📦 CONTENEUR PRINCIPAL */
+/* ============================= */
+.admin-classrooms-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* ============================= */
+/* 🎯 EN-TÊTE */
+/* ============================= */
+.admin-header-classrooms {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+
+.admin-header-classrooms .header-content h1 {
+  font-size: 28px;
+  margin: 0;
+  color: white;
+}
+
+.admin-header-classrooms .header-content p {
+  margin: 8px 0 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.admin-header-classrooms .header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.admin-header-classrooms .header-actions .btn {
+  white-space: nowrap;
+}
+
+/* Mode sombre */
+body.dark-mode .admin-header-classrooms {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+}
+
+/* ============================= */
+/* 🔍 FILTRES */
+/* ============================= */
+.admin-filters-classrooms {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.filter-group {
+  flex: 1;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  transition: all var(--transition);
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all var(--transition);
+}
+
+.filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+}
+
+/* ============================= */
+/* 📊 GRILLE DES CLASSES */
+/* ============================= */
+.admin-classrooms-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 24px;
+}
+
+.admin-classes-list {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.admin-classes-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.admin-class-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.admin-class-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.admin-class-card .card-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(108, 99, 255, 0.1);
+  border-radius: 8px;
+}
+
+.admin-class-card .card-content {
+  flex: 1;
+}
+
+.admin-class-card .card-content h3 {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.admin-class-card .card-meta {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-class-card .card-courses {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.admin-class-card .card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: rgba(108, 99, 255, 0.1);
+  transform: scale(1.1);
+}
+
+/* ============================= */
+/* 📝 PANEL DE DÉTAIL */
+/* ============================= */
+.admin-detail-panel {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.admin-class-detail {
+  padding: 24px;
+}
+
+.placeholder-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.class-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.detail-icon {
+  font-size: 48px;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(108, 99, 255, 0.1);
+  border-radius: 12px;
+}
+
+.detail-title h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.detail-title p {
+  margin: 8px 0 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.detail-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+.class-detail-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.class-detail-actions .btn {
+  flex: 1;
+}
+
+/* ============================= */
+/* 📋 TABLEAU DES COURS */
+/* ============================= */
+.courses-table {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 60px 1fr 2fr 120px;
+  gap: 16px;
+  padding: 16px;
+  background: var(--bg);
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 2fr 120px;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row:hover {
+  background: var(--bg-hover);
+}
+
+.col-icon {
+  text-align: center;
+}
+
+.col-name strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.col-name small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.col-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.col-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon-small {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-icon-small:hover {
+  background: rgba(108, 99, 255, 0.1);
+}
+
+.btn-icon-small.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ============================= */
+/* 🪟 MODAL */
+/* ============================= */
+.modal-classrooms {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-classrooms.open {
+  display: flex;
+}
+
+.modal-content-classrooms {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: var(--bg-hover);
+}
+
+/* ============================= */
+/* 📝 FORMULAIRE */
+/* ============================= */
+#form-course {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: all var(--transition);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.icon-picker {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-picker input {
+  flex: 1;
+  font-size: 16px;
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.form-actions .btn {
+  flex: 1;
+}
+
+/* ============================= */
+/* 🔔 NOTIFICATIONS */
+/* ============================= */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: var(--radius-sm);
+  background: var(--success);
+  color: white;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  transform: translateX(400px);
+  transition: transform 0.3s ease-out;
+  z-index: 2000;
+}
+
+.toast-notification.show {
+  transform: translateX(0);
+}
+
+.toast-notification.toast-error {
+  background: var(--danger);
+}
+
+.toast-notification.toast-info {
+  background: var(--info);
+}
+
+.toast-notification.toast-warning {
+  background: var(--accent);
+  color: #000;
+}
+
+/* ============================= */
+/* 👁️ PREVIEW MODAL */
+/* ============================= */
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.preview-content {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.preview-content .btn-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  background: var(--bg-card);
+}
+
+/* ============================= */
+/* 📱 RESPONSIVE */
+/* ============================= */
+@media (max-width: 1024px) {
+  .admin-classrooms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-classes-list {
+    max-height: 400px;
+  }
+
+  .admin-detail-panel {
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header-classrooms {
+    flex-direction: column;
+  }
+
+  .admin-header-classrooms .header-actions {
+    width: 100%;
+  }
+
+  .admin-header-classrooms .header-actions .btn {
+    flex: 1;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+  }
+
+  .filter-btn {
+    width: 100%;
+  }
+
+  .class-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detail-stats {
+    width: 100%;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+
+  .table-header > div::before {
+    font-weight: 600;
+    margin-right: 8px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================= */
+/* ✨ ANIMATIONS */
+/* ============================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ============================= */
+/* 🌙 MODE SOMBRE */
+/* ============================= */
+body.dark-mode .admin-classrooms-wrapper {
+  background: transparent;
+}
+
+body.dark-mode .admin-filters-classrooms,
+body.dark-mode .admin-classes-list,
+body.dark-mode .admin-detail-panel,
+body.dark-mode .modal-content-classrooms {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+body.dark-mode .filter-input,
+body.dark-mode .filter-btn {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+body.dark-mode .filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+body.dark-mode .table-header {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group textarea {
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+body.dark-mode .admin-header-classrooms {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #0a0a12;
+}
+
+body.dark-mode .admin-header-classrooms h1,
+body.dark-mode .admin-header-classrooms p {
+  color: #0a0a12;
+}
