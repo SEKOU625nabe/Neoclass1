@@ -1,0 +1,14 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 51;
+	objects = {
+		/* Begin PBXBuildFile section */
+		50B271D024F5B80D00E7B5F8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B271CF24F5B80D00E7B5F8 /* AppDelegate.swift */; };
+		50B271D224F5B80D00E7B5F8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B271D124F5B80D00E7B5F8 /* SceneDelegate.swift */; };
+		/* End PBXBuildFile section */
+	};
+	rootObject = 50B271C524F5B80D00E7B5F8 /* Project object */;
+}

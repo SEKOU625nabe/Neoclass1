@@ -1,0 +1,20 @@
+{
+  "appId": "com.neoclass.mobile",
+  "appName": "Neoclass",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#6c63ff",
+      "showSpinner": true,
+      "spinnerColor": "#fbbf24"
+    }
+  }
+}

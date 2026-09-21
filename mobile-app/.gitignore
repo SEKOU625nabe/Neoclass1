@@ -1,0 +1,17 @@
+node_modules/
+platforms/
+plugins/
+android/
+.gradle
+.DS_Store
+*.log
+*.jks
+google-services.json
+capacitor.config.json.bak
+dist/
+build/
+.env
+.env.local
+*.apk
+*.aab
+out/
