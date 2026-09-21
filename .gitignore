@@ -40,3 +40,13 @@ Thumbs.db
 # Temp files
 temp_*.js
 *.tmp
+
+# Local Netlify folder
+.netlify
+
+# Sauvegardes locales (contiennent des secrets)
+.backup-phase0/
+*.bak
+
+# Sauvegardes horodatées
+*.bak-*

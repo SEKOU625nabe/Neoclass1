@@ -3,15 +3,9 @@
 // Intégration complète de tous les modules
 // ============================================================
 
-// Charger les variables d'environnement
-require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const compression = require('compression');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 
 // ============================================================
 // 📦 IMPORTS DES MODULES
@@ -56,93 +50,16 @@ const {
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-// ============================================================
-// 🛡️ MIDDLEWARES DE SÉCURITÉ
-// ============================================================
-
-// Protection des headers HTTP (désactivé en dev pour éviter les problèmes)
-if (process.env.NODE_ENV === 'production') {
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdn.jsdelivr.net", "www.gstatic.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
-        fontSrc: ["'self'", "fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "blob:", "*.firebasestorage.app", "*.googleapis.com"],
-        connectSrc: ["'self'", "*.firebaseio.com", "*.googleapis.com", "api.mistral.ai"]
-      }
-    }
-  }));
-} else {
-  // Mode dev: helmet avec CSP désactivé
-  app.use(helmet({
-    contentSecurityPolicy: false
-  }));
-}
-
-// Compression des réponses (gzip/brotli)
-app.use(compression());
-
-// Rate limiting - protection contre DoS
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requêtes par IP par fenêtre
-  message: { success: false, error: 'RATE_LIMIT', message: 'Trop de requêtes, réessayez plus tard' },
-  standardHeaders: true,
-  legacyHeaders: false
-});
-app.use('/api/', apiLimiter);
-
-// Rate limiting strict pour l'authentification
-const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 heure
-  max: 10, // 10 tentatives par heure
-  message: { success: false, error: 'AUTH_LIMIT', message: 'Trop de tentatives de connexion' }
-});
-app.use('/api/auth/', authLimiter);
-
-// Middleware de base avec limites sécurisées
-app.use(express.json({ limit: '10mb' })); // Réduit de 50mb à 10mb
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// CORS sécurisé
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:3001'];
+// Middleware de base
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: (origin, callback) => {
-    // Permettre les requêtes sans origin (mobile apps, curl, etc.) en dev
-    if (!origin && process.env.NODE_ENV !== 'production') return callback(null, true);
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Non autorisé par CORS'));
-    }
-  },
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
   credentials: true
 }));
 
-// ============================================================
-// 📁 SERVIR LES FICHIERS STATIQUES
-// ============================================================
-
-// Servir le nouveau dossier public/ pour CSS, JS, assets (sans index.html par défaut)
-app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
-  etag: true,
-  lastModified: true,
-  index: false  // Ne pas servir index.html automatiquement
-}));
-
-// Servir les assets (images, icons, sounds)
-app.use('/assets', express.static(path.join(__dirname, 'public', 'assets'), {
-  maxAge: '7d'
-}));
-
-// Fallback: servir le dossier racine (pour Neoclass3.html legacy)
-app.use(express.static(path.join(__dirname), {
-  maxAge: 0,
-  index: false  // Ne pas servir index.html automatiquement
-}));
+// Servir les fichiers statiques
+app.use(express.static(path.join(__dirname)));
 
 // ============================================================
 // 🗄️ SIMULATION BASE DE DONNÉES (remplacer par Firebase/MongoDB)
@@ -218,14 +135,9 @@ app.use(securityMiddleware.logAccess);
 // 🛣️ ROUTES PUBLIQUES
 // ============================================================
 
-// Route principale - servir Neoclass3.html avec toutes les fonctionnalités
+// Route principale - servir le fichier HTML
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'Neoclass3.html'));
-});
-
-// Route pour la version modulaire (optionnel)
-app.get('/v2', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Health check
@@ -615,6 +527,367 @@ app.get('/api/search/courses',
 );
 
 // ============================================================
+// 💰 ROUTES PROTÉGÉES - FINANCE
+// ============================================================
+
+// Middleware pour vérifier les droits finance (school/admin)
+const requireFinanceRole = (req, res, next) => {
+  const financeRoles = ['admin', 'school', 'director', 'accountant', 'treasurer'];
+  if (!financeRoles.includes(req.user?.role)) {
+    return res.status(403).json({
+      success: false,
+      error: 'PERMISSION_DENIED',
+      message: 'Seuls les admins et directeurs peuvent accéder aux finances'
+    });
+  }
+  next();
+};
+
+// GET /api/finance/dashboard - Dashboard financier
+app.get('/api/finance/dashboard',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  async (req, res) => {
+    try {
+      const schoolId = req.user.uid || req.user.schoolId;
+      
+      // Récupérer les opérations de cette année
+      const operations = Array.from(mockDB.collections.operations?.values() || [])
+        .filter(op => op.schoolId === schoolId && op.year === new Date().getFullYear());
+      
+      // Calculs
+      const income = operations
+        .filter(op => op.type === 'income')
+        .reduce((sum, op) => sum + (op.amount || 0), 0);
+      
+      const expenses = operations
+        .filter(op => op.type === 'expense')
+        .reduce((sum, op) => sum + (op.amount || 0), 0);
+      
+      const balance = income - expenses;
+      
+      res.json({
+        success: true,
+        data: {
+          year: new Date().getFullYear(),
+          income,
+          expenses,
+          balance,
+          operationCount: operations.length,
+          lastUpdate: new Date().toISOString(),
+          recentOperations: operations.slice(-5)
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'DASHBOARD_ERROR',
+        message: error.message
+      });
+    }
+  }
+);
+
+// GET /api/finance/operations - Lister toutes les opérations
+app.get('/api/finance/operations',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  async (req, res) => {
+    try {
+      const schoolId = req.user.uid || req.user.schoolId;
+      const { type, status, from, to } = req.query;
+      
+      let operations = Array.from(mockDB.collections.operations?.values() || [])
+        .filter(op => op.schoolId === schoolId);
+      
+      // Filtres optionnels
+      if (type) operations = operations.filter(op => op.type === type);
+      if (status) operations = operations.filter(op => op.status === status);
+      if (from) operations = operations.filter(op => new Date(op.date) >= new Date(from));
+      if (to) operations = operations.filter(op => new Date(op.date) <= new Date(to));
+      
+      res.json({
+        success: true,
+        data: operations.sort((a, b) => new Date(b.date) - new Date(a.date))
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'OPERATIONS_ERROR',
+        message: error.message
+      });
+    }
+  }
+);
+
+// POST /api/finance/operations - Enregistrer une opération
+app.post('/api/finance/operations',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  async (req, res) => {
+    try {
+      const { type, amount, category, description } = req.body;
+      const schoolId = req.user.uid || req.user.schoolId;
+      
+      // Validation
+      if (!type || !['income', 'expense', 'transfer'].includes(type)) {
+        return res.status(400).json({ success: false, error: 'Invalid operation type' });
+      }
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ success: false, error: 'Invalid amount' });
+      }
+      
+      const operation = {
+        id: `op_${Date.now()}`,
+        schoolId,
+        type,
+        amount,
+        category: category || 'general',
+        description: description || '',
+        status: 'pending',
+        date: new Date().toISOString(),
+        recordedBy: req.user.uid,
+        year: new Date().getFullYear()
+      };
+      
+      // Sauvegarder
+      if (!mockDB.collections.operations) {
+        mockDB.collections.operations = new Map();
+      }
+      mockDB.collections.operations.set(operation.id, operation);
+      
+      res.status(201).json({
+        success: true,
+        data: operation
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: 'RECORD_ERROR',
+        message: error.message
+      });
+    }
+  }
+);
+
+// GET /api/finance/operations/:id - Obtenir une opération spécifique
+app.get('/api/finance/operations/:id',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  async (req, res) => {
+    try {
+      const operation = mockDB.collections.operations?.get(req.params.id);
+      
+      if (!operation || operation.schoolId !== (req.user.uid || req.user.schoolId)) {
+        return res.status(404).json({ success: false, error: 'OPERATION_NOT_FOUND' });
+      }
+      
+      res.json({ success: true, data: operation });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'FETCH_ERROR', message: error.message });
+    }
+  }
+);
+
+// POST /api/finance/reports - Générer un rapport
+app.post('/api/finance/reports',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  async (req, res) => {
+    try {
+      const schoolId = req.user.uid || req.user.schoolId;
+      const { type = 'monthly', month, year = new Date().getFullYear() } = req.body;
+      
+      let operations = Array.from(mockDB.collections.operations?.values() || [])
+        .filter(op => op.schoolId === schoolId && op.year === year);
+      
+      if (type === 'monthly' && month) {
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+        operations = operations.filter(op => {
+          const opDate = new Date(op.date);
+          return opDate >= startDate && opDate <= endDate;
+        });
+      }
+      
+      const summary = {
+        type,
+        period: type === 'monthly' ? `${month}/${year}` : year,
+        income: operations.filter(o => o.type === 'income').reduce((s, o) => s + o.amount, 0),
+        expenses: operations.filter(o => o.type === 'expense').reduce((s, o) => s + o.amount, 0),
+        operationCount: operations.length,
+        generatedAt: new Date().toISOString()
+      };
+      
+      summary.balance = summary.income - summary.expenses;
+      
+      res.json({ success: true, data: summary });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'REPORT_ERROR', message: error.message });
+    }
+  }
+);
+
+// POST /api/finance/budgets - Créer un budget
+app.post('/api/finance/budgets',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  async (req, res) => {
+    try {
+      const { year, department, totalAllocated } = req.body;
+      const schoolId = req.user.uid || req.user.schoolId;
+      
+      if (!year || !totalAllocated) {
+        return res.status(400).json({ success: false, error: 'Missing required fields' });
+      }
+      
+      const budget = {
+        id: `budget_${Date.now()}`,
+        schoolId,
+        year,
+        department: department || 'general',
+        allocated: totalAllocated,
+        spent: 0,
+        utilization: 0,
+        createdAt: new Date().toISOString()
+      };
+      
+      if (!mockDB.collections.budgets) {
+        mockDB.collections.budgets = new Map();
+      }
+      mockDB.collections.budgets.set(budget.id, budget);
+      
+      res.status(201).json({ success: true, data: budget });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'BUDGET_ERROR', message: error.message });
+    }
+  }
+);
+
+// GET /api/finance/budgets - Lister les budgets
+app.get('/api/finance/budgets',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  async (req, res) => {
+    try {
+      const schoolId = req.user.uid || req.user.schoolId;
+      const { year = new Date().getFullYear() } = req.query;
+      
+      const budgets = Array.from(mockDB.collections.budgets?.values() || [])
+        .filter(b => b.schoolId === schoolId && b.year === parseInt(year));
+      
+      res.json({ success: true, data: budgets });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'BUDGETS_ERROR', message: error.message });
+    }
+  }
+);
+
+// POST /api/payment/initiate - Initier un paiement (Orange/MTN)
+app.post('/api/payment/initiate',
+  securityMiddleware.authenticateUser,
+  async (req, res) => {
+    try {
+      const { operator, amount, phone, name, email, planName } = req.body;
+      
+      // Validation
+      if (!operator || !['orange', 'mtn', 'card'].includes(operator)) {
+        return res.status(400).json({ success: false, error: 'Invalid operator' });
+      }
+      if (!amount || amount <= 0 || amount > 10000000) {
+        return res.status(400).json({ success: false, error: 'Invalid amount' });
+      }
+      if (!/^\d{8,9}$/.test(phone)) {
+        return res.status(400).json({ success: false, error: 'Invalid phone number' });
+      }
+      
+      const orderId = `NEO-${Date.now()}`;
+      
+      // En mode démo (sans credentials réels)
+      const tokens = {
+        orange: process.env.ORANGE_ACCESS_TOKEN || 'DEMO_ORANGE_' + Date.now(),
+        mtn: process.env.MTN_ACCESS_TOKEN || 'DEMO_MTN_' + Date.now(),
+        card: process.env.STRIPE_KEY || 'DEMO_CARD_' + Date.now()
+      };
+      
+      // Sauvegarder la transaction en attente
+      if (!mockDB.collections.transactions) {
+        mockDB.collections.transactions = new Map();
+      }
+      
+      const transaction = {
+        id: orderId,
+        userId: req.user.uid,
+        operator,
+        amount,
+        phone,
+        name,
+        email,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      };
+      
+      mockDB.collections.transactions.set(orderId, transaction);
+      
+      res.json({
+        success: true,
+        data: {
+          orderId,
+          operator,
+          amount,
+          phone: phone.slice(-4),
+          status: 'pending',
+          message: 'Paiement initié - Vérifiez votre téléphone'
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'PAYMENT_ERROR', message: error.message });
+    }
+  }
+);
+
+// POST /api/payment/webhook - Webhook pour les paiements
+app.post('/api/payment/webhook',
+  async (req, res) => {
+    try {
+      const { orderId, status, transactionId } = req.body;
+      
+      const transaction = mockDB.collections.transactions?.get(orderId);
+      if (!transaction) {
+        return res.status(404).json({ success: false, error: 'Transaction not found' });
+      }
+      
+      transaction.status = status || 'completed';
+      transaction.transactionId = transactionId;
+      transaction.completedAt = new Date().toISOString();
+      
+      mockDB.collections.transactions.set(orderId, transaction);
+      
+      res.json({
+        success: true,
+        message: 'Transaction mise à jour',
+        data: transaction
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'WEBHOOK_ERROR', message: error.message });
+    }
+  }
+);
+
+// GET /api/finance/sync - Synchroniser avec Firebase (optionnel)
+app.get('/api/finance/sync',
+  securityMiddleware.authenticateUser,
+  requireFinanceRole,
+  (req, res) => {
+    res.json({
+      success: true,
+      message: 'Sync avec Firebase disponible',
+      note: 'Les données sont sauvegardées localement. Pour Firebase, activez les imports'
+    });
+  }
+);
+
+// ============================================================
 // ⚠️ GESTION DES ERREURS
 // ============================================================
 app.use((err, req, res, next) => {
@@ -682,14 +955,20 @@ if (require.main === module) {
 
 // ============================================================
 // 📤 EXPORTS
+// ------------------------------------------------------------
+// L'export principal est l'app Express elle-même (une fonction).
+// Les plateformes serverless (Vercel, etc.) exigent que le module
+// exporte une fonction ou un serveur : exporter un objet provoquait
+// « Invalid export found in module server.js » et un 500 sur toutes
+// les routes. Les services restent accessibles en propriétés.
 // ============================================================
-module.exports = {
-  app,
-  mockDB,
-  securityMiddleware,
-  AcademicService,
-  SubscriptionService,
-  CoursePublicationService,
-  ClassMigrationService,
-  ValidationService
-};
+module.exports = app;
+module.exports.app = app;
+module.exports.default = app;
+module.exports.mockDB = mockDB;
+module.exports.securityMiddleware = securityMiddleware;
+module.exports.AcademicService = AcademicService;
+module.exports.SubscriptionService = SubscriptionService;
+module.exports.CoursePublicationService = CoursePublicationService;
+module.exports.ClassMigrationService = ClassMigrationService;
+module.exports.ValidationService = ValidationService;

@@ -1,0 +1,57 @@
+# ============================================================
+# Fichiers exclus du déploiement Vercel
+# ------------------------------------------------------------
+# NeoClass est déployé en site STATIQUE : le navigateur parle
+# directement à Firebase. Le seul code serveur est dans api/.
+#
+# server.js et ses modules sont exclus : sans cette exclusion,
+# Vercel les détecte comme un serveur Node et tente de les
+# invoquer sur chaque requête — c'est ce qui provoquait
+# « Invalid export found in module /var/task/server.js »
+# (500 FUNCTION_INVOCATION_FAILED) sur toutes les pages.
+# Ils restent utilisables en local avec `npm start`.
+# ============================================================
+
+# --- Serveur Express (usage local uniquement) ---
+server.js
+ai.js
+academic-structure.js
+subscription-system.js
+security-middleware.js
+course-publication.js
+validate-netlify.js
+
+# --- Dépendances et artefacts de build ---
+node_modules
+.netlify
+.expo
+.idea
+.vscode
+
+# --- Applications annexes (non servies par ce domaine) ---
+mobile
+mobile-app
+flutter_app
+
+# --- Sauvegardes et fichiers temporaires ---
+.backup-phase0
+temp_*.js
+*.bak
+*.bak-*
+*.tmp
+*.log
+
+# --- Documentation interne (inutile en production) ---
+*.md
+*.txt
+
+# --- Scripts ponctuels non chargés par l'application ---
+CORRECTION_*.js
+EXEMPLES_USAGE_COMPLET.js
+SETUP_FIRESTORE_PAIEMENT.js
+
+# --- Secrets ---
+.env
+.env.*
+firebase-service-account.json
+*-firebase-adminsdk-*.json
