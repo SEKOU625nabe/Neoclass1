@@ -11255,7 +11255,8 @@ Réponds en JSON:
             {icon:'🛒',label:'Achats',page:'admin-purchases'},
             {icon:'📺',label:'Ventes LIVE',page:'admin-purchases-live'},
             {icon:'🏪',label:'Marketplace',page:'marketplace-admin'},
-            {icon:'📊',label:'Stats',page:'admin-stats'}
+            {icon:'📊',label:'Stats',page:'admin-stats'},
+            {icon:'🎧',label:'Support clients',page:'admin-support'}
           ]}
         ];
       }
@@ -11263,6 +11264,7 @@ Réponds en JSON:
       // Liens communs en bas
       const commonLinks = [
         {icon:'📚',label:'Historique IA',page:'darx-history'},
+        {icon:'🎧',label:'Support',page:'support'},
         {icon:'⚙️',label:t('settings'),page:'settings'},
         {icon:'🔒',label:t('security'),page:'security'}
       ];
@@ -43168,6 +43170,256 @@ function handleDocumentUpload(e) {
 
 </script>
 
+<!-- 🎯 Moteur de notation -->
+<script id="sch-grading-v3">
+// ============================================================
+// 🎯 NEOCLASS ÉCOLE — MOTEUR DE NOTATION CONFIGURABLE
+//
+// Chaque établissement définit sa propre façon de calculer : ses types
+// d'évaluation (note de cours, devoir, composition…), leur poids, ses
+// coefficients de matière, son barème et ses mentions.
+//
+// Ce module est la source unique de vérité : le tableau de bord, le
+// bulletin et la saisie des notes s'appuient tous dessus.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+
+  // Types d'évaluation proposés par défaut : beaucoup d'écoles notent à
+  // la fois le travail de classe et les évaluations formelles.
+  const TYPES_DEFAUT = [
+    { id: 'cours', name: 'Note de cours', short: 'NC', weight: 20 },
+    { id: 'devoir', name: 'Devoir', short: 'DV', weight: 30 },
+    { id: 'composition', name: 'Composition', short: 'CP', weight: 50 }
+  ];
+
+  const MATIERES_DEFAUT = [
+    { name: 'Mathématiques', coef: 4 },
+    { name: 'Français', coef: 4 },
+    { name: 'Sciences Physiques', coef: 3 },
+    { name: 'Sciences de la Vie et de la Terre', coef: 2 },
+    { name: 'Histoire-Géographie', coef: 2 },
+    { name: 'Anglais', coef: 2 },
+    { name: 'Éducation Physique', coef: 1 }
+  ];
+
+  const MENTIONS_DEFAUT = [
+    { min: 16, label: 'Excellent' },
+    { min: 14, label: 'Très bien' },
+    { min: 12, label: 'Bien' },
+    { min: 10, label: 'Assez bien' },
+    { min: 8, label: 'Insuffisant' },
+    { min: 0, label: 'Très insuffisant' }
+  ];
+
+  function slug(s) {
+    return String(s || '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '') || ('t' + Date.now());
+  }
+
+  // ------------------------------------------------------------
+  // Configuration
+  // ------------------------------------------------------------
+
+  // Complète une configuration éventuellement ancienne (v1) sans rien
+  // perdre de ce que l'établissement avait déjà renseigné.
+  function normaliser(brut) {
+    const c = brut && typeof brut === 'object' ? JSON.parse(JSON.stringify(brut)) : {};
+
+    c.version = 2;
+    c.maxGrade = parseFloat(c.maxGrade) || 20;
+    c.passingGrade = parseFloat(c.passingGrade);
+    if (isNaN(c.passingGrade)) c.passingGrade = c.maxGrade / 2;
+    c.decimals = c.decimals == null ? 2 : Math.max(0, Math.min(3, parseInt(c.decimals, 10) || 0));
+
+    c.periodSystem = ['trimester', 'semester', 'monthly'].indexOf(c.periodSystem) !== -1
+      ? c.periodSystem : 'trimester';
+    const parDefaut = { trimester: 3, semester: 2, monthly: 10 };
+    c.periodCount = parseInt(c.periodCount, 10) || parDefaut[c.periodSystem];
+
+    // v1 stockait calcType ('simple' | 'coefficient' | 'custom').
+    if (!c.calcMode) {
+      c.calcMode = c.calcType === 'simple' ? 'simple' : 'weighted_types';
+    }
+
+    if (!Array.isArray(c.evalTypes) || !c.evalTypes.length) {
+      c.evalTypes = JSON.parse(JSON.stringify(TYPES_DEFAUT));
+    }
+    c.evalTypes = c.evalTypes.map(function (t) {
+      return {
+        id: t.id || slug(t.name),
+        name: t.name || 'Évaluation',
+        short: (t.short || (t.name || 'EV').slice(0, 2)).toUpperCase(),
+        weight: Math.max(0, parseFloat(t.weight) || 0)
+      };
+    });
+
+    if (!Array.isArray(c.subjects) || !c.subjects.length) {
+      c.subjects = JSON.parse(JSON.stringify(MATIERES_DEFAUT));
+    }
+    c.subjects = c.subjects.map(function (s) {
+      return { name: s.name || 'Matière', coef: Math.max(0.5, parseFloat(s.coef) || 1) };
+    });
+
+    if (!Array.isArray(c.mentions) || !c.mentions.length) {
+      c.mentions = JSON.parse(JSON.stringify(MENTIONS_DEFAUT));
+    }
+    c.mentions = c.mentions
+      .map(function (m) { return { min: parseFloat(m.min) || 0, label: m.label || '' }; })
+      .sort(function (a, b) { return b.min - a.min; });
+
+    return c;
+  }
+
+  function lire() {
+    return normaliser((typeof State !== 'undefined' && State.profile && State.profile.gradesConfig) || {});
+  }
+
+  function enregistrer(config) {
+    const c = normaliser(config);
+    return db.collection('users').doc(State.user.uid)
+      .update({ gradesConfig: c })
+      .then(function () {
+        State.profile.gradesConfig = c;
+        if (window.SchoolData) SchoolData.invalider();
+        return c;
+      });
+  }
+
+  // ------------------------------------------------------------
+  // Périodes
+  // ------------------------------------------------------------
+
+  function periodes(config) {
+    const c = config || lire();
+    if (c.periodSystem === 'semester') {
+      const noms = ['1er Semestre', '2e Semestre', '3e Semestre'];
+      return noms.slice(0, c.periodCount).map(function (t, i) { return { v: 'S' + (i + 1), t: t }; });
+    }
+    if (c.periodSystem === 'monthly') {
+      return U.MOIS.slice(0, c.periodCount).map(function (m, i) {
+        return { v: 'M' + (i + 1), t: m.charAt(0).toUpperCase() + m.slice(1) };
+      });
+    }
+    const noms = ['1er Trimestre', '2e Trimestre', '3e Trimestre', '4e Trimestre'];
+    return noms.slice(0, c.periodCount).map(function (t, i) { return { v: 'T' + (i + 1), t: t }; });
+  }
+
+  function libellePeriode(v, config) {
+    const p = periodes(config).filter(function (x) { return x.v === v; })[0];
+    return p ? p.t : (v || '—');
+  }
+
+  // ------------------------------------------------------------
+  // Calcul
+  // ------------------------------------------------------------
+
+  function arrondir(n, config) {
+    if (n == null || isNaN(n)) return null;
+    const d = (config || lire()).decimals;
+    const f = Math.pow(10, d);
+    return Math.round(n * f) / f;
+  }
+
+  // notesParType : { idDuType: [12, 14, ...] }
+  // Seuls les types réellement notés entrent dans le calcul : une école
+  // qui n'a pas encore fait la composition ne doit pas voir la moyenne
+  // s'effondrer parce que ce type pèse 50 %.
+  function moyenneMatiere(notesParType, config) {
+    const c = config || lire();
+    if (c.calcMode === 'simple') {
+      const toutes = [];
+      Object.keys(notesParType || {}).forEach(function (k) {
+        (notesParType[k] || []).forEach(function (n) {
+          const v = parseFloat(n);
+          if (!isNaN(v)) toutes.push(v);
+        });
+      });
+      return toutes.length ? arrondir(U.moyenne(toutes), c) : null;
+    }
+
+    let somme = 0, poids = 0;
+    c.evalTypes.forEach(function (t) {
+      const notes = (notesParType || {})[t.id] || [];
+      const moy = U.moyenne(notes.map(function (n) { return parseFloat(n); }));
+      if (moy == null) return;
+      somme += moy * t.weight;
+      poids += t.weight;
+    });
+    return poids > 0 ? arrondir(somme / poids, c) : null;
+  }
+
+  // matieres : [{ nom, moyenne, coef }]
+  function moyenneGenerale(matieres, config) {
+    const c = config || lire();
+    let somme = 0, coefs = 0;
+    (matieres || []).forEach(function (m) {
+      if (m.moyenne == null || isNaN(m.moyenne)) return;
+      const co = parseFloat(m.coef) || 1;
+      somme += m.moyenne * co;
+      coefs += co;
+    });
+    return coefs > 0 ? arrondir(somme / coefs, c) : null;
+  }
+
+  function mention(moy, config) {
+    const c = config || lire();
+    if (moy == null || isNaN(moy)) return null;
+    const sur20 = (moy / c.maxGrade) * 20;
+    for (let i = 0; i < c.mentions.length; i++) {
+      if (sur20 >= c.mentions[i].min) return c.mentions[i].label;
+    }
+    return c.mentions[c.mentions.length - 1].label;
+  }
+
+  function admis(moy, config) {
+    const c = config || lire();
+    return moy != null && !isNaN(moy) && moy >= c.passingGrade;
+  }
+
+  function coefMatiere(nom, config) {
+    const c = config || lire();
+    const s = c.subjects.filter(function (x) { return x.name === nom; })[0];
+    return s ? s.coef : 1;
+  }
+
+  function typeParId(id, config) {
+    const c = config || lire();
+    return c.evalTypes.filter(function (t) { return t.id === id; })[0] || null;
+  }
+
+  // Un total de poids différent de 100 n'est pas une erreur (les poids
+  // sont relatifs), mais l'interface le signale pour éviter les surprises.
+  function totalPoids(config) {
+    return (config || lire()).evalTypes.reduce(function (a, t) { return a + (t.weight || 0); }, 0);
+  }
+
+  window.SchoolGrading = {
+    TYPES_DEFAUT: TYPES_DEFAUT,
+    MATIERES_DEFAUT: MATIERES_DEFAUT,
+    MENTIONS_DEFAUT: MENTIONS_DEFAUT,
+    slug: slug,
+    normaliser: normaliser,
+    lire: lire,
+    enregistrer: enregistrer,
+    periodes: periodes,
+    libellePeriode: libellePeriode,
+    arrondir: arrondir,
+    moyenneMatiere: moyenneMatiere,
+    moyenneGenerale: moyenneGenerale,
+    mention: mention,
+    admis: admis,
+    coefMatiere: coefMatiere,
+    typeParId: typeParId,
+    totalPoids: totalPoids
+  };
+})();
+
+</script>
+
 <!-- 📄 Aperçu du bulletin -->
 <script id="sch-bulletin-v3">
 // ============================================================
@@ -43201,25 +43453,12 @@ function handleDocumentUpload(e) {
   function notePassage() { return parseFloat(cfg().passingGrade) || 10; }
 
   // Les périodes suivent le système choisi dans « Règles de notation ».
+  // Délégué au moteur de notation : une seule définition des périodes
+  // pour le tableau de bord, le bulletin et la saisie des notes.
   function periodes() {
-    const sys = cfg().periodSystem || 'trimester';
-    if (sys === 'semester') {
-      return [
-        { v: 'S1', t: '1er Semestre' },
-        { v: 'S2', t: '2e Semestre' },
-        { v: 'S3', t: '3e Semestre' }
-      ].slice(0, parseInt(cfg().periodCount, 10) || 2);
-    }
-    if (sys === 'monthly') {
-      return U.MOIS.map(function (m, i) {
-        return { v: 'M' + (i + 1), t: m.charAt(0).toUpperCase() + m.slice(1) };
-      });
-    }
-    return [
-      { v: 'T1', t: '1er Trimestre' },
-      { v: 'T2', t: '2e Trimestre' },
-      { v: 'T3', t: '3e Trimestre' }
-    ];
+    return window.SchoolGrading
+      ? SchoolGrading.periodes(cfg())
+      : [{ v: 'T1', t: '1er Trimestre' }, { v: 'T2', t: '2e Trimestre' }, { v: 'T3', t: '3e Trimestre' }];
   }
   function libellePeriode(v) {
     const p = periodes().filter(function (x) { return x.v === v; })[0];
@@ -43262,15 +43501,15 @@ function handleDocumentUpload(e) {
     };
   }
 
+  // Les mentions sont celles configurées par l'établissement.
   function mention(moy) {
-    const max = noteMax();
-    const r = (moy / max) * 20; // ramené sur 20 pour les seuils
-    if (r >= 16) return { t: 'Excellent', c: 'ok' };
-    if (r >= 14) return { t: 'Très bien', c: 'ok' };
-    if (r >= 12) return { t: 'Bien', c: 'ok' };
-    if (r >= 10) return { t: 'Assez bien', c: 'info' };
-    if (r >= 8) return { t: 'Insuffisant', c: 'warn' };
-    return { t: 'Très insuffisant', c: 'bad' };
+    if (window.SchoolGrading) {
+      const label = SchoolGrading.mention(moy, cfg());
+      const ok = SchoolGrading.admis(moy, cfg());
+      return { t: label || '—', c: ok ? 'ok' : 'warn' };
+    }
+    const r = (moy / noteMax()) * 20;
+    return { t: r >= 10 ? 'Assez bien' : 'Insuffisant', c: r >= 10 ? 'ok' : 'warn' };
   }
 
   function appreciationAuto(note) {
@@ -43994,6 +44233,1181 @@ function handleDocumentUpload(e) {
   window.renderSchoolAbsences = render;
   window.NC_PAGES = window.NC_PAGES || {};
   window.NC_PAGES['school-absences'] = render;
+})();
+
+</script>
+
+<!-- ⚙️ Règles de notation -->
+<script id="sch-grades-config-v3">
+// ============================================================
+// ⚙️ NEOCLASS ÉCOLE — RÈGLES DE NOTATION
+// Remplace l'ancienne page, qui proposait une « formule personnalisée »
+// saisie en français libre et jamais appliquée par quoi que ce soit.
+// Ici, chaque réglage agit réellement sur les calculs, et un simulateur
+// montre immédiatement son effet.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const G = window.SchoolGrading;
+
+  let _c = null;          // configuration en cours d'édition
+  let _sale = false;      // modifications non enregistrées
+
+  function estEcole() {
+    return typeof State !== 'undefined' && State.profile && State.profile.role === 'school';
+  }
+  function touche() { _sale = true; majBarreEtat(); }
+
+  function majBarreEtat() {
+    const b = document.getElementById('schCfgEtat');
+    if (!b) return;
+    b.innerHTML = _sale
+      ? '<span class="sch-chip sch-chip-warn">Modifications non enregistrées</span>'
+      : '<span class="sch-chip sch-chip-ok">À jour</span>';
+  }
+
+  // ------------------------------------------------------------
+  function render(app) {
+    if (!estEcole()) { navigate('dashboard'); return; }
+    _c = G.lire();
+    _sale = false;
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks('school') + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-sliders"></i></div>' +
+              '<div><h1>Règles de notation</h1>' +
+              '<div class="sch-head-sub"><span>Votre établissement définit sa propre méthode de calcul</span>' +
+              '<span>·</span><span id="schCfgEtat"></span></div></div>' +
+            '</div>' +
+            '<div class="sch-head-actions">' +
+              '<button class="sch-btn" onclick="SchoolGradesConfig.reinitialiser()">' +
+                '<i class="fas fa-rotate-left"></i> Valeurs par défaut</button>' +
+              '<button class="sch-btn sch-btn-primary" onclick="SchoolGradesConfig.enregistrer()">' +
+                '<i class="fas fa-floppy-disk"></i> Enregistrer</button>' +
+            '</div>' +
+          '</header>' +
+
+          '<div class="sch-charts">' +
+            '<div class="sch-col-8" style="display:flex;flex-direction:column;gap:18px;">' +
+              '<div class="sch-card" id="schCfgBareme"></div>' +
+              '<div class="sch-card" id="schCfgTypes"></div>' +
+              '<div class="sch-card" id="schCfgMatieres"></div>' +
+              '<div class="sch-card" id="schCfgMentions"></div>' +
+            '</div>' +
+            '<div class="sch-col-4">' +
+              '<div class="sch-card" id="schCfgSimu" style="position:sticky;top:84px;"></div>' +
+            '</div>' +
+          '</div>' +
+        '</div></main>' +
+      '</div>';
+
+    dessiner();
+  }
+
+  function dessiner() {
+    dessinerBareme();
+    dessinerTypes();
+    dessinerMatieres();
+    dessinerMentions();
+    dessinerSimu();
+    majBarreEtat();
+  }
+
+  // ------------------------------------------------------------
+  function dessinerBareme() {
+    const el = document.getElementById('schCfgBareme');
+    if (!el) return;
+    const per = G.periodes(_c);
+
+    el.innerHTML = '' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Barème et périodes</h3>' +
+        '<p class="sch-card-sub">Les bases de tous les calculs</p></div></div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Note maximale</label>' +
+          '<input class="form-input" type="number" min="5" max="100" value="' + _c.maxGrade + '" ' +
+          'oninput="SchoolGradesConfig.set(\'maxGrade\', this.value)" /></div>' +
+        '<div class="form-group"><label>Moyenne de passage</label>' +
+          '<input class="form-input" type="number" min="0" max="' + _c.maxGrade + '" step="0.5" value="' + _c.passingGrade + '" ' +
+          'oninput="SchoolGradesConfig.set(\'passingGrade\', this.value)" /></div>' +
+        '<div class="form-group"><label>Décimales affichées</label>' +
+          '<select class="form-input" onchange="SchoolGradesConfig.set(\'decimals\', this.value)">' +
+            [0, 1, 2, 3].map(function (d) {
+              return '<option value="' + d + '"' + (_c.decimals === d ? ' selected' : '') + '>' + d + '</option>';
+            }).join('') +
+          '</select></div>' +
+      '</div>' +
+      '<div class="form-row">' +
+        '<div class="form-group"><label>Découpage de l\'année</label>' +
+          '<select class="form-input" onchange="SchoolGradesConfig.setPeriodSystem(this.value)">' +
+            '<option value="trimester"' + (_c.periodSystem === 'trimester' ? ' selected' : '') + '>Trimestres</option>' +
+            '<option value="semester"' + (_c.periodSystem === 'semester' ? ' selected' : '') + '>Semestres</option>' +
+            '<option value="monthly"' + (_c.periodSystem === 'monthly' ? ' selected' : '') + '>Mensuel</option>' +
+          '</select></div>' +
+        '<div class="form-group"><label>Nombre de périodes</label>' +
+          '<input class="form-input" type="number" min="1" max="12" value="' + _c.periodCount + '" ' +
+          'oninput="SchoolGradesConfig.set(\'periodCount\', this.value)" /></div>' +
+        '<div class="form-group"><label>Mode de calcul</label>' +
+          '<select class="form-input" onchange="SchoolGradesConfig.set(\'calcMode\', this.value)">' +
+            '<option value="weighted_types"' + (_c.calcMode === 'weighted_types' ? ' selected' : '') + '>Pondéré par type d\'évaluation</option>' +
+            '<option value="simple"' + (_c.calcMode === 'simple' ? ' selected' : '') + '>Moyenne simple de toutes les notes</option>' +
+          '</select></div>' +
+      '</div>' +
+      '<div class="sch-note"><i class="fas fa-circle-info"></i><div>Périodes actives : ' +
+        per.map(function (p) { return '<strong>' + U.esc(p.t) + '</strong>'; }).join(' · ') +
+        '. Elles apparaissent dans la saisie des notes, les bulletins et les résultats.</div></div>';
+  }
+
+  // ------------------------------------------------------------
+  function dessinerTypes() {
+    const el = document.getElementById('schCfgTypes');
+    if (!el) return;
+    const total = G.totalPoids(_c);
+    const simple = _c.calcMode === 'simple';
+
+    let lignes = _c.evalTypes.map(function (t, i) {
+      const part = total > 0 ? (t.weight / total) * 100 : 0;
+      return '<tr>' +
+        '<td><input class="form-input" style="padding:6px 8px;" value="' + U.esc(t.name) + '" ' +
+          'oninput="SchoolGradesConfig.majType(' + i + ',\'name\',this.value)" /></td>' +
+        '<td style="width:78px;"><input class="form-input" style="padding:6px 8px;text-align:center;text-transform:uppercase;" maxlength="4" value="' + U.esc(t.short) + '" ' +
+          'oninput="SchoolGradesConfig.majType(' + i + ',\'short\',this.value)" /></td>' +
+        '<td style="width:92px;"><input class="form-input" type="number" min="0" max="100" style="padding:6px 8px;text-align:right;" value="' + t.weight + '" ' +
+          'oninput="SchoolGradesConfig.majType(' + i + ',\'weight\',this.value)" ' + (simple ? 'disabled' : '') + ' /></td>' +
+        '<td style="width:120px;">' +
+          '<div class="sch-meter" style="--kpi-color:' + U.COULEURS.violet + '"><span style="width:' + part.toFixed(0) + '%"></span></div>' +
+          '<span style="font-size:.72rem;color:var(--text-secondary);">' + part.toFixed(0) + ' %</span>' +
+        '</td>' +
+        '<td style="width:34px;"><button class="sch-btn sch-btn-sm sch-btn-ghost" title="Retirer" ' +
+          'onclick="SchoolGradesConfig.retirerType(' + i + ')"><i class="fas fa-xmark"></i></button></td>' +
+        '</tr>';
+    }).join('');
+
+    el.innerHTML = '' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Types d\'évaluation</h3>' +
+        '<p class="sch-card-sub">Note de cours, devoir, composition… et le poids de chacun</p></div>' +
+        '<span class="sch-chip ' + (simple ? 'sch-chip-mute' : (total === 100 ? 'sch-chip-ok' : 'sch-chip-info')) + '">' +
+          (simple ? 'Poids ignorés' : 'Total ' + total) + '</span>' +
+      '</div>' +
+      (simple
+        ? '<div class="sch-note warn"><i class="fas fa-triangle-exclamation"></i><div>Le mode « moyenne simple » est actif : toutes les notes comptent à égalité et les poids ci-dessous ne sont pas appliqués.</div></div>'
+        : '') +
+      '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+        '<th>Nom</th><th>Abrégé</th><th>Poids</th><th>Part réelle</th><th></th>' +
+      '</tr></thead><tbody>' + lignes + '</tbody></table></div>' +
+      '<div style="display:flex;gap:8px;margin-top:12px;">' +
+        '<input class="form-input" id="schCfgNouveauType" placeholder="Ajouter un type (ex. Interrogation)" style="flex:2;" />' +
+        '<input class="form-input" id="schCfgNouveauPoids" type="number" min="0" value="10" style="width:84px;" />' +
+        '<button class="sch-btn sch-btn-sm" onclick="SchoolGradesConfig.ajouterType()"><i class="fas fa-plus"></i></button>' +
+      '</div>' +
+      '<div class="sch-note" style="margin-top:12px;"><i class="fas fa-lightbulb"></i><div>' +
+        'Les poids sont <strong>relatifs</strong> : 20/30/50 et 2/3/5 donnent le même résultat. ' +
+        'Un type qui n\'a pas encore de note est ignoré, la moyenne reste donc juste en cours de période.</div></div>';
+  }
+
+  // ------------------------------------------------------------
+  function dessinerMatieres() {
+    const el = document.getElementById('schCfgMatieres');
+    if (!el) return;
+    const totalCoef = _c.subjects.reduce(function (a, s) { return a + s.coef; }, 0);
+
+    const lignes = _c.subjects.map(function (s, i) {
+      return '<tr>' +
+        '<td><input class="form-input" style="padding:6px 8px;" value="' + U.esc(s.name) + '" ' +
+          'oninput="SchoolGradesConfig.majMatiere(' + i + ',\'name\',this.value)" /></td>' +
+        '<td style="width:92px;"><input class="form-input" type="number" min="0.5" max="20" step="0.5" style="padding:6px 8px;text-align:right;" value="' + s.coef + '" ' +
+          'oninput="SchoolGradesConfig.majMatiere(' + i + ',\'coef\',this.value)" /></td>' +
+        '<td style="width:100px;font-size:.78rem;color:var(--text-secondary);">' +
+          (totalCoef ? ((s.coef / totalCoef) * 100).toFixed(0) + ' % du total' : '—') + '</td>' +
+        '<td style="width:34px;"><button class="sch-btn sch-btn-sm sch-btn-ghost" ' +
+          'onclick="SchoolGradesConfig.retirerMatiere(' + i + ')"><i class="fas fa-xmark"></i></button></td>' +
+        '</tr>';
+    }).join('');
+
+    el.innerHTML = '' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Matières et coefficients</h3>' +
+        '<p class="sch-card-sub">Le poids de chaque matière dans la moyenne générale</p></div>' +
+        '<span class="sch-chip sch-chip-info">Total ' + totalCoef + '</span></div>' +
+      '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+        '<th>Matière</th><th>Coef.</th><th>Part</th><th></th></tr></thead><tbody>' + lignes + '</tbody></table></div>' +
+      '<div style="display:flex;gap:8px;margin-top:12px;">' +
+        '<input class="form-input" id="schCfgNouvelleMat" placeholder="Ajouter une matière" style="flex:2;" />' +
+        '<input class="form-input" id="schCfgNouveauCoef" type="number" min="0.5" step="0.5" value="1" style="width:84px;" />' +
+        '<button class="sch-btn sch-btn-sm" onclick="SchoolGradesConfig.ajouterMatiere()"><i class="fas fa-plus"></i></button>' +
+      '</div>';
+  }
+
+  // ------------------------------------------------------------
+  function dessinerMentions() {
+    const el = document.getElementById('schCfgMentions');
+    if (!el) return;
+    const lignes = _c.mentions.map(function (m, i) {
+      return '<tr>' +
+        '<td style="width:110px;"><input class="form-input" type="number" min="0" max="20" step="0.5" style="padding:6px 8px;text-align:right;" value="' + m.min + '" ' +
+          'oninput="SchoolGradesConfig.majMention(' + i + ',\'min\',this.value)" /></td>' +
+        '<td><input class="form-input" style="padding:6px 8px;" value="' + U.esc(m.label) + '" ' +
+          'oninput="SchoolGradesConfig.majMention(' + i + ',\'label\',this.value)" /></td>' +
+        '<td style="width:34px;"><button class="sch-btn sch-btn-sm sch-btn-ghost" ' +
+          'onclick="SchoolGradesConfig.retirerMention(' + i + ')"><i class="fas fa-xmark"></i></button></td>' +
+        '</tr>';
+    }).join('');
+
+    el.innerHTML = '' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Mentions</h3>' +
+        '<p class="sch-card-sub">Seuils exprimés sur 20, convertis automatiquement à votre barème</p></div></div>' +
+      '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+        '<th>À partir de</th><th>Mention</th><th></th></tr></thead><tbody>' + lignes + '</tbody></table></div>' +
+      '<button class="sch-btn sch-btn-sm" style="margin-top:12px;" onclick="SchoolGradesConfig.ajouterMention()">' +
+        '<i class="fas fa-plus"></i> Ajouter un seuil</button>';
+  }
+
+  // ------------------------------------------------------------
+  // Simulateur : rend le réglage tangible.
+  function dessinerSimu() {
+    const el = document.getElementById('schCfgSimu');
+    if (!el) return;
+
+    // Un élève fictif, noté dans chaque type et chaque matière.
+    const exemple = [14, 11, 16, 9, 13];
+    const matieres = _c.subjects.slice(0, 5).map(function (s, i) {
+      const notesParType = {};
+      _c.evalTypes.forEach(function (t, j) {
+        notesParType[t.id] = [Math.min(_c.maxGrade, exemple[(i + j) % exemple.length])];
+      });
+      return {
+        nom: s.name,
+        coef: s.coef,
+        notesParType: notesParType,
+        moyenne: G.moyenneMatiere(notesParType, _c)
+      };
+    });
+    const moy = G.moyenneGenerale(matieres, _c);
+    const men = G.mention(moy, _c);
+    const ok = G.admis(moy, _c);
+
+    let detail = matieres.map(function (m) {
+      const notes = _c.evalTypes.map(function (t) {
+        const v = (m.notesParType[t.id] || [])[0];
+        return '<span title="' + U.esc(t.name) + '">' + U.esc(t.short) + ' ' + v + '</span>';
+      }).join(' · ');
+      return '<tr>' +
+        '<td><strong>' + U.esc(m.nom) + '</strong><div style="font-size:.7rem;color:var(--text-secondary);margin-top:2px;">' + detail + '</div></td>' +
+        '<td class="num">' + (m.moyenne == null ? '—' : U.pourcent(m.moyenne, _c.decimals)) + '</td>' +
+        '<td class="num">×' + m.coef + '</td></tr>';
+    }).join('');
+
+    el.innerHTML = '' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Simulateur</h3>' +
+        '<p class="sch-card-sub">Effet immédiat de vos réglages</p></div></div>' +
+      '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+        '<th>Matière</th><th class="num">Moy.</th><th class="num">Coef</th>' +
+      '</tr></thead><tbody>' + detail + '</tbody></table></div>' +
+      '<div class="sch-kpi" style="--kpi-color:' + (ok ? U.COULEURS.ok : U.COULEURS.warn) + ';--kpi-soft:' +
+        (ok ? U.COULEURS.ok : U.COULEURS.warn) + '1f;margin-top:16px;">' +
+        '<div class="sch-kpi-top"><span class="sch-kpi-label">Moyenne générale simulée</span></div>' +
+        '<div class="sch-kpi-val">' + (moy == null ? '—' : U.pourcent(moy, _c.decimals)) +
+          '<small>/' + _c.maxGrade + '</small></div>' +
+        '<div class="sch-kpi-foot">' + U.esc(men || '—') + ' · ' + (ok ? 'Admis' : 'Non admis') + '</div>' +
+      '</div>' +
+      '<div class="sch-note" style="margin-top:14px;"><i class="fas fa-circle-info"></i><div>' +
+        'Ces réglages s\'appliquent au tableau de bord, aux bulletins et à la saisie des notes des enseignants ' +
+        'dès leur enregistrement.</div></div>';
+  }
+
+  // ------------------------------------------------------------
+  const API = {
+    render: render,
+
+    set: function (cle, val) {
+      if (cle === 'decimals' || cle === 'periodCount') _c[cle] = parseInt(val, 10) || 0;
+      else if (cle === 'calcMode') _c[cle] = val;
+      else _c[cle] = parseFloat(val) || 0;
+      _c = G.normaliser(_c);
+      touche();
+      if (cle === 'calcMode') { dessinerTypes(); }
+      if (cle === 'periodCount') { dessinerBareme(); }
+      dessinerSimu();
+    },
+
+    setPeriodSystem: function (v) {
+      _c.periodSystem = v;
+      _c.periodCount = { trimester: 3, semester: 2, monthly: 10 }[v];
+      _c = G.normaliser(_c);
+      touche();
+      dessinerBareme();
+      dessinerSimu();
+    },
+
+    majType: function (i, cle, val) {
+      if (!_c.evalTypes[i]) return;
+      if (cle === 'weight') _c.evalTypes[i].weight = Math.max(0, parseFloat(val) || 0);
+      else if (cle === 'short') _c.evalTypes[i].short = String(val).toUpperCase().slice(0, 4);
+      else _c.evalTypes[i].name = val;
+      touche();
+      dessinerSimu();
+      // Le tableau n'est pas redessiné pendant la frappe : cela ferait
+      // perdre le focus du champ à chaque caractère.
+      const chip = document.querySelector('#schCfgTypes .sch-chip');
+      if (chip && _c.calcMode !== 'simple') chip.textContent = 'Total ' + G.totalPoids(_c);
+    },
+
+    ajouterType: function () {
+      const nom = (document.getElementById('schCfgNouveauType').value || '').trim();
+      if (!nom) { showToast('Indiquez le nom du type', 'error'); return; }
+      const poids = Math.max(0, parseFloat(document.getElementById('schCfgNouveauPoids').value) || 0);
+      _c.evalTypes.push({ id: G.slug(nom), name: nom, short: nom.slice(0, 2).toUpperCase(), weight: poids });
+      document.getElementById('schCfgNouveauType').value = '';
+      touche(); dessinerTypes(); dessinerSimu();
+    },
+
+    retirerType: function (i) {
+      if (_c.evalTypes.length <= 1) { showToast('Gardez au moins un type d\'évaluation', 'error'); return; }
+      _c.evalTypes.splice(i, 1);
+      touche(); dessinerTypes(); dessinerSimu();
+    },
+
+    majMatiere: function (i, cle, val) {
+      if (!_c.subjects[i]) return;
+      if (cle === 'coef') _c.subjects[i].coef = Math.max(0.5, parseFloat(val) || 1);
+      else _c.subjects[i].name = val;
+      touche(); dessinerSimu();
+    },
+
+    ajouterMatiere: function () {
+      const nom = (document.getElementById('schCfgNouvelleMat').value || '').trim();
+      if (!nom) { showToast('Indiquez le nom de la matière', 'error'); return; }
+      _c.subjects.push({ name: nom, coef: Math.max(0.5, parseFloat(document.getElementById('schCfgNouveauCoef').value) || 1) });
+      document.getElementById('schCfgNouvelleMat').value = '';
+      touche(); dessinerMatieres(); dessinerSimu();
+    },
+
+    retirerMatiere: function (i) {
+      _c.subjects.splice(i, 1);
+      touche(); dessinerMatieres(); dessinerSimu();
+    },
+
+    majMention: function (i, cle, val) {
+      if (!_c.mentions[i]) return;
+      if (cle === 'min') _c.mentions[i].min = parseFloat(val) || 0;
+      else _c.mentions[i].label = val;
+      touche(); dessinerSimu();
+    },
+
+    ajouterMention: function () {
+      _c.mentions.push({ min: 0, label: 'Nouvelle mention' });
+      touche(); dessinerMentions();
+    },
+
+    retirerMention: function (i) {
+      if (_c.mentions.length <= 1) { showToast('Gardez au moins une mention', 'error'); return; }
+      _c.mentions.splice(i, 1);
+      touche(); dessinerMentions(); dessinerSimu();
+    },
+
+    reinitialiser: function () {
+      openModal('<h3>Revenir aux valeurs par défaut ?</h3>' +
+        '<p style="color:var(--text-secondary);margin:12px 0 20px;">Vos types d\'évaluation, matières et mentions personnalisés seront remplacés. Rien n\'est enregistré tant que vous ne cliquez pas sur « Enregistrer ».</p>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button class="sch-btn sch-btn-danger" style="flex:1" onclick="SchoolGradesConfig.confirmerReinit()">Réinitialiser</button>' +
+          '<button class="sch-btn" onclick="closeModal()">Annuler</button></div>');
+    },
+
+    confirmerReinit: function () {
+      _c = G.normaliser({});
+      closeModal(); touche(); dessiner();
+    },
+
+    enregistrer: function () {
+      G.enregistrer(_c).then(function (c) {
+        _c = c; _sale = false;
+        showToast('Règles de notation enregistrées', 'success');
+        dessiner();
+      }).catch(function (e) {
+        console.error('[École] configuration :', e);
+        showToast('Erreur : ' + (e.message || e), 'error');
+      });
+    }
+  };
+
+  window.SchoolGradesConfig = API;
+  window.renderSchoolGradesConfig = render;
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['school-grades-config'] = render;
+})();
+
+</script>
+
+<!-- 🎧 Support client -->
+<script id="sch-support-v3">
+// ============================================================
+// 🎧 NEOCLASS — SUPPORT CLIENT
+// Côté établissement : ouvrir un ticket et dialoguer avec l'équipe.
+// Côté administration : voir tous les tickets et répondre.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+
+  const CATEGORIES = [
+    { v: 'technique', t: 'Problème technique', i: 'fa-bug' },
+    { v: 'facturation', t: 'Facturation / abonnement', i: 'fa-file-invoice' },
+    { v: 'compte', t: 'Compte et accès', i: 'fa-user-lock' },
+    { v: 'formation', t: 'Prise en main', i: 'fa-graduation-cap' },
+    { v: 'suggestion', t: 'Suggestion', i: 'fa-lightbulb' },
+    { v: 'autre', t: 'Autre', i: 'fa-circle-question' }
+  ];
+  const PRIORITES = [
+    { v: 'basse', t: 'Basse', chip: 'mute' },
+    { v: 'normale', t: 'Normale', chip: 'info' },
+    { v: 'haute', t: 'Haute', chip: 'warn' },
+    { v: 'bloquante', t: 'Bloquante', chip: 'bad' }
+  ];
+  const STATUTS = {
+    open: { t: 'Ouvert', chip: 'info' },
+    pending: { t: 'En attente de votre réponse', chip: 'warn' },
+    resolved: { t: 'Résolu', chip: 'ok' },
+    closed: { t: 'Clos', chip: 'mute' }
+  };
+
+  function lib(liste, v) {
+    const x = liste.filter(function (i) { return i.v === v; })[0];
+    return x ? x.t : (v || '—');
+  }
+  function estAdmin() {
+    return typeof State !== 'undefined' && State.profile && State.profile.role === 'admin';
+  }
+  function col() { return db.collection('supportTickets'); }
+
+  let _tickets = [];
+  let _ouvert = null;       // ticket affiché
+  let _messages = [];
+  let _filtreStatut = '';
+  let _cotéAdmin = false;
+  let _desabonner = null;
+
+  // ------------------------------------------------------------
+  function render(app, admin) {
+    if (typeof State === 'undefined' || !State.user) { navigate('login'); return; }
+    _cotéAdmin = !!admin;
+    if (_cotéAdmin && !estAdmin()) { navigate('dashboard'); return; }
+    _ouvert = null;
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(State.profile.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-headset"></i></div>' +
+              '<div><h1>' + (_cotéAdmin ? 'Support — tous les tickets' : 'Support client') + '</h1>' +
+              '<div class="sch-head-sub"><span id="schSupResume">Chargement…</span></div></div>' +
+            '</div>' +
+            '<div class="sch-head-actions">' +
+              (_cotéAdmin ? '' :
+                '<button class="sch-btn sch-btn-primary" onclick="SchoolSupport.ouvrirNouveau()">' +
+                '<i class="fas fa-plus"></i> Nouvelle demande</button>') +
+            '</div>' +
+          '</header>' +
+
+          (_cotéAdmin ? '' :
+            '<div class="sch-note" style="margin-bottom:20px;"><i class="fas fa-circle-info"></i><div>' +
+            'Décrivez votre problème ici : l\'équipe NeoClass vous répond directement dans la conversation. ' +
+            'Vous recevez une notification dès qu\'une réponse arrive.</div></div>') +
+
+          '<div class="sch-toolbar">' +
+            '<select class="sch-select" onchange="SchoolSupport.filtrer(this.value)">' +
+              '<option value="">Tous les statuts</option>' +
+              Object.keys(STATUTS).map(function (k) {
+                return '<option value="' + k + '">' + STATUTS[k].t + '</option>';
+              }).join('') +
+            '</select>' +
+          '</div>' +
+
+          '<div class="sch-charts">' +
+            '<div class="sch-col-5" id="schSupListe" style="grid-column:span 5;">' +
+              '<div class="sch-card"><div class="sch-skel" style="height:180px"></div></div></div>' +
+            '<div class="sch-col-7" id="schSupConv" style="grid-column:span 7;"></div>' +
+          '</div>' +
+        '</div></main>' +
+      '</div>';
+
+    charger();
+  }
+
+  function charger() {
+    const q = _cotéAdmin
+      ? col().limit(300)
+      : col().where('userId', '==', State.user.uid);
+
+    q.get().then(function (snap) {
+      _tickets = snap.docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _tickets.sort(function (a, b) {
+        const da = U.toDate(a.lastMessageAt || a.createdAt), dbb = U.toDate(b.lastMessageAt || b.createdAt);
+        return (dbb ? dbb.getTime() : 0) - (da ? da.getTime() : 0);
+      });
+      afficherListe();
+      afficherConv();
+    }).catch(function (e) {
+      console.warn('[Support] lecture :', e.code || e.message);
+      const el = document.getElementById('schSupListe');
+      if (el) {
+        el.innerHTML = '<div class="sch-card"><div class="sch-note warn"><i class="fas fa-triangle-exclamation"></i>' +
+          '<div><strong>Tickets illisibles.</strong><br>Les règles de sécurité de la base n\'autorisent pas encore ' +
+          'l\'accès à la collection <code>supportTickets</code>.</div></div></div>';
+      }
+    });
+  }
+
+  function filtres() {
+    return _filtreStatut ? _tickets.filter(function (t) { return t.status === _filtreStatut; }) : _tickets;
+  }
+
+  function afficherListe() {
+    const liste = filtres();
+    const res = document.getElementById('schSupResume');
+    if (res) {
+      const ouverts = _tickets.filter(function (t) { return t.status === 'open' || t.status === 'pending'; }).length;
+      res.textContent = _tickets.length
+        ? (_tickets.length + ' demande' + (_tickets.length > 1 ? 's' : '') + ' · ' + ouverts + ' en cours')
+        : 'Aucune demande';
+    }
+
+    const el = document.getElementById('schSupListe');
+    if (!el) return;
+
+    if (!liste.length) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-inbox"></i><strong>Aucune demande</strong>' +
+        '<p>' + (_cotéAdmin
+          ? 'Aucun établissement n\'a encore écrit au support.'
+          : 'Une question, un blocage, une idée ? Ouvrez une demande, nous vous répondons ici.') + '</p>' +
+        (_cotéAdmin ? '' : '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="SchoolSupport.ouvrirNouveau()"><i class="fas fa-plus"></i> Nouvelle demande</button>') +
+        '</div></div>';
+      return;
+    }
+
+    el.innerHTML = '<div class="sch-card" style="padding:8px;">' + liste.map(function (t) {
+      const st = STATUTS[t.status] || STATUTS.open;
+      const pr = PRIORITES.filter(function (p) { return p.v === t.priority; })[0] || PRIORITES[1];
+      const d = U.toDate(t.lastMessageAt || t.createdAt);
+      const nonLu = _cotéAdmin ? t.unreadForAdmin : t.unreadForUser;
+      const actif = _ouvert && _ouvert.id === t.id;
+      return '<button class="sch-todo-item" style="--todo-color:' + U.COULEURS.violet + ';--todo-soft:' + U.COULEURS.violet + '1f;' +
+          'margin-bottom:6px;' + (actif ? 'border-color:' + U.COULEURS.violet + ';background:var(--bg-hover);' : '') + '" ' +
+          'onclick="SchoolSupport.ouvrir(\'' + t.id + '\')">' +
+        '<span class="sch-todo-ico"><i class="fas ' +
+          ((CATEGORIES.filter(function (c) { return c.v === t.category; })[0] || CATEGORIES[5]).i) + '"></i></span>' +
+        '<span class="sch-todo-txt"><strong>' + U.esc(t.subject || 'Sans objet') + '</strong>' +
+          '<span>' + (_cotéAdmin ? U.esc(t.userName || '—') + ' · ' : '') +
+          U.esc(st.t) + ' · ' + (d ? d.toLocaleDateString('fr-FR') : '') + '</span></span>' +
+        (nonLu ? '<span class="sch-todo-count">•</span>'
+               : '<span class="sch-chip sch-chip-' + pr.chip + '">' + pr.t + '</span>') +
+        '</button>';
+    }).join('') + '</div>';
+  }
+
+  function afficherConv() {
+    const el = document.getElementById('schSupConv');
+    if (!el) return;
+
+    if (!_ouvert) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-comments"></i><strong>Sélectionnez une demande</strong>' +
+        '<p>La conversation s\'affichera ici.</p></div></div>';
+      return;
+    }
+
+    const t = _ouvert;
+    const st = STATUTS[t.status] || STATUTS.open;
+
+    const fil = _messages.length
+      ? _messages.map(function (m) {
+          const moi = m.authorId === State.user.uid;
+          const equipe = m.authorRole === 'admin';
+          const d = U.toDate(m.createdAt);
+          return '<div style="display:flex;justify-content:' + (moi ? 'flex-end' : 'flex-start') + ';margin-bottom:12px;">' +
+            '<div style="max-width:78%;padding:10px 14px;border-radius:14px;' +
+              (moi ? 'background:' + U.COULEURS.violet + ';color:#fff;border-bottom-right-radius:4px;'
+                   : 'background:var(--bg-hover);border-bottom-left-radius:4px;') + '">' +
+              '<div style="font-size:.7rem;opacity:.75;font-weight:700;margin-bottom:3px;">' +
+                U.esc(m.authorName || (equipe ? 'Équipe NeoClass' : 'Vous')) +
+                (equipe ? ' · Support' : '') + '</div>' +
+              '<div style="font-size:.88rem;line-height:1.5;white-space:pre-wrap;">' + U.esc(m.body) + '</div>' +
+              '<div style="font-size:.68rem;opacity:.6;margin-top:4px;text-align:right;">' +
+                (d ? d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '') +
+              '</div>' +
+            '</div></div>';
+        }).join('')
+      : '<div class="sch-empty"><i class="fas fa-comment-dots"></i><p>Aucun message.</p></div>';
+
+    const clos = t.status === 'closed';
+
+    el.innerHTML = '<div class="sch-card">' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">' + U.esc(t.subject || 'Sans objet') + '</h3>' +
+        '<p class="sch-card-sub">' + U.esc(lib(CATEGORIES, t.category)) +
+          (_cotéAdmin && t.userName ? ' · ' + U.esc(t.userName) : '') +
+          (_cotéAdmin && t.schoolName ? ' · ' + U.esc(t.schoolName) : '') + '</p></div>' +
+        '<span class="sch-chip sch-chip-' + st.chip + '">' + st.t + '</span></div>' +
+
+      '<div style="max-height:380px;overflow-y:auto;padding:4px 2px;margin-bottom:14px;">' + fil + '</div>' +
+
+      (clos
+        ? '<div class="sch-note"><i class="fas fa-lock"></i><div>Cette demande est close.' +
+          (_cotéAdmin ? ' <a onclick="SchoolSupport.changerStatut(\'open\')">La rouvrir</a>' : '') + '</div></div>'
+        : '<div style="display:flex;gap:8px;align-items:flex-end;">' +
+            '<textarea class="form-input" id="schSupMsg" rows="2" placeholder="Écrire un message…" style="flex:1;resize:vertical;"></textarea>' +
+            '<button class="sch-btn sch-btn-primary" onclick="SchoolSupport.envoyer()"><i class="fas fa-paper-plane"></i></button>' +
+          '</div>') +
+
+      (_cotéAdmin
+        ? '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">' +
+            '<button class="sch-btn sch-btn-sm" onclick="SchoolSupport.changerStatut(\'pending\')">En attente client</button>' +
+            '<button class="sch-btn sch-btn-sm" onclick="SchoolSupport.changerStatut(\'resolved\')">Marquer résolu</button>' +
+            '<button class="sch-btn sch-btn-sm" onclick="SchoolSupport.changerStatut(\'closed\')">Clore</button>' +
+          '</div>'
+        : (t.status === 'resolved'
+            ? '<div style="margin-top:12px;"><button class="sch-btn sch-btn-sm" onclick="SchoolSupport.changerStatut(\'open\')">' +
+              'Ce n\'est pas résolu, rouvrir</button></div>'
+            : '')) +
+      '</div>';
+  }
+
+  // ------------------------------------------------------------
+  const API = {
+    render: function (app) { render(app, false); },
+    renderAdmin: function (app) { render(app, true); },
+
+    filtrer: function (v) { _filtreStatut = v; afficherListe(); },
+
+    ouvrirNouveau: function () {
+      openModal('' +
+        '<h3 style="margin-bottom:18px;">Nouvelle demande</h3>' +
+        '<div class="form-group"><label>Objet *</label>' +
+          '<input class="form-input" id="schSupObjet" placeholder="Résumez votre demande en une ligne" /></div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Catégorie</label><select class="form-input" id="schSupCat">' +
+            CATEGORIES.map(function (c) { return '<option value="' + c.v + '">' + c.t + '</option>'; }).join('') +
+          '</select></div>' +
+          '<div class="form-group"><label>Priorité</label><select class="form-input" id="schSupPrio">' +
+            PRIORITES.map(function (p) {
+              return '<option value="' + p.v + '"' + (p.v === 'normale' ? ' selected' : '') + '>' + p.t + '</option>';
+            }).join('') +
+          '</select></div>' +
+        '</div>' +
+        '<div class="form-group"><label>Description *</label>' +
+          '<textarea class="form-input" id="schSupDesc" rows="5" ' +
+          'placeholder="Décrivez ce qui se passe, ce que vous attendiez, et ce que vous avez déjà essayé."></textarea></div>' +
+        '<div style="display:flex;gap:10px;margin-top:18px;">' +
+          '<button class="sch-btn sch-btn-primary" style="flex:1" onclick="SchoolSupport.creer()">' +
+            '<i class="fas fa-paper-plane"></i> Envoyer</button>' +
+          '<button class="sch-btn" onclick="closeModal()">Annuler</button></div>');
+    },
+
+    creer: function () {
+      const objet = (document.getElementById('schSupObjet').value || '').trim();
+      const desc = (document.getElementById('schSupDesc').value || '').trim();
+      if (!objet) { showToast('Indiquez un objet', 'error'); return; }
+      if (!desc) { showToast('Décrivez votre demande', 'error'); return; }
+
+      const p = State.profile || {};
+      const maintenant = firebase.firestore.FieldValue.serverTimestamp();
+
+      col().add({
+        userId: State.user.uid,
+        userName: p.fullName || State.user.email || '',
+        userRole: p.role || '',
+        userEmail: State.user.email || '',
+        schoolId: p.role === 'school' ? State.user.uid : (p.schoolId || ''),
+        schoolName: p.schoolName || '',
+        subject: objet,
+        category: document.getElementById('schSupCat').value,
+        priority: document.getElementById('schSupPrio').value,
+        status: 'open',
+        createdAt: maintenant,
+        lastMessageAt: maintenant,
+        unreadForAdmin: true,
+        unreadForUser: false
+      }).then(function (ref) {
+        return ref.collection('messages').add({
+          authorId: State.user.uid,
+          authorName: p.fullName || 'Moi',
+          authorRole: p.role || '',
+          body: desc,
+          createdAt: maintenant
+        }).then(function () { return ref.id; });
+      }).then(function (id) {
+        showToast('Demande envoyée', 'success');
+        closeModal();
+        charger();
+        setTimeout(function () { API.ouvrir(id); }, 400);
+      }).catch(function (e) {
+        console.error('[Support] création :', e);
+        showToast('Erreur : ' + (e.message || e), 'error');
+      });
+    },
+
+    ouvrir: function (id) {
+      _ouvert = _tickets.filter(function (t) { return t.id === id; })[0] || null;
+      if (!_ouvert) return;
+      _messages = [];
+      afficherListe();
+      afficherConv();
+
+      col().doc(id).collection('messages').get().then(function (snap) {
+        _messages = snap.docs.map(function (d) { return d.data() || {}; });
+        _messages.sort(function (a, b) {
+          const da = U.toDate(a.createdAt), dbb = U.toDate(b.createdAt);
+          return (da ? da.getTime() : 0) - (dbb ? dbb.getTime() : 0);
+        });
+        afficherConv();
+      }).catch(function (e) { console.warn('[Support] messages :', e.code || e.message); });
+
+      // Marquer comme lu de son côté.
+      const champ = _cotéAdmin ? 'unreadForAdmin' : 'unreadForUser';
+      if (_ouvert[champ]) {
+        const maj = {}; maj[champ] = false;
+        col().doc(id).update(maj).catch(function () { /* sans conséquence */ });
+        _ouvert[champ] = false;
+      }
+    },
+
+    envoyer: function () {
+      const zone = document.getElementById('schSupMsg');
+      const texte = (zone ? zone.value : '').trim();
+      if (!texte || !_ouvert) return;
+      const p = State.profile || {};
+      const maintenant = firebase.firestore.FieldValue.serverTimestamp();
+
+      zone.value = '';
+      col().doc(_ouvert.id).collection('messages').add({
+        authorId: State.user.uid,
+        authorName: p.fullName || (_cotéAdmin ? 'Équipe NeoClass' : 'Moi'),
+        authorRole: p.role || '',
+        body: texte,
+        createdAt: maintenant
+      }).then(function () {
+        const maj = { lastMessageAt: maintenant };
+        maj[_cotéAdmin ? 'unreadForUser' : 'unreadForAdmin'] = true;
+        if (_cotéAdmin && _ouvert.status === 'open') maj.status = 'pending';
+        if (!_cotéAdmin && _ouvert.status === 'pending') maj.status = 'open';
+        return col().doc(_ouvert.id).update(maj);
+      }).then(function () {
+        API.ouvrir(_ouvert.id);
+        charger();
+      }).catch(function (e) {
+        console.error('[Support] envoi :', e);
+        showToast('Erreur : ' + (e.message || e), 'error');
+        if (zone) zone.value = texte;
+      });
+    },
+
+    changerStatut: function (statut) {
+      if (!_ouvert) return;
+      col().doc(_ouvert.id).update({ status: statut }).then(function () {
+        _ouvert.status = statut;
+        showToast('Statut mis à jour', 'success');
+        afficherListe(); afficherConv();
+      }).catch(function (e) { showToast('Erreur : ' + (e.message || e), 'error'); });
+    }
+  };
+
+  window.SchoolSupport = API;
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['support'] = API.render;
+  window.NC_PAGES['admin-support'] = API.renderAdmin;
+})();
+
+</script>
+
+<!-- 📝 Saisie des notes (enseignant) -->
+<script id="sch-teacher-grades-v3">
+// ============================================================
+// 📝 NEOCLASS — SAISIE DES NOTES (ENSEIGNANT)
+// Les types d'évaluation ne sont plus codés en dur (« Devoir N°1 »… ) :
+// ils viennent des règles définies par l'établissement, de sorte qu'une
+// école qui note le travail de cours peut le faire saisir par ses profs.
+//
+// Cycle : Brouillon → Soumis → Validé → Verrouillé.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const G = window.SchoolGrading;
+
+  let _config = null;       // règles de l'établissement
+  let _classes = [];
+  let _eleves = [];
+  let _lot = null;          // document de notes en cours
+  let _saisies = {};        // studentId -> { note, commentaire }
+  let _sel = { classId: '', matiere: '', periode: '', type: '' };
+
+  function estProf() {
+    if (typeof State === 'undefined' || !State.profile) return false;
+    const r = State.profile.role;
+    return r === 'teacher' || r === 'indep_teacher' || r === 'school' || r === 'admin';
+  }
+  function ecoleId() {
+    const p = State.profile || {};
+    return p.role === 'school' ? State.user.uid : (p.schoolId || '');
+  }
+
+  // Les règles appartiennent à l'établissement, pas à l'enseignant.
+  function chargerConfig() {
+    const id = ecoleId();
+    if (!id) return Promise.resolve(G.normaliser({}));
+    if (id === State.user.uid) return Promise.resolve(G.lire());
+    return db.collection('users').doc(id).get()
+      .then(function (d) { return G.normaliser((d.data() || {}).gradesConfig || {}); })
+      .catch(function () { return G.normaliser({}); });
+  }
+
+  const STATUTS = {
+    draft: { t: 'Brouillon', chip: 'mute', aide: 'Visible de vous seul. Modifiable à volonté.' },
+    submitted: { t: 'Soumis', chip: 'info', aide: "Transmis à l'administration. Vous ne pouvez plus le modifier." },
+    pending: { t: 'Soumis', chip: 'info', aide: "Transmis à l'administration." },
+    validated: { t: 'Validé', chip: 'ok', aide: "Validé par l'administration." },
+    locked: { t: 'Verrouillé', chip: 'ok', aide: 'Verrouillé : plus aucune modification possible.' }
+  };
+  function statutDe(s) { return STATUTS[s] || STATUTS.draft; }
+  function modifiable(s) { return !s || s === 'draft'; }
+
+  // ------------------------------------------------------------
+  function render(app) {
+    if (typeof State === 'undefined' || !State.user) { navigate('login'); return; }
+    if (!estProf()) { navigate('dashboard'); return; }
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(State.profile.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-pen-to-square"></i></div>' +
+              '<div><h1>Saisie des notes</h1>' +
+              '<div class="sch-head-sub"><span id="schNotesEtat">Chargement…</span></div></div>' +
+            '</div>' +
+          '</header>' +
+          '<div class="sch-card" style="margin-bottom:20px;" id="schNotesSel"></div>' +
+          '<div id="schNotesCorps"></div>' +
+        '</div></main>' +
+      '</div>';
+
+    Promise.all([
+      chargerConfig(),
+      db.collection('classes').where('schoolId', '==', ecoleId()).get().catch(function () { return { docs: [] }; })
+    ]).then(function (r) {
+      _config = r[0];
+      _classes = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+
+      // Un enseignant ne voit que les classes qui lui sont affectées.
+      const p = State.profile || {};
+      if (p.role === 'teacher' && Array.isArray(p.classIds) && p.classIds.length) {
+        _classes = _classes.filter(function (c) { return p.classIds.indexOf(c.id) !== -1; });
+      }
+
+      _sel.periode = G.periodes(_config)[0].v;
+      _sel.type = _config.evalTypes[0].id;
+      dessinerSelecteurs();
+      dessinerCorps();
+    });
+  }
+
+  function dessinerSelecteurs() {
+    const el = document.getElementById('schNotesSel');
+    if (!el) return;
+    const per = G.periodes(_config);
+
+    el.innerHTML = '' +
+      '<div class="sch-toolbar" style="margin:0;">' +
+        '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Classe</label>' +
+          '<select class="sch-select" onchange="TeacherGrades.set(\'classId\', this.value)">' +
+            '<option value="">— Choisir —</option>' +
+            _classes.map(function (c) {
+              return '<option value="' + c.id + '"' + (_sel.classId === c.id ? ' selected' : '') + '>' + U.esc(c.name) + '</option>';
+            }).join('') +
+          '</select></div>' +
+        '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Matière</label>' +
+          '<select class="sch-select" onchange="TeacherGrades.set(\'matiere\', this.value)">' +
+            '<option value="">— Choisir —</option>' +
+            _config.subjects.map(function (s) {
+              return '<option value="' + U.esc(s.name) + '"' + (_sel.matiere === s.name ? ' selected' : '') + '>' +
+                U.esc(s.name) + ' (coef ' + s.coef + ')</option>';
+            }).join('') +
+          '</select></div>' +
+        '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Période</label>' +
+          '<select class="sch-select" onchange="TeacherGrades.set(\'periode\', this.value)">' +
+            per.map(function (p) {
+              return '<option value="' + p.v + '"' + (_sel.periode === p.v ? ' selected' : '') + '>' + p.t + '</option>';
+            }).join('') +
+          '</select></div>' +
+        '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Type d\'évaluation</label>' +
+          '<select class="sch-select" onchange="TeacherGrades.set(\'type\', this.value)">' +
+            _config.evalTypes.map(function (t) {
+              return '<option value="' + t.id + '"' + (_sel.type === t.id ? ' selected' : '') + '>' +
+                U.esc(t.name) + (_config.calcMode === 'weighted_types' ? ' — poids ' + t.weight : '') + '</option>';
+            }).join('') +
+          '</select></div>' +
+        '<div class="sch-toolbar-spacer"></div>' +
+        '<button class="sch-btn sch-btn-primary" onclick="TeacherGrades.charger()">' +
+          '<i class="fas fa-list-check"></i> Ouvrir la liste</button>' +
+      '</div>';
+  }
+
+  function dessinerCorps() {
+    const el = document.getElementById('schNotesCorps');
+    if (!el) return;
+
+    if (!_lot) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-clipboard-list"></i><strong>Choisissez une classe, une matière et un type d\'évaluation</strong>' +
+        '<p>' + (_classes.length
+          ? 'La liste des élèves apparaîtra ici, prête à être notée.'
+          : "Aucune classe ne vous est affectée. Contactez l'administration de votre établissement.") + '</p>' +
+        '</div></div>';
+      return;
+    }
+
+    const st = statutDe(_lot.status);
+    const modif = modifiable(_lot.status);
+    const type = G.typeParId(_sel.type, _config);
+    const max = _config.maxGrade;
+
+    let notees = 0;
+    const lignes = _eleves.map(function (e, i) {
+      const cle = e.uid || e.id;
+      const s = _saisies[cle] || {};
+      if (s.note !== '' && s.note != null) notees++;
+      const nom = ((e.firstName || '') + ' ' + (e.lastName || '')).trim() || e.fullName || 'Sans nom';
+      return '<tr>' +
+        '<td style="width:34px;color:var(--text-secondary);">' + (i + 1) + '</td>' +
+        '<td><strong>' + U.esc(nom) + '</strong></td>' +
+        '<td style="width:110px;">' +
+          '<input class="form-input" type="number" min="0" max="' + max + '" step="0.25" ' +
+            'style="padding:7px 9px;text-align:right;" value="' + U.esc(s.note == null ? '' : s.note) + '" ' +
+            (modif ? '' : 'disabled ') +
+            'oninput="TeacherGrades.majNote(\'' + cle + '\', this.value)" /></td>' +
+        '<td><input class="form-input" style="padding:7px 9px;" placeholder="Commentaire (facultatif)" ' +
+            'value="' + U.esc(s.commentaire || '') + '" ' + (modif ? '' : 'disabled ') +
+            'oninput="TeacherGrades.majCommentaire(\'' + cle + '\', this.value)" /></td>' +
+        '</tr>';
+    }).join('');
+
+    const valeurs = Object.keys(_saisies)
+      .map(function (k) { return parseFloat(_saisies[k].note); })
+      .filter(function (v) { return !isNaN(v); });
+    const moy = U.moyenne(valeurs);
+
+    el.innerHTML = '<div class="sch-card">' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">' + U.esc(_sel.matiere) + ' — ' + U.esc(type ? type.name : '') + '</h3>' +
+        '<p class="sch-card-sub">' + U.esc(G.libellePeriode(_sel.periode, _config)) +
+          ' · ' + notees + ' / ' + _eleves.length + ' élèves notés' +
+          (moy != null ? ' · moyenne ' + U.pourcent(moy, _config.decimals) + '/' + max : '') + '</p></div>' +
+        '<span class="sch-chip sch-chip-' + st.chip + '">' + st.t + '</span></div>' +
+
+      '<div class="sch-note' + (modif ? '' : ' warn') + '" style="margin-bottom:16px;">' +
+        '<i class="fas fa-' + (modif ? 'circle-info' : 'lock') + '"></i><div>' + st.aide + '</div></div>' +
+
+      (_eleves.length
+        ? '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+            '<th></th><th>Élève</th><th>Note /' + max + '</th><th>Commentaire</th>' +
+          '</tr></thead><tbody>' + lignes + '</tbody></table></div>'
+        : '<div class="sch-empty"><i class="fas fa-users"></i><strong>Aucun élève dans cette classe</strong></div>') +
+
+      (modif && _eleves.length
+        ? '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">' +
+            '<button class="sch-btn" onclick="TeacherGrades.enregistrer(false)">' +
+              '<i class="fas fa-floppy-disk"></i> Enregistrer le brouillon</button>' +
+            '<button class="sch-btn sch-btn-primary" onclick="TeacherGrades.soumettre()">' +
+              '<i class="fas fa-paper-plane"></i> Valider et transmettre</button>' +
+          '</div>'
+        : '') +
+      '</div>';
+  }
+
+  // ------------------------------------------------------------
+  const API = {
+    render: render,
+
+    set: function (cle, val) { _sel[cle] = val; },
+
+    charger: function () {
+      if (!_sel.classId) { showToast('Choisissez une classe', 'error'); return; }
+      if (!_sel.matiere) { showToast('Choisissez une matière', 'error'); return; }
+
+      const etat = document.getElementById('schNotesEtat');
+      if (etat) etat.textContent = 'Chargement des élèves…';
+
+      Promise.all([
+        db.collection('schools').doc(ecoleId()).collection('students').get()
+          .catch(function () { return { docs: [] }; }),
+        db.collection('grades').where('schoolId', '==', ecoleId()).get()
+          .catch(function () { return { docs: [] }; })
+      ]).then(function (r) {
+        _eleves = r[0].docs
+          .map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+          .filter(function (e) { return e.classId === _sel.classId; })
+          .sort(function (a, b) {
+            return String(a.lastName || a.fullName || '').localeCompare(String(b.lastName || b.fullName || ''), 'fr');
+          });
+
+        // Un lot existant pour cette combinaison ?
+        const lots = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+        _lot = lots.filter(function (g) {
+          return g.classId === _sel.classId && (g.subject === _sel.matiere)
+            && (g.period === _sel.periode) && (g.evalTypeId === _sel.type)
+            && g.teacherId === State.user.uid;
+        })[0] || null;
+
+        _saisies = {};
+        if (_lot) {
+          (_lot.grades || []).forEach(function (g) {
+            _saisies[g.studentId] = { note: g.grade, commentaire: g.comment || '' };
+          });
+        } else {
+          _lot = { status: 'draft', nouveau: true };
+        }
+
+        if (etat) {
+          etat.textContent = _eleves.length + ' élève' + (_eleves.length > 1 ? 's' : '') + ' dans la classe';
+        }
+        dessinerCorps();
+      });
+    },
+
+    majNote: function (cle, val) {
+      const max = _config.maxGrade;
+      let v = val === '' ? '' : parseFloat(val);
+      if (v !== '' && !isNaN(v)) v = Math.max(0, Math.min(max, v));
+      _saisies[cle] = _saisies[cle] || {};
+      _saisies[cle].note = (v === '' || isNaN(v)) ? '' : v;
+    },
+
+    majCommentaire: function (cle, val) {
+      _saisies[cle] = _saisies[cle] || {};
+      _saisies[cle].commentaire = val;
+    },
+
+    _payload: function (statut) {
+      const notes = [];
+      Object.keys(_saisies).forEach(function (cle) {
+        const s = _saisies[cle];
+        const v = parseFloat(s.note);
+        if (isNaN(v)) return;
+        notes.push({ studentId: cle, grade: v, comment: s.commentaire || '' });
+      });
+      const type = G.typeParId(_sel.type, _config);
+      const classe = _classes.filter(function (c) { return c.id === _sel.classId; })[0];
+      const p = State.profile || {};
+      return {
+        schoolId: ecoleId(),
+        teacherId: State.user.uid,
+        teacherName: p.fullName || '',
+        classId: _sel.classId,
+        className: classe ? classe.name : '',
+        subject: _sel.matiere,
+        period: _sel.periode,
+        evalTypeId: _sel.type,
+        evalType: type ? type.name : _sel.type,
+        coefficient: G.coefMatiere(_sel.matiere, _config),
+        maxGrade: _config.maxGrade,
+        grades: notes,
+        status: statut,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+    },
+
+    enregistrer: function (silencieux) {
+      const data = API._payload('draft');
+      const op = (_lot && _lot.id)
+        ? db.collection('grades').doc(_lot.id).update(data)
+        : db.collection('grades').add(Object.assign(
+            { createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data));
+
+      return op.then(function (ref) {
+        if (ref && ref.id) _lot = Object.assign({ id: ref.id }, data);
+        else _lot = Object.assign(_lot || {}, data);
+        if (!silencieux) showToast('Brouillon enregistré', 'success');
+        if (window.SchoolData) SchoolData.invalider();
+        dessinerCorps();
+      }).catch(function (e) {
+        console.error('[Notes] enregistrement :', e);
+        showToast('Erreur : ' + (e.message || e), 'error');
+      });
+    },
+
+    soumettre: function () {
+      const data = API._payload('submitted');
+      if (!data.grades.length) { showToast('Saisissez au moins une note', 'error'); return; }
+      const manquants = _eleves.length - data.grades.length;
+
+      openModal('<h3>Transmettre les notes ?</h3>' +
+        '<p style="color:var(--text-secondary);margin:12px 0;">' +
+          U.esc(_sel.matiere) + ' — ' + U.esc(data.evalType) + ' — ' + U.esc(G.libellePeriode(_sel.periode, _config)) + '<br>' +
+          '<strong>' + data.grades.length + '</strong> note' + (data.grades.length > 1 ? 's' : '') + ' saisie' + (data.grades.length > 1 ? 's' : '') +
+          (manquants > 0 ? ' · <strong style="color:var(--sch-warn,#f59e0b);">' + manquants + ' élève' + (manquants > 1 ? 's' : '') + ' sans note</strong>' : '') +
+        '</p>' +
+        '<div class="sch-note warn"><i class="fas fa-triangle-exclamation"></i><div>' +
+          "Après transmission, vous ne pourrez plus modifier ces notes vous-même. " +
+          "L'administration en sera informée et pourra vous demander une correction." +
+        '</div></div>' +
+        '<div style="display:flex;gap:10px;margin-top:18px;">' +
+          '<button class="sch-btn sch-btn-primary" style="flex:1" onclick="TeacherGrades.confirmerSoumission()">' +
+            '<i class="fas fa-paper-plane"></i> Transmettre</button>' +
+          '<button class="sch-btn" onclick="closeModal()">Annuler</button></div>');
+    },
+
+    confirmerSoumission: function () {
+      const data = API._payload('submitted');
+      data.submittedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+      const op = (_lot && _lot.id)
+        ? db.collection('grades').doc(_lot.id).update(data)
+        : db.collection('grades').add(Object.assign(
+            { createdAt: firebase.firestore.FieldValue.serverTimestamp() }, data));
+
+      op.then(function (ref) {
+        if (ref && ref.id) _lot = Object.assign({ id: ref.id }, data);
+        else _lot = Object.assign(_lot || {}, data);
+        // Prévenir l'administration.
+        return db.collection('messages').add({
+          recipientId: ecoleId(),
+          senderId: State.user.uid,
+          senderName: (State.profile || {}).fullName || 'Enseignant',
+          schoolId: ecoleId(),
+          type: 'grades',
+          title: 'Nouvelles notes reçues — ' + data.subject + ' — ' + (data.className || ''),
+          body: data.evalType + ' · ' + G.libellePeriode(data.period, _config) +
+                ' · ' + data.grades.length + ' élèves notés.',
+          gradeId: _lot.id || '',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          read: false
+        }).catch(function () { /* la notification ne doit pas bloquer */ });
+      }).then(function () {
+        closeModal();
+        showToast('Les notes ont été transmises à l\'administration', 'success');
+        if (window.SchoolData) SchoolData.invalider();
+        dessinerCorps();
+      }).catch(function (e) {
+        console.error('[Notes] transmission :', e);
+        showToast('Erreur : ' + (e.message || e), 'error');
+      });
+    }
+  };
+
+  window.TeacherGrades = API;
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['prof-grades-entry'] = render;
 })();
 
 </script>

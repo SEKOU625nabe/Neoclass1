@@ -534,6 +534,24 @@ service cloud.firestore {
 
     // Examens : consultables par toute la communaute de l ecole,
     // modifiables par l etablissement et les enseignants.
+    // --- Support client ---
+    // L auteur du ticket et les administrateurs NeoClass y ont acces.
+    // Personne d autre : un ticket peut contenir des informations
+    // sensibles sur l etablissement.
+    match /supportTickets/{id} {
+      allow read: if isAuth() && (owns('userId') || isAdmin());
+      allow create: if isAuth() && request.resource.data.userId == uid();
+      allow update: if isAuth() && (owns('userId') || isAdmin());
+      allow delete: if isAdmin();
+
+      match /messages/{msgId} {
+        allow read: if isAuth() && (isAdmin() ||
+          get(/databases/$(database)/documents/supportTickets/$(id)).data.userId == uid());
+        allow create: if isAuth() && request.resource.data.authorId == uid();
+        allow update, delete: if isAdmin();
+      }
+    }
+
     match /exams/{id}     { allow read: if isAuth(); allow create: if willOwnSchool() || isEducator(); allow update, delete: if ownsSchool() || isEducator(); }
 
     // Bulletins : l eleve concerne, son ecole et le corps enseignant.
