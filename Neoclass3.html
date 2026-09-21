@@ -32757,8 +32757,11 @@ function switchTab(tabId) {
 // 👨‍🎓 GESTION ÉLÈVES
 // ============================================================
 async function renderGestionEleves(app) {
-  if (!isAdmin()) { navigate('dashboard'); return; }
-  const sl = getSidebarLinks('admin');
+  // Cette page figure dans le menu École mais était verrouillée sur
+  // isAdmin() : un compte école était renvoyé au tableau de bord, ce qui
+  // rendait la section Finances inaccessible à son propre propriétaire.
+  if (!isAdmin() && !isSchool()) { navigate('dashboard'); return; }
+  const sl = getSidebarLinks(State.profile.role);
   const breadcrumb = typeof NavigationManager !== 'undefined' ? NavigationManager.renderBreadcrumb() : '';
 
   app.innerHTML = `
@@ -32952,8 +32955,11 @@ async function chargerStatsEleves() {
 // 💳 GESTION SCOLARITÉS
 // ============================================================
 async function renderGestionScolarites(app) {
-  if (!isAdmin()) { navigate('dashboard'); return; }
-  const sl = getSidebarLinks('admin');
+  // Cette page figure dans le menu École mais était verrouillée sur
+  // isAdmin() : un compte école était renvoyé au tableau de bord, ce qui
+  // rendait la section Finances inaccessible à son propre propriétaire.
+  if (!isAdmin() && !isSchool()) { navigate('dashboard'); return; }
+  const sl = getSidebarLinks(State.profile.role);
 
   app.innerHTML = `
     <div class="layout-dashboard">
@@ -33150,8 +33156,11 @@ async function chargerStatsScolarites() {
 // 📊 TABLEAU DE BORD FINANCES
 // ============================================================
 async function renderTableauBordFinances(app) {
-  if (!isAdmin()) { navigate('dashboard'); return; }
-  const sl = getSidebarLinks('admin');
+  // Cette page figure dans le menu École mais était verrouillée sur
+  // isAdmin() : un compte école était renvoyé au tableau de bord, ce qui
+  // rendait la section Finances inaccessible à son propre propriétaire.
+  if (!isAdmin() && !isSchool()) { navigate('dashboard'); return; }
+  const sl = getSidebarLinks(State.profile.role);
 
   app.innerHTML = `
     <div class="layout-dashboard">
@@ -33228,8 +33237,11 @@ async function chargerGraphiquesFin() {
 // 🏷️ GESTION DÉPENSES
 // ============================================================
 async function renderGestionDepenses(app) {
-  if (!isAdmin()) { navigate('dashboard'); return; }
-  const sl = getSidebarLinks('admin');
+  // Cette page figure dans le menu École mais était verrouillée sur
+  // isAdmin() : un compte école était renvoyé au tableau de bord, ce qui
+  // rendait la section Finances inaccessible à son propre propriétaire.
+  if (!isAdmin() && !isSchool()) { navigate('dashboard'); return; }
+  const sl = getSidebarLinks(State.profile.role);
 
   app.innerHTML = `
     <div class="layout-dashboard">
@@ -33388,8 +33400,11 @@ async function chargerStatsDepenses() {
 // 🔔 GESTION NOTIFICATIONS
 // ============================================================
 async function renderGestionNotifications(app) {
-  if (!isAdmin()) { navigate('dashboard'); return; }
-  const sl = getSidebarLinks('admin');
+  // Cette page figure dans le menu École mais était verrouillée sur
+  // isAdmin() : un compte école était renvoyé au tableau de bord, ce qui
+  // rendait la section Finances inaccessible à son propre propriétaire.
+  if (!isAdmin() && !isSchool()) { navigate('dashboard'); return; }
+  const sl = getSidebarLinks(State.profile.role);
 
   app.innerHTML = `
     <div class="layout-dashboard">
@@ -43644,6 +43659,341 @@ function handleDocumentUpload(e) {
       }
     };
   }
+})();
+
+</script>
+
+<!-- 📋 Présences -->
+<script id="sch-absences-v3">
+// ============================================================
+// 📋 NEOCLASS ÉCOLE — PRÉSENCES
+// L'ancienne page demandait l'identifiant de l'élève en texte libre et
+// affichait « Aucune absence enregistrée » en dur, sans jamais lire la
+// base. Elle est remplacée ici par une saisie réelle, qui alimente
+// l'indicateur de présence du tableau de bord.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+
+  let _classes = [];
+  let _eleves = [];
+  let _absences = [];
+  let _filtreClasse = '';
+  let _filtreType = '';
+  let _charge = false;
+
+  function autorise() {
+    if (typeof State === 'undefined' || !State.profile) return false;
+    const r = State.profile.role;
+    return r === 'school' || r === 'admin' || r === 'teacher';
+  }
+
+  const TYPES = [
+    { v: 'absence', t: 'Absence', chip: 'bad' },
+    { v: 'retard', t: 'Retard', chip: 'warn' }
+  ];
+  const MOTIFS = [
+    { v: 'maladie', t: 'Maladie' },
+    { v: 'famille', t: 'Raison familiale' },
+    { v: 'transport', t: 'Transport' },
+    { v: 'autre', t: 'Autre' }
+  ];
+  function libelle(liste, v) {
+    const x = liste.filter(function (i) { return i.v === v; })[0];
+    return x ? x.t : v || '—';
+  }
+
+  function render(app) {
+    if (!autorise()) { navigate('dashboard'); return; }
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(State.profile.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-clipboard-user"></i></div>' +
+              '<div><h1>Présences</h1>' +
+              '<div class="sch-head-sub"><span id="schAbsResume">Chargement…</span></div></div>' +
+            '</div>' +
+            '<div class="sch-head-actions">' +
+              '<button class="sch-btn sch-btn-primary" onclick="SchoolAbsences.ouvrirSaisie()">' +
+                '<i class="fas fa-plus"></i> Enregistrer une absence</button>' +
+            '</div>' +
+          '</header>' +
+
+          '<div id="schAbsStats" class="sch-kpis" style="margin-bottom:24px;"></div>' +
+
+          '<div class="sch-toolbar">' +
+            '<select class="sch-select" id="schAbsFClasse" onchange="SchoolAbsences.filtrer()">' +
+              '<option value="">Toutes les classes</option></select>' +
+            '<select class="sch-select" id="schAbsFType" onchange="SchoolAbsences.filtrer()">' +
+              '<option value="">Absences et retards</option>' +
+              TYPES.map(function (t) { return '<option value="' + t.v + '">' + t.t + 's</option>'; }).join('') +
+            '</select>' +
+          '</div>' +
+
+          '<div id="schAbsListe"><div class="sch-card"><div class="sch-skel" style="height:140px"></div></div></div>' +
+        '</div></main>' +
+      '</div>';
+
+    charger();
+  }
+
+  function charger() {
+    const uid = State.user.uid;
+    Promise.all([
+      db.collection('classes').where('schoolId', '==', uid).get().catch(function () { return { docs: [] }; }),
+      db.collection('schools').doc(uid).collection('students').get().catch(function () { return { docs: [] }; }),
+      db.collection('absences').where('schoolId', '==', uid).get().catch(function (e) {
+        console.warn('[École] absences :', e.code || e.message); return { docs: [] };
+      })
+    ]).then(function (r) {
+      _classes = r[0].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _eleves = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _absences = r[2].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      // Les plus récentes d'abord.
+      _absences.sort(function (a, b) {
+        const da = U.toDate(a.date || a.createdAt), dbb = U.toDate(b.date || b.createdAt);
+        return (dbb ? dbb.getTime() : 0) - (da ? da.getTime() : 0);
+      });
+      _charge = true;
+
+      const fc = document.getElementById('schAbsFClasse');
+      if (fc) {
+        fc.innerHTML = '<option value="">Toutes les classes</option>' + _classes.map(function (c) {
+          return '<option value="' + c.id + '">' + U.esc(c.name) + '</option>';
+        }).join('');
+      }
+      afficher();
+    });
+  }
+
+  function filtrees() {
+    return _absences.filter(function (a) {
+      if (_filtreClasse && a.classId !== _filtreClasse) return false;
+      if (_filtreType && (a.type || 'absence') !== _filtreType) return false;
+      return true;
+    });
+  }
+
+  function nomEleve(a) {
+    if (a.studentName) return a.studentName;
+    const e = _eleves.filter(function (x) { return (x.uid || x.id) === a.studentId; })[0];
+    if (!e) return a.studentId || '—';
+    return ((e.firstName || '') + ' ' + (e.lastName || '')).trim() || e.fullName || '—';
+  }
+
+  function afficher() {
+    const liste = filtrees();
+
+    // --- Résumé ---
+    const mois = new Date(); mois.setDate(1); mois.setHours(0, 0, 0, 0);
+    const ceMois = _absences.filter(function (a) {
+      const d = U.toDate(a.date || a.createdAt); return d && d >= mois;
+    });
+    const nbAbs = _absences.filter(function (a) { return (a.type || 'absence') === 'absence'; }).length;
+    const nbRet = _absences.filter(function (a) { return a.type === 'retard'; }).length;
+    const nbJust = _absences.filter(function (a) { return a.justified; }).length;
+
+    const res = document.getElementById('schAbsResume');
+    if (res) {
+      res.textContent = _absences.length
+        ? (_absences.length + ' enregistrement' + (_absences.length > 1 ? 's' : ''))
+        : 'Aucun enregistrement';
+    }
+
+    const stats = document.getElementById('schAbsStats');
+    if (stats) {
+      const C = U.COULEURS;
+      function tuile(label, val, couleur, icone, note) {
+        return '<div class="sch-kpi" style="--kpi-color:' + couleur + ';--kpi-soft:' + couleur + '1f">' +
+          '<div class="sch-kpi-top"><span class="sch-kpi-label">' + label + '</span>' +
+          '<span class="sch-kpi-ico"><i class="fas ' + icone + '"></i></span></div>' +
+          '<div class="sch-kpi-val">' + U.nombre(val) + '</div>' +
+          '<div class="sch-kpi-foot">' + (note || '') + '</div></div>';
+      }
+      stats.innerHTML =
+        tuile('Absences', nbAbs, C.bad, 'fa-user-xmark', nbJust + ' justifiée' + (nbJust > 1 ? 's' : '')) +
+        tuile('Retards', nbRet, C.warn, 'fa-clock', '') +
+        tuile('Ce mois-ci', ceMois.length, C.info, 'fa-calendar-day', '') +
+        tuile('Élèves suivis', _eleves.length, C.violet, 'fa-user-group', '');
+    }
+
+    // --- Liste ---
+    const el = document.getElementById('schAbsListe');
+    if (!el) return;
+
+    if (!liste.length) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-clipboard-check"></i>' +
+        '<strong>' + (_absences.length ? 'Aucun résultat avec ces filtres' : 'Aucune absence enregistrée') + '</strong>' +
+        '<p>' + (_absences.length
+          ? 'Modifiez les filtres pour voir d\'autres enregistrements.'
+          : 'Tant qu\'aucune absence n\'est saisie, le taux de présence ne peut pas être calculé : le tableau de bord affiche « — » plutôt qu\'un 100 % trompeur.') + '</p>' +
+        (_absences.length ? '' : '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="SchoolAbsences.ouvrirSaisie()"><i class="fas fa-plus"></i> Enregistrer une absence</button>') +
+        '</div></div>';
+      return;
+    }
+
+    let h = '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+      '<th>Élève</th><th>Classe</th><th>Date</th><th>Type</th><th>Motif</th><th>Justifiée</th><th></th>' +
+      '</tr></thead><tbody>';
+
+    liste.slice(0, 200).forEach(function (a) {
+      const d = U.toDate(a.date || a.createdAt);
+      const classe = _classes.filter(function (c) { return c.id === a.classId; })[0];
+      const type = TYPES.filter(function (t) { return t.v === (a.type || 'absence'); })[0] || TYPES[0];
+      h += '<tr>' +
+        '<td><strong>' + U.esc(nomEleve(a)) + '</strong></td>' +
+        '<td>' + U.esc(classe ? classe.name : (a.className || '—')) + '</td>' +
+        '<td>' + (d ? d.toLocaleDateString('fr-FR') : '—') + '</td>' +
+        '<td><span class="sch-chip sch-chip-' + type.chip + '">' + type.t + '</span></td>' +
+        '<td>' + U.esc(libelle(MOTIFS, a.reason)) + '</td>' +
+        '<td>' + (a.justified
+          ? '<span class="sch-chip sch-chip-ok">Oui</span>'
+          : '<span class="sch-chip sch-chip-mute">Non</span>') + '</td>' +
+        '<td style="text-align:right;white-space:nowrap;">' +
+          '<button class="sch-btn sch-btn-sm sch-btn-ghost" title="' + (a.justified ? 'Marquer non justifiée' : 'Marquer justifiée') + '" ' +
+            'onclick="SchoolAbsences.basculerJustification(\'' + a.id + '\')"><i class="fas fa-' + (a.justified ? 'rotate-left' : 'check') + '"></i></button>' +
+          '<button class="sch-btn sch-btn-sm sch-btn-ghost" title="Supprimer" ' +
+            'onclick="SchoolAbsences.supprimer(\'' + a.id + '\')"><i class="fas fa-trash"></i></button>' +
+        '</td></tr>';
+    });
+
+    h += '</tbody></table></div>';
+    if (liste.length > 200) {
+      h += '<p style="font-size:.8rem;color:var(--text-secondary);margin-top:10px;">' +
+        'Affichage des 200 enregistrements les plus récents sur ' + U.nombre(liste.length) + '.</p>';
+    }
+    el.innerHTML = h;
+  }
+
+  function optionsEleves(classId) {
+    const liste = classId ? _eleves.filter(function (e) { return e.classId === classId; }) : _eleves;
+    if (!liste.length) return '<option value="">— Aucun élève —</option>';
+    return '<option value="">— Choisir un élève —</option>' + liste.map(function (e) {
+      const nom = ((e.firstName || '') + ' ' + (e.lastName || '')).trim() || e.fullName || 'Sans nom';
+      return '<option value="' + (e.uid || e.id) + '" data-classe="' + U.esc(e.classId || '') + '">' + U.esc(nom) + '</option>';
+    }).join('');
+  }
+
+  const API = {
+    render: render,
+
+    filtrer: function () {
+      const c = document.getElementById('schAbsFClasse');
+      const t = document.getElementById('schAbsFType');
+      _filtreClasse = c ? c.value : '';
+      _filtreType = t ? t.value : '';
+      afficher();
+    },
+
+    ouvrirSaisie: function () {
+      if (!_eleves.length) {
+        showToast('Inscrivez d\'abord des élèves', 'error');
+        return;
+      }
+      const auj = new Date().toISOString().slice(0, 10);
+      openModal('' +
+        '<h3 style="margin-bottom:18px;">Enregistrer une absence</h3>' +
+        '<div class="form-group"><label>Classe</label>' +
+          '<select class="form-input" id="schAbsClasse" onchange="SchoolAbsences.majEleves(this.value)">' +
+            '<option value="">Toutes</option>' +
+            _classes.map(function (c) { return '<option value="' + c.id + '">' + U.esc(c.name) + '</option>'; }).join('') +
+          '</select></div>' +
+        '<div class="form-group"><label>Élève *</label>' +
+          '<select class="form-input" id="schAbsEleve">' + optionsEleves('') + '</select></div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Date *</label>' +
+            '<input class="form-input" type="date" id="schAbsDate" value="' + auj + '" max="' + auj + '" /></div>' +
+          '<div class="form-group"><label>Type</label>' +
+            '<select class="form-input" id="schAbsType">' +
+              TYPES.map(function (t) { return '<option value="' + t.v + '">' + t.t + '</option>'; }).join('') +
+            '</select></div>' +
+        '</div>' +
+        '<div class="form-group"><label>Motif</label>' +
+          '<select class="form-input" id="schAbsMotif">' +
+            MOTIFS.map(function (m) { return '<option value="' + m.v + '">' + m.t + '</option>'; }).join('') +
+          '</select></div>' +
+        '<label style="display:flex;align-items:center;gap:8px;margin:12px 0;cursor:pointer;">' +
+          '<input type="checkbox" id="schAbsJust" /> <span>Absence justifiée</span></label>' +
+        '<div style="display:flex;gap:10px;margin-top:18px;">' +
+          '<button class="sch-btn sch-btn-primary" style="flex:1" onclick="SchoolAbsences.enregistrer()">' +
+            '<i class="fas fa-check"></i> Enregistrer</button>' +
+          '<button class="sch-btn" onclick="closeModal()">Annuler</button>' +
+        '</div>');
+    },
+
+    majEleves: function (classId) {
+      const s = document.getElementById('schAbsEleve');
+      if (s) s.innerHTML = optionsEleves(classId);
+    },
+
+    enregistrer: function () {
+      const sel = document.getElementById('schAbsEleve');
+      const studentId = sel ? sel.value : '';
+      const date = document.getElementById('schAbsDate').value;
+      if (!studentId) { showToast('Choisissez un élève', 'error'); return; }
+      if (!date) { showToast('Indiquez la date', 'error'); return; }
+
+      const eleve = _eleves.filter(function (e) { return (e.uid || e.id) === studentId; })[0] || {};
+      const nom = ((eleve.firstName || '') + ' ' + (eleve.lastName || '')).trim() || eleve.fullName || '';
+
+      db.collection('absences').add({
+        schoolId: State.user.uid,
+        studentId: studentId,
+        studentName: nom,
+        classId: eleve.classId || '',
+        className: eleve.className || '',
+        date: new Date(date + 'T12:00:00'),
+        type: document.getElementById('schAbsType').value,
+        reason: document.getElementById('schAbsMotif').value,
+        justified: document.getElementById('schAbsJust').checked,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(function () {
+        showToast('Enregistré', 'success');
+        closeModal();
+        SchoolData.invalider();
+        charger();
+      }).catch(function (e) {
+        console.error('[École] absence :', e);
+        showToast('Erreur : ' + (e.message || e), 'error');
+      });
+    },
+
+    basculerJustification: function (id) {
+      const a = _absences.filter(function (x) { return x.id === id; })[0];
+      if (!a) return;
+      db.collection('absences').doc(id).update({ justified: !a.justified })
+        .then(function () { a.justified = !a.justified; afficher(); })
+        .catch(function (e) { showToast('Erreur : ' + (e.message || e), 'error'); });
+    },
+
+    supprimer: function (id) {
+      openModal('<h3>Supprimer cet enregistrement ?</h3>' +
+        '<p style="color:var(--text-secondary);margin:12px 0 20px;">Le taux de présence sera recalculé.</p>' +
+        '<div style="display:flex;gap:10px;">' +
+          '<button class="sch-btn sch-btn-danger" style="flex:1" onclick="SchoolAbsences.confirmerSuppression(\'' + id + '\')">Supprimer</button>' +
+          '<button class="sch-btn" onclick="closeModal()">Annuler</button></div>');
+    },
+
+    confirmerSuppression: function (id) {
+      db.collection('absences').doc(id).delete().then(function () {
+        showToast('Supprimé', 'success');
+        closeModal();
+        SchoolData.invalider();
+        charger();
+      }).catch(function (e) { showToast('Erreur : ' + (e.message || e), 'error'); });
+    }
+  };
+
+  window.SchoolAbsences = API;
+  // Remplace l'ancienne page, qui n'affichait qu'un formulaire inerte.
+  window.renderSchoolAbsences = render;
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['school-absences'] = render;
 })();
 
 </script>
