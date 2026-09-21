@@ -11053,57 +11053,62 @@ Réponds en JSON:
       let directLinks = [{icon:'📊',label:t('dashboard'),page:'dashboard'}];
       
       if(role==='student'||role==='indep_student'){
+        // L'espace élève est d'abord un espace scolaire : « Ma scolarité »
+        // (notes, bulletins, absences) passe en accès direct, avant tout le
+        // reste. Les 50 entrées précédentes sont regroupées en 6 rubriques
+        // thématiques ; les 4 entrées qui renvoyaient à l'accueil
+        // (Flashcards, Prédicteur de notes, Objectifs, Aventure) sont
+        // retirées : aucune page ne leur correspondait.
+        directLinks.push({icon:'🎓',label:'Ma scolarité',page:'ma-scolarite'});
         groups = [
           { id:'learn', icon:'📚', label:'Apprendre', items:[
-            {icon:'📚',label:'Mes Cours',page:'cours-pro'},
-            {icon:'✅',label:t('quizzes'),page:'quizzes'},
-            {icon:'🧠',label:'Quiz Adaptatif IA',page:'adaptive-quiz'},
-            {icon:'🎮',label:t('games'),page:'games'},
-            {icon:'📺',label:'Cours Live',page:'live'},
-            {icon:'📚',label:'Bibliothèque',page:'library'}
+            {icon:'📚',label:'Mes cours',page:'cours-pro'},
+            {icon:'✅',label:'Exercices & quiz',page:'quizzes'},
+            {icon:'🧠',label:'Quiz adaptatif IA',page:'adaptive-quiz'},
+            {icon:'📅',label:'Emploi du temps',page:'timetable'},
+            {icon:'📖',label:'Bibliothèque',page:'library'},
+            {icon:'📺',label:'Cours en direct',page:'live'}
           ]},
-          { id:'ia', icon:'🤖', label:'DARX IA', items:[
-            {icon:'🤖',label:'Darx IA',page:'darx'},
-            {icon:'📸',label:'Aide Devoirs',page:'homework-correction'},
-            {icon:'🧠',label:'Plan Étude',page:'study-plan'},
-            {icon:'📝',label:'Fiches Révision',page:'revision-ia'},
-            {icon:'🃏',label:'Flashcards',page:'flashcards-ai'},
-            {icon:'🔮',label:'Prédicteur Notes',page:'grade-predictor'},
-            {icon:'📝',label:'Simulation Examen',page:'exam-simulation'},
-            {icon:'🎤',label:'Analyse Vocale',page:'voice-analysis'}
+          { id:'ia', icon:'🤖', label:'Assistant Darx', items:[
+            {icon:'🤖',label:'Poser une question',page:'darx'},
+            {icon:'📸',label:'Aide aux devoirs',page:'homework-correction'},
+            {icon:'📝',label:'Fiches de révision',page:'revision-ia'},
+            {icon:'🧭',label:"Plan d'étude",page:'study-plan'},
+            {icon:'📄',label:"Simulation d'examen",page:'exam-simulation'},
+            {icon:'🎤',label:'Analyse vocale',page:'voice-analysis'}
           ]},
-          { id:'gamif', icon:'🏆', label:'Jeux & Récompenses', items:[
-            {icon:'📊',label:'Compétences',page:'competences'},
-            {icon:'🏆',label:'Classement',page:'leaderboard'},
-            {icon:'🔥',label:'Streaks',page:'streaks'},
-            {icon:'🏅',label:'Certificats',page:'my-certificates'},
-            {icon:'🎯',label:'Objectifs',page:'weekly-goals'},
-            {icon:'🎯',label:'Défis',page:'daily-challenges'},
-            {icon:'⚔️',label:'Duel 1v1',page:'duel'},
-            {icon:'🏆',label:'Championnat',page:'championnat'},
-            {icon:'🗺️',label:'Aventure',page:'adventure-mode'},
-            {icon:'🎮',label:'Mini-Jeux',page:'mini-games'},
-            {icon:'💰',label:t('nabecoins'),page:'nabecoins'},
-            {icon:'🛒',label:'Boutique',page:'shop'},
-            {icon:'🎁',label:'Parrainage',page:'referral'},
-            {icon:'🏅',label:'Succès',page:'achievements'},
-            {icon:'💸',label:t('withdrawal'),page:'withdrawal'}
-          ]},
-          { id:'social', icon:'💬', label:'Social & Messages', items:[
-            {icon:'🌐',label:t('social'),page:'social'},
+          { id:'comm', icon:'💬', label:'Messages', items:[
             {icon:'💬',label:'Messagerie',page:'messaging-v2'},
-            {icon:'📬',label:t('inbox'),page:'inbox'},
-            {icon:'👥',label:'Groupes',page:'study-groups'},
+            {icon:'📬',label:'Boîte de réception',page:'inbox'},
+            {icon:'👥',label:'Groupes de travail',page:'study-groups'},
+            {icon:'🌐',label:'Communauté',page:'social'},
             {icon:'📖',label:'Stories',page:'stories'}
           ]},
+          { id:'progress', icon:'📈', label:'Ma progression', items:[
+            {icon:'📊',label:'Mes compétences',page:'competences'},
+            {icon:'🏆',label:'Classement',page:'leaderboard'},
+            {icon:'🔥',label:'Ma série',page:'streaks'},
+            {icon:'🏅',label:'Mes certificats',page:'my-certificates'},
+            {icon:'⭐',label:'Mes succès',page:'achievements'}
+          ]},
+          { id:'fun', icon:'🎮', label:'Jeux & récompenses', items:[
+            {icon:'💰',label:t('nabecoins'),page:'nabecoins'},
+            {icon:'💸',label:t('withdrawal'),page:'withdrawal'},
+            {icon:'🎯',label:'Défis du jour',page:'daily-challenges'},
+            {icon:'⚔️',label:'Duel 1v1',page:'duel'},
+            {icon:'🏆',label:'Championnat',page:'championnat'},
+            {icon:'🎮',label:'Jeux éducatifs',page:'games'},
+            {icon:'🕹️',label:'Mini-jeux',page:'mini-games'},
+            {icon:'🛒',label:'Boutique',page:'shop'},
+            {icon:'🎁',label:'Parrainage',page:'referral'}
+          ]},
           { id:'outils', icon:'🛠️', label:'Outils', items:[
-            {icon:'📅',label:t('timetable'),page:'timetable'},
+            {icon:'⏱️',label:'Minuteur Pomodoro',page:'pomodoro'},
             {icon:'📝',label:t('composition'),page:'composition'},
-            {icon:'⏱️',label:'Pomodoro',page:'pomodoro'},
-            {icon:'👤',label:'Avatar',page:'avatar'},
-            {icon:'🐱',label:'Pet',page:'pet'},
+            {icon:'👤',label:'Mon avatar',page:'avatar'},
+            {icon:'🐱',label:'Mon compagnon',page:'pet'},
             {icon:'🎨',label:'Thèmes',page:'themes'},
-            {icon:'📱',label:'Hors Ligne',page:'offline-content'}
+            {icon:'📱',label:'Contenu hors ligne',page:'offline-content'}
           ]}
         ];
         // Coran si franco-arabe ou mixte
@@ -12327,15 +12332,16 @@ Réponds en JSON:
         <div id="dashDarxAnswer" style="white-space:pre-wrap;line-height:1.7;"></div>
 
         <!-- ⚡ ACCÈS RAPIDES -->
+        <!-- Ma scolarite en premier : notes, bulletins, absences -->
         <div class="nc-quick">
-          ${ncQuickTile('fa-book-open','Mes cours','nc-bg-violet',`navigate('${coursesPage}')`)}
-          ${ncQuickTile('fa-circle-play','Vidéos','nc-bg-gold',"navigate('short-videos')")}
+          ${ncQuickTile('fa-graduation-cap','Ma scolarité','nc-bg-violet',"navigate('ma-scolarite')")}
+          ${ncQuickTile('fa-book-open','Mes cours','nc-bg-indigo',`navigate('${coursesPage}')`)}
           ${ncQuickTile('fa-pen-to-square','Exercices','nc-bg-green',"navigate('quizzes')")}
-          ${ncQuickTile('fa-file-signature','Examens','nc-bg-red',"navigate('exam-papers')")}
-          ${ncQuickTile('fa-camera','Aide devoirs','nc-bg-blue',"navigate('homework-correction')")}
-          ${ncQuickTile('fa-bolt','Révision 5 min','nc-bg-teal',"navigate('revision-rapide')")}
+          ${ncQuickTile('fa-calendar-days','Emploi du temps','nc-bg-teal',"navigate('timetable')")}
+          ${ncQuickTile('fa-camera','Aide aux devoirs','nc-bg-blue',"navigate('homework-correction')")}
+          ${ncQuickTile('fa-circle-play','Vidéos','nc-bg-gold',"navigate('short-videos')")}
           ${ncQuickTile('fa-trophy','Classement','nc-bg-pink',"navigate('leaderboard')")}
-          ${ncQuickTile('fa-table-cells-large','Tout voir','nc-bg-indigo',"ncOpenMenu()")}
+          ${ncQuickTile('fa-table-cells-large','Tout voir','nc-bg-red',"ncOpenMenu()")}
         </div>
 
         <!-- 📚 MES MATIÈRES -->
@@ -45408,6 +45414,402 @@ function handleDocumentUpload(e) {
   window.TeacherGrades = API;
   window.NC_PAGES = window.NC_PAGES || {};
   window.NC_PAGES['prof-grades-entry'] = render;
+})();
+
+</script>
+
+<!-- 🎓 Ma scolarité (élève) -->
+<script id="sch-eleve-v3">
+// ============================================================
+// 🎓 NEOCLASS — MA SCOLARITÉ (ÉLÈVE)
+//
+// L'espace élève comptait 15 entrées de jeux et aucune entrée de
+// scolarité : un élève ne pouvait consulter ni ses notes, ni son
+// bulletin, ni ses absences. Cette page comble ce manque.
+//
+// Lecture seule : un élève ne modifie jamais ses notes.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const G = window.SchoolGrading;
+
+  let _config = null;
+  let _notes = [];        // notes de l'élève, à plat
+  let _bulletins = [];
+  let _absences = [];
+  let _periode = '';
+  let _onglet = 'notes';
+  let _charge = false;
+  let _erreurs = [];
+
+  function estEleve() {
+    if (typeof State === 'undefined' || !State.profile) return false;
+    const r = State.profile.role;
+    return r === 'student' || r === 'indep_student';
+  }
+  function ecoleId() { return (State.profile || {}).schoolId || ''; }
+
+  // ------------------------------------------------------------
+  function render(app) {
+    if (typeof State === 'undefined' || !State.user) { navigate('login'); return; }
+    if (!estEleve()) { navigate('dashboard'); return; }
+
+    const p = State.profile || {};
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(p.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-graduation-cap"></i></div>' +
+              '<div><h1>Ma scolarité</h1>' +
+              '<div class="sch-head-sub">' +
+                '<span>' + U.esc(p.className || p.level || '') + '</span>' +
+                (p.schoolName ? '<span>·</span><span>' + U.esc(p.schoolName) + '</span>' : '') +
+                '<span>·</span><span id="schElvPeriodeLbl">—</span>' +
+              '</div></div>' +
+            '</div>' +
+            '<div class="sch-head-actions">' +
+              '<select class="sch-select" id="schElvPeriode" onchange="StudentSchool.changerPeriode(this.value)"></select>' +
+            '</div>' +
+          '</header>' +
+
+          '<div id="schElvKpis" class="sch-kpis" style="margin-bottom:24px;"></div>' +
+
+          '<div class="sch-tabs">' +
+            '<button class="sch-tab active" data-t="notes" onclick="StudentSchool.onglet(\'notes\')">Mes notes</button>' +
+            '<button class="sch-tab" data-t="bulletins" onclick="StudentSchool.onglet(\'bulletins\')">Mes bulletins</button>' +
+            '<button class="sch-tab" data-t="absences" onclick="StudentSchool.onglet(\'absences\')">Mes absences</button>' +
+          '</div>' +
+
+          '<div id="schElvCorps"><div class="sch-card"><div class="sch-skel" style="height:160px"></div></div></div>' +
+        '</div></main>' +
+      '</div>';
+
+    charger();
+  }
+
+  // ------------------------------------------------------------
+  function charger() {
+    const uid = State.user.uid;
+    const ecole = ecoleId();
+    _erreurs = [];
+
+    function lire(nom, prom) {
+      return prom.catch(function (e) {
+        console.warn('[Élève] ' + nom + ' :', (e && (e.code || e.message)) || e);
+        _erreurs.push(nom);
+        return { docs: [] };
+      });
+    }
+
+    const pConfig = ecole
+      ? db.collection('users').doc(ecole).get()
+          .then(function (d) { return G.normaliser((d.data() || {}).gradesConfig || {}); })
+          .catch(function () { return G.normaliser({}); })
+      : Promise.resolve(G.normaliser({}));
+
+    Promise.all([
+      pConfig,
+      ecole ? lire('notes', db.collection('grades').where('schoolId', '==', ecole).get()) : Promise.resolve({ docs: [] }),
+      lire('bulletins', db.collection('bulletins').where('studentId', '==', uid).get()),
+      lire('absences', db.collection('absences').where('studentId', '==', uid).get())
+    ]).then(function (r) {
+      _config = r[0];
+
+      // On ne garde que les notes validées qui concernent cet élève.
+      const VALIDES = ['validated', 'locked', 'published'];
+      _notes = [];
+      r[1].docs.forEach(function (d) {
+        const g = d.data() || {};
+        if (VALIDES.indexOf(g.status) === -1) return;
+        (g.grades || []).forEach(function (n) {
+          if ((n.studentId || n.eleveId) !== uid) return;
+          const v = parseFloat(n.grade != null ? n.grade : n.note);
+          if (isNaN(v)) return;
+          _notes.push({
+            valeur: v,
+            matiere: g.subject || 'Non précisée',
+            periode: g.period || '',
+            typeId: g.evalTypeId || '',
+            type: g.evalType || '',
+            coef: parseFloat(g.coefficient) || null,
+            max: parseFloat(g.maxGrade) || _config.maxGrade,
+            commentaire: n.comment || '',
+            prof: g.teacherName || '',
+            date: U.toDate(g.updatedAt || g.createdAt)
+          });
+        });
+      });
+
+      _bulletins = r[2].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .filter(function (b) { return b.status === 'published'; });
+
+      _absences = r[3].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .sort(function (a, b) {
+          const da = U.toDate(a.date || a.createdAt), dbb = U.toDate(b.date || b.createdAt);
+          return (dbb ? dbb.getTime() : 0) - (da ? da.getTime() : 0);
+        });
+
+      _charge = true;
+
+      const per = G.periodes(_config);
+      const dispo = per.filter(function (p) {
+        return _notes.some(function (n) { return n.periode === p.v; });
+      });
+      _periode = (dispo[dispo.length - 1] || per[0]).v;
+
+      const sel = document.getElementById('schElvPeriode');
+      if (sel) {
+        sel.innerHTML = per.map(function (p) {
+          const a = _notes.some(function (n) { return n.periode === p.v; });
+          return '<option value="' + p.v + '"' + (p.v === _periode ? ' selected' : '') + '>' +
+            p.t + (a ? '' : ' (aucune note)') + '</option>';
+        }).join('');
+      }
+
+      afficher();
+    });
+  }
+
+  // ------------------------------------------------------------
+  // Regroupe les notes de la période par matière, puis par type, et
+  // applique les règles de calcul de l'établissement.
+  function parMatiere() {
+    const notes = _notes.filter(function (n) { return n.periode === _periode; });
+    const map = {};
+    notes.forEach(function (n) {
+      const m = map[n.matiere] || (map[n.matiere] = { nom: n.matiere, notes: [], parType: {}, coef: null });
+      m.notes.push(n);
+      const cle = n.typeId || n.type || 'autre';
+      (m.parType[cle] = m.parType[cle] || []).push(n.valeur);
+      if (m.coef == null && n.coef != null) m.coef = n.coef;
+    });
+    return Object.keys(map).map(function (k) {
+      const m = map[k];
+      if (m.coef == null) m.coef = G.coefMatiere(m.nom, _config);
+      m.moyenne = G.moyenneMatiere(m.parType, _config);
+      return m;
+    }).sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
+  }
+
+  function afficher() {
+    const mats = parMatiere();
+    const moy = G.moyenneGenerale(mats, _config);
+    const max = _config.maxGrade;
+
+    const lbl = document.getElementById('schElvPeriodeLbl');
+    if (lbl) lbl.textContent = G.libellePeriode(_periode, _config);
+
+    // --- Indicateurs ---
+    const C = U.COULEURS;
+    const abs = _absences.filter(function (a) { return (a.type || 'absence') === 'absence'; }).length;
+    const ret = _absences.filter(function (a) { return a.type === 'retard'; }).length;
+    const men = moy != null ? G.mention(moy, _config) : null;
+
+    function tuile(o) {
+      const vide = o.valeur == null;
+      return '<div class="sch-kpi' + (o.page ? ' is-clickable' : '') + '" style="--kpi-color:' + o.c + ';--kpi-soft:' + o.c + '1f"' +
+        (o.page ? ' onclick="navigate(\'' + o.page + '\')"' : '') + '>' +
+        '<div class="sch-kpi-top"><span class="sch-kpi-label">' + o.label + '</span>' +
+        '<span class="sch-kpi-ico"><i class="fas ' + o.i + '"></i></span></div>' +
+        '<div class="sch-kpi-val">' + (vide ? '—' : o.valeur) + (o.u && !vide ? '<small>' + o.u + '</small>' : '') + '</div>' +
+        (o.jauge != null && !vide ? '<div class="sch-meter"><span style="width:' + Math.max(0, Math.min(100, o.jauge)) + '%"></span></div>' : '') +
+        '<div class="sch-kpi-foot">' + (o.note || '') + '</div></div>';
+    }
+
+    const kp = document.getElementById('schElvKpis');
+    if (kp) {
+      kp.innerHTML =
+        tuile({
+          label: 'Moyenne de la période', i: 'fa-square-poll-vertical',
+          c: moy == null ? C.slate : (G.admis(moy, _config) ? C.ok : C.warn),
+          valeur: moy == null ? null : U.pourcent(moy, _config.decimals), u: '/' + max,
+          jauge: moy == null ? null : (moy / max) * 100,
+          note: men ? U.esc(men) : 'Aucune note publiée'
+        }) +
+        tuile({
+          label: 'Matières notées', i: 'fa-book', c: C.violet,
+          valeur: U.nombre(mats.length),
+          note: _notes.length ? U.nombre(_notes.filter(function (n) { return n.periode === _periode; }).length) + ' notes' : ''
+        }) +
+        tuile({
+          label: 'Absences', i: 'fa-user-xmark', c: abs ? C.bad : C.ok,
+          valeur: U.nombre(abs), note: ret ? (ret + ' retard' + (ret > 1 ? 's' : '')) : 'Aucun retard'
+        }) +
+        tuile({
+          label: 'Bulletins disponibles', i: 'fa-file-lines',
+          c: _bulletins.length ? C.info : C.slate,
+          valeur: U.nombre(_bulletins.length),
+          note: _bulletins.length ? 'Publiés par l\'école' : 'Aucun publié'
+        });
+    }
+
+    // --- Onglet actif ---
+    document.querySelectorAll('.sch-tab').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-t') === _onglet);
+    });
+
+    const el = document.getElementById('schElvCorps');
+    if (!el) return;
+
+    let html = '';
+    if (_erreurs.length) {
+      html += '<div class="sch-note warn" style="margin-bottom:16px;"><i class="fas fa-triangle-exclamation"></i>' +
+        '<div>Certaines données n\'ont pas pu être lues : ' + U.esc(_erreurs.join(', ')) + '.</div></div>';
+    }
+
+    if (_onglet === 'notes') html += vueNotes(mats, moy, max);
+    else if (_onglet === 'bulletins') html += vueBulletins();
+    else html += vueAbsences();
+
+    el.innerHTML = html;
+  }
+
+  // ------------------------------------------------------------
+  function vueNotes(mats, moy, max) {
+    if (!mats.length) {
+      return '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-clipboard"></i><strong>Aucune note pour cette période</strong>' +
+        '<p>Tes notes apparaîtront ici dès que tes professeurs les auront saisies et que l\'école les aura validées. ' +
+        'Une note en cours de saisie n\'est pas encore visible.</p></div></div>';
+    }
+
+    let html = '<div class="sch-card">' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Détail par matière</h3>' +
+        '<p class="sch-card-sub">' + U.esc(G.libellePeriode(_periode, _config)) + '</p></div>' +
+        (moy != null ? '<span class="sch-chip sch-chip-' + (G.admis(moy, _config) ? 'ok' : 'warn') + '">Moyenne ' +
+          U.pourcent(moy, _config.decimals) + '/' + max + '</span>' : '') +
+      '</div>';
+
+    mats.forEach(function (m) {
+      const ok = m.moyenne != null && m.moyenne >= _config.passingGrade;
+      const couleur = m.moyenne == null ? U.COULEURS.slate : (ok ? U.COULEURS.ok : U.COULEURS.warn);
+
+      const detail = m.notes.map(function (n) {
+        return '<span class="sch-chip sch-chip-mute" title="' + U.esc(n.type || '') +
+          (n.commentaire ? ' — ' + U.esc(n.commentaire) : '') + '">' +
+          (n.type ? U.esc(n.type) + ' ' : '') + U.pourcent(n.valeur, 2) + '</span>';
+      }).join(' ');
+
+      html += '<div style="padding:14px 0;border-bottom:1px solid var(--border);">' +
+        '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">' +
+          '<strong style="flex:1;min-width:140px;">' + U.esc(m.nom) + '</strong>' +
+          '<span style="font-size:.75rem;color:var(--text-secondary);">coef ' + m.coef + '</span>' +
+          '<strong style="font-size:1.1rem;color:' + couleur + ';font-variant-numeric:tabular-nums;">' +
+            (m.moyenne == null ? '—' : U.pourcent(m.moyenne, _config.decimals)) +
+            '<small style="color:var(--text-secondary);font-weight:600;">/' + max + '</small></strong>' +
+        '</div>' +
+        '<div class="sch-meter" style="--kpi-color:' + couleur + ';margin:8px 0;">' +
+          '<span style="width:' + (m.moyenne == null ? 0 : (m.moyenne / max) * 100) + '%"></span></div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + detail + '</div>' +
+      '</div>';
+    });
+
+    html += '</div>';
+
+    // Commentaires des professeurs, s'il y en a.
+    const avecCom = _notes.filter(function (n) { return n.periode === _periode && n.commentaire; });
+    if (avecCom.length) {
+      html += '<div class="sch-card" style="margin-top:18px;">' +
+        '<div class="sch-card-head"><div><h3 class="sch-card-title">Appréciations de tes professeurs</h3></div></div>' +
+        avecCom.map(function (n) {
+          return '<div style="padding:10px 0;border-bottom:1px solid var(--border);">' +
+            '<div style="font-size:.78rem;color:var(--text-secondary);font-weight:700;">' +
+              U.esc(n.matiere) + (n.prof ? ' · ' + U.esc(n.prof) : '') + '</div>' +
+            '<div style="font-size:.9rem;margin-top:3px;">' + U.esc(n.commentaire) + '</div></div>';
+        }).join('') + '</div>';
+    }
+
+    return html;
+  }
+
+  // ------------------------------------------------------------
+  function vueBulletins() {
+    if (!_bulletins.length) {
+      return '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-file-lines"></i><strong>Aucun bulletin publié</strong>' +
+        '<p>Ton bulletin apparaîtra ici une fois validé et publié par ton établissement.</p></div></div>';
+    }
+    return '<div class="sch-card"><div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+      '<th>Période</th><th>Année</th><th class="num">Moyenne</th><th>Mention</th><th></th>' +
+      '</tr></thead><tbody>' +
+      _bulletins.map(function (b) {
+        const m = b.average != null ? b.average : b.moyenne;
+        return '<tr>' +
+          '<td><strong>' + U.esc(G.libellePeriode(b.period, _config)) + '</strong></td>' +
+          '<td>' + U.esc(b.year || b.schoolYear || '—') + '</td>' +
+          '<td class="num">' + (m == null ? '—' : U.pourcent(parseFloat(m), _config.decimals) + '/' + _config.maxGrade) + '</td>' +
+          '<td>' + U.esc(b.mention || (m != null ? G.mention(parseFloat(m), _config) : '—')) + '</td>' +
+          '<td style="text-align:right;">' +
+            '<button class="sch-btn sch-btn-sm" onclick="StudentSchool.voirBulletin(\'' + b.id + '\')">' +
+              '<i class="fas fa-eye"></i> Consulter</button></td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table></div></div>';
+  }
+
+  // ------------------------------------------------------------
+  function vueAbsences() {
+    if (!_absences.length) {
+      return '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-circle-check"></i><strong>Aucune absence enregistrée</strong>' +
+        '<p>Continue comme ça.</p></div></div>';
+    }
+    return '<div class="sch-card"><div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+      '<th>Date</th><th>Type</th><th>Motif</th><th>Justifiée</th>' +
+      '</tr></thead><tbody>' +
+      _absences.map(function (a) {
+        const d = U.toDate(a.date || a.createdAt);
+        const retard = a.type === 'retard';
+        return '<tr>' +
+          '<td>' + (d ? d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }) : '—') + '</td>' +
+          '<td><span class="sch-chip sch-chip-' + (retard ? 'warn' : 'bad') + '">' + (retard ? 'Retard' : 'Absence') + '</span></td>' +
+          '<td>' + U.esc(a.reason || '—') + '</td>' +
+          '<td>' + (a.justified
+            ? '<span class="sch-chip sch-chip-ok">Oui</span>'
+            : '<span class="sch-chip sch-chip-mute">Non</span>') + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table></div></div>';
+  }
+
+  // ------------------------------------------------------------
+  const API = {
+    render: render,
+    onglet: function (t) { _onglet = t; afficher(); },
+    changerPeriode: function (v) { _periode = v; afficher(); },
+
+    voirBulletin: function (id) {
+      const b = _bulletins.filter(function (x) { return x.id === id; })[0];
+      if (!b) return;
+      const lignes = (b.subjects || b.matieres || []);
+      openModal('<h3 style="margin-bottom:6px;">Bulletin — ' + U.esc(G.libellePeriode(b.period, _config)) + '</h3>' +
+        '<p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:16px;">' +
+          U.esc(b.schoolName || (State.profile || {}).schoolName || '') + ' · ' + U.esc(b.year || b.schoolYear || '') + '</p>' +
+        (lignes.length
+          ? '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+            '<th>Matière</th><th class="num">Moyenne</th><th class="num">Coef</th></tr></thead><tbody>' +
+            lignes.map(function (l) {
+              return '<tr><td>' + U.esc(l.name || l.matiere || '') + '</td>' +
+                '<td class="num">' + U.esc(l.average != null ? l.average : (l.moyenne != null ? l.moyenne : '—')) + '</td>' +
+                '<td class="num">' + U.esc(l.coef != null ? l.coef : '—') + '</td></tr>';
+            }).join('') + '</tbody></table></div>'
+          : '<div class="sch-note"><i class="fas fa-circle-info"></i><div>Le détail des matières n\'est pas disponible pour ce bulletin.</div></div>') +
+        (b.comment || b.appreciation
+          ? '<div style="margin-top:14px;"><strong style="font-size:.8rem;">Appréciation générale</strong>' +
+            '<p style="font-size:.9rem;margin-top:4px;">' + U.esc(b.comment || b.appreciation) + '</p></div>'
+          : '') +
+        '<button class="sch-btn sch-btn-primary" style="width:100%;margin-top:18px;" onclick="closeModal()">Fermer</button>');
+    }
+  };
+
+  window.StudentSchool = API;
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['ma-scolarite'] = render;
 })();
 
 </script>
