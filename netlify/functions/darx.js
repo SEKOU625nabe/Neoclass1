@@ -41,75 +41,56 @@ exports.handler = async (event) => {
 
     const body = JSON.parse(event.body);
 
-    const prompt = body.prompt;
-    const userContext = body.userContext || {};
+    const prompt = (body.prompt || '').toString().trim();
+    const userContext = (body.userContext && typeof body.userContext === 'object') ? body.userContext : {};
 
+    // Validation basique: non vide et taille raisonnable
     if (!prompt) {
-
       return {
         statusCode: 400,
         body: JSON.stringify({
-          answer: "Question vide."
+          answer: 'Question vide.'
         })
       };
     }
 
-    const response = await fetch(
-      "https://api.mistral.ai/v1/chat/completions",
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization":
-            `Bearer ${process.env.MISTRAL_API_KEY}`
-        },
-
+    if (prompt.length > 2000) {
+      return {
+        statusCode: 400,
         body: JSON.stringify({
-
-          model: "mistral-small",
-
-          messages: [
-
-            {
-              role: "system",
-
-              content:
-                `Tu es ${APP_CONFIG.NOM_IA},
-                une IA éducative du système
-                ${APP_CONFIG.SYSTEME}.`
-            },
-
-            {
-              role: "user",
-              content: prompt
-            }
-
-          ]
+          answer: 'Question trop longue. Veuillez réduire la taille du prompt.'
         })
-      }
-    );
+      };
+    }
+
+    const API_KEY = process.env.MISTRAL_API_KEY || process.env.VITE_MISTRAL_API_KEY;
+
+    const agentBody = {
+      agent_id: "ag_019e93673fb171c889fb4c2c6bd32176",
+      agent_version: 0,
+      inputs: [
+        { role: 'user', content: prompt }
+      ]
+    };
+
+    const response = await fetch("https://api.mistral.ai/v1/conversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify(agentBody)
+    });
 
     const data = await response.json();
 
-    let answer =
-      data.choices?.[0]?.message?.content ||
-      "Pas de réponse.";
+    let answer = data?.outputs?.[0]?.content?.[0]?.text || data?.answer || "Pas de réponse.";
 
-    answer =
-      addBacEncouragement(
-        answer,
-        userContext
-      );
+    answer = addBacEncouragement(answer, userContext);
 
     return {
-
       statusCode: 200,
-
-      body: JSON.stringify({
-        answer
-      })
-
+      body: JSON.stringify({ answer })
     };
 
   } catch (error) {

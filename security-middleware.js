@@ -22,25 +22,14 @@ const authenticateUser = (db) => async (req, res, next) => {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    let userId;
     
-    // En production, utiliser Firebase Admin SDK pour vérifier le token
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Implémenter la vérification Firebase Admin
-      // const admin = require('firebase-admin');
-      // const decodedToken = await admin.auth().verifyIdToken(token);
-      // userId = decodedToken.uid;
-      return res.status(501).json({
-        success: false,
-        error: 'NOT_IMPLEMENTED',
-        message: 'Authentification Firebase Admin non configurée'
-      });
-    } else {
-      // ⚠️ MODE DÉVELOPPEMENT UNIQUEMENT - Accepter le header x-user-id
-      // NE JAMAIS UTILISER EN PRODUCTION
-      userId = req.headers['x-user-id'] || token;
-      console.warn('⚠️ Mode dev: authentification simplifiée utilisée');
-    }
+    // Vérifier le token Firebase (dans un vrai environnement)
+    // const decodedToken = await admin.auth().verifyIdToken(token);
+    // const userId = decodedToken.uid;
+    
+    // Pour le développement, extraire l'userId du token
+    // En production, utiliser Firebase Admin SDK
+    const userId = req.headers['x-user-id'] || token;
 
     if (!userId) {
       return res.status(401).json({

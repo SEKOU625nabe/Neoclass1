@@ -81,10 +81,10 @@ const LivesSystem = {
   async save() {
     if (!State.user) return;
     try {
-        await db.collection('users').doc(State.user.uid).update({
-          lives: State.profile.lives,
-          lastLifeLoss: State.profile.lastLifeLoss
-        });
+      await db.collection('users').doc(State.user.uid).update({
+        lives: State.profile.lives,
+        lastLifeLoss: State.profile.lastLifeLoss
+      });
     } catch(e) {
       console.error('Erreur sauvegarde vies:', e);
     }
@@ -264,11 +264,11 @@ const DailyRewards = {
       State.profile.lastDailyReward = new Date().toDateString();
       
       try {
-          await db.collection('users').doc(State.user.uid).update({
-            totalXP: State.profile.totalXP,
-            nabecoins: State.profile.nabecoins,
-            lastDailyReward: State.profile.lastDailyReward
-          });
+        await db.collection('users').doc(State.user.uid).update({
+          totalXP: State.profile.totalXP,
+          nabecoins: State.profile.nabecoins,
+          lastDailyReward: State.profile.lastDailyReward
+        });
         
         closeModal();
         
@@ -781,10 +781,8 @@ const RegionalLeaderboard = {
 // ============================================================
 // 📋 SIMULATEUR D'EXAMEN BAC
 // ============================================================
-// NOTE: ExamSimulator est déjà défini dans Neoclass3.html - bloc commenté pour éviter conflit
-/*
 if (typeof ExamSimulator === 'undefined') {
-var ExamSimulator_DISABLED = {
+var ExamSimulator = {
   examTypes: {
     bac_maths: {
       name: 'BAC Maths',
@@ -1150,8 +1148,6 @@ var ExamSimulator_DISABLED = {
   }
 };
 }
-*/
-// FIN du bloc ExamSimulator commenté
 
 // ============================================================
 // 📊 PRÉDICTEUR DE NOTE BAC

@@ -543,7 +543,7 @@ function selectOp(op){
   document.querySelectorAll('.op').forEach(c=>c.className=c.className.replace(/\bsel-\w+/g,'').trim());
   document.getElementById('op-'+op).classList.add('sel-'+op);
   const pre=document.getElementById('phonePre'),inp=document.getElementById('fPhone'),hint=document.getElementById('phoneHint');
-  if(op==='orange'){pre.textContent='🟠 +224';inp.className='inp of';inp.placeholder='6XX XX XX XX';hint.textContent='Numéro associé à votre compte Orange Money';}
+  if(op==='orange'){pre.textContent='🟠 +224';inp.className='inp of';inp.placeholder='62X XX XX XX';hint.textContent='Numéro associé à votre compte Orange Money';}
   else{pre.textContent='🟡 +224';inp.className='inp mf';inp.placeholder='67X XX XX XX';hint.textContent='Numéro associé à votre compte MTN MoMo';}
   updateSummary();updatePayBtn();
 }
@@ -590,8 +590,8 @@ function validate(){
   const phone=document.getElementById('fPhone').value.trim();
   if(name.length<3){toast('Entrez votre nom complet','err');return false;}
   if(phone.length<8){toast('Numéro de téléphone invalide','err');return false;}
-  if(S.op==='orange'&&!['61','62','63','64','65','66', '67', '68', '69', '70'].some(p=>phone.startsWith(p))){toast('Ce numéro ne correspond pas à Orange Guinea','err');return false;}
-  if(S.op==='mtn'&&!['61','62','63','64','65','66', '67', '68', '69', '70'].some(p=>phone.startsWith(p))){toast('Ce numéro ne correspond pas à MTN Guinea','err');return false;}
+  if(S.op==='orange'&&!['62','63','64','65'].some(p=>phone.startsWith(p))){toast('Ce numéro ne correspond pas à Orange Guinea','err');return false;}
+  if(S.op==='mtn'&&!['66','67','68','69'].some(p=>phone.startsWith(p))){toast('Ce numéro ne correspond pas à MTN Guinea','err');return false;}
   return true;
 }
 

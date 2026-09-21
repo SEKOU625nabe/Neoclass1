@@ -1,0 +1,5 @@
+scripts: 11
+errors: 1
+BLOC 8 LIGNE 3353 Invalid or unexpected token 
+SNIPPET:      console.log('%c[NEOCLASS] Script démarré', 'color: green; font-weight: bold;');          // ============================================================     // 🛡️ SÉCURITÉ: Fonctions d'échap 
+---

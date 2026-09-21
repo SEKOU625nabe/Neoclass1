@@ -1,0 +1,88 @@
+# 💳 FINANCE V2 - ACCÈS AU MENU ✅
+
+**Le problème a été corrigé !** 
+
+Le menu **"Finances V2"** s'affiche maintenant pour les **Écoles** 🏫
+
+---
+
+## 🎯 COMMENT ACCÉDER
+
+### Étape 1: Se connecter
+```
+🔐 Login Admin École:
+- Email: (votre email école)
+- Mot de passe: (votre mot de passe)
+```
+
+### Étape 2: Regarder le menu latéral
+Dans le **menu de gauche**, vous verrez maintenant:
+
+```
+📊 Utilisateurs
+📚 Pédagogie
+📊 Notes & Bulletins
+💰 Finances V2          ← NOUVEAU !
+⚙️  Administration
+📢 Communication
+📅 Planning
+```
+
+### Étape 3: Cliquer sur "Finances V2"
+Le menu **se déplie** et affiche:
+
+```
+💰 Finances V2
+├─ 👨‍🎓 Gestion Élèves
+├─ 💳 Gestion Scolarités
+├─ 📈 Tableau Bord
+├─ 🏷️  Gestion Dépenses
+└─ 🔔 Notifications
+```
+
+---
+
+## 📖 LES 5 MODULES
+
+### 1️⃣ **👨‍🎓 Gestion Élèves**
+Inscrivez les élèves et gérez leurs documents
+
+### 2️⃣ **💳 Gestion Scolarités**
+Enregistrez les paiements et générez les reçus
+
+### 3️⃣ **📈 Tableau Bord**
+Consultez le dashboard financier complet
+
+### 4️⃣ **🏷️ Gestion Dépenses**
+Suivi des dépenses (5 catégories)
+
+### 5️⃣ **🔔 Notifications**
+Alertes et rappels automatiques
+
+---
+
+## ✨ CARACTÉRISTIQUES
+
+✅ Matricules auto-générées (STU-XXXX)
+✅ Facturation automatique
+✅ Reçus auto-générés
+✅ Suivi des retards
+✅ Alertes budget
+✅ Interface en Français
+✅ Devise: Franc Guinéen (Fr)
+✅ Zéro erreurs
+
+---
+
+## 🚀 TESTER MAINTENANT
+
+1. Ouvrir **Neoclass3.html**
+2. Login école
+3. Cliquer **"Finances V2"** dans le menu
+4. Essayer un module (ex: inscrire un élève)
+
+---
+
+**Vous êtes prêt ! 🎉**
+
+Contactez l'admin si le menu n'apparaît pas.

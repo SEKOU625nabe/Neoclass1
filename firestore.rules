@@ -1,205 +1,613 @@
 rules_version = '2';
+
+// ============================================================
+// NEOCLASS — RÈGLES FIRESTORE
+// ============================================================
+// Couvre l'intégralité des collections réellement utilisées par
+// l'application (~100). Toute collection non déclarée ici est
+// refusée par défaut par Firestore.
+//
+// Principes :
+//  1. Rien n'est lisible/écrivable sans authentification.
+//  2. Les champs de privilège (role, subscription, classId…) ne
+//     sont modifiables que par un admin.
+//  3. L'économie (NabeCoins, XP) est plafonnée par écriture en
+//     attendant les Cloud Functions (Phase 10), puis passera en
+//     écriture serveur uniquement.
+//  4. Les flux d'argent (retraits, paiements, portefeuilles) sont
+//     créables par le client mais jamais approuvables par lui.
+// ============================================================
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ============================================================
-    // 🔐 RÈGLES DE SÉCURITÉ FIREBASE POUR NEOCLASS
-    // ============================================================
-    // Pour appliquer ces règles:
-    // 1. Allez sur https://console.firebase.google.com
-    // 2. Sélectionnez votre projet
-    // 3. Allez dans Firestore Database → Rules
-    // 4. Copiez-collez ces règles
-    // 5. Cliquez sur "Publish"
-    // ============================================================
-    
-    // Helper: Vérifier si l'utilisateur est connecté
-    function isAuthenticated() {
+
+    // ========================================================
+    // HELPERS
+    // ========================================================
+
+    function isAuth() {
       return request.auth != null;
     }
-    
-    // Helper: Vérifier si c'est le propriétaire du document
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+
+    function uid() {
+      return request.auth.uid;
     }
-    
-    // Helper: Vérifier le rôle admin
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(uid())).data;
+    }
+
+    function userRole() {
+      return isAuth() ? userDoc().get('role', 'guest') : 'guest';
+    }
+
     function isAdmin() {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+      return userRole() in ['admin', 'superadmin'];
     }
-    
-    // ============================================================
-    // 👥 UTILISATEURS
-    // ============================================================
+
+    function isTeacher() {
+      return userRole() in ['teacher', 'indep_teacher'];
+    }
+
+    function isSchool() {
+      return userRole() == 'school';
+    }
+
+    function isParent() {
+      return userRole() == 'parent';
+    }
+
+    // Peut publier du contenu pédagogique
+    function isEducator() {
+      return isAdmin() || isTeacher() || isSchool();
+    }
+
+    // Le document appartient à l'utilisateur courant
+    function owns(field) {
+      return isAuth() && resource.data.get(field, '') == uid();
+    }
+
+    // Le document créé appartiendra à l'utilisateur courant
+    function willOwn(field) {
+      return isAuth() && request.resource.data.get(field, '') == uid();
+    }
+
+    // Le document appartient à l'école connectée
+    function ownsSchool() {
+      return isSchool() && resource.data.get('schoolId', '') == uid();
+    }
+
+    function willOwnSchool() {
+      return isSchool() && request.resource.data.get('schoolId', '') == uid();
+    }
+
+    // Champs modifiés par cette écriture
+    function touched() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // Aucun des champs listés n'est modifié
+    function locks(fields) {
+      return !touched().hasAny(fields);
+    }
+
+    // Un document créé avec un statut obligatoirement "pending"
+    function createdPending() {
+      return request.resource.data.get('status', '') == 'pending';
+    }
+
+    // ========================================================
+    // UTILISATEURS
+    // ========================================================
+    // Champs interdits au client : privilèges + solde direct.
+    // Plafond temporaire sur les gains (voir Phase 10).
+
+    // Champs strictement réservés à l'admin / au serveur
+    function privilegedUserFields() {
+      return [
+        'role', 'subscription', 'subscriptionStatus', 'plan', 'premium',
+        'classId', 'isBanned', 'isAdmin', 'pendingEarnings', 'balance',
+        'solde', 'walletBalance', 'certifiedTeacher', 'schoolId'
+      ];
+    }
+
+    // Gain de NabeCoins plafonné par écriture (les dépenses restent libres)
+    function coinGainWithinCap() {
+      let before = resource.data.get('nabecoins', 0);
+      let after = request.resource.data.get('nabecoins', before);
+      return after <= before + 100;
+    }
+
+    function xpGainWithinCap() {
+      let before = resource.data.get('xp', 0);
+      let after = request.resource.data.get('xp', before);
+      return after <= before + 500;
+    }
+
+    // Plafond des transferts entre comptes (parrainage 50 NC,
+    // reversement vendeur marketplace, cadeaux).
+    // ATTENTION : un plafond ne fait que ralentir un attaquant qui
+    // boucle les écritures. Ce chemin n'est réellement fermé qu'en
+    // Phase 10, quand les transferts passeront par une Cloud Function.
+    // D'ici là, la vraie barrière reste la validation manuelle des
+    // retraits : vérifier le solde et l'historique avant d'approuver.
+    function transferWithinCap() {
+      let before = resource.data.get('nabecoins', 0);
+      let after = request.resource.data.get('nabecoins', before);
+      return after <= before + 5000;
+    }
+
+    // Champs qu'un utilisateur peut créditer sur le compte d'un AUTRE
+    // (parrainage, reversement marketplace, cadeaux). Plafonnés.
+    // À supprimer en Phase 10 : ces transferts passeront par une
+    // Cloud Function et le client n'écrira plus jamais chez autrui.
+    function transferableFields() {
+      return ['nabecoins', 'totalSalesEarnings', 'referrals', 'referredBy'];
+    }
+
     match /users/{userId} {
-      // Lecture: soi-même ou admin
-      allow read: if isOwner(userId) || isAdmin();
-      
-      // Création: utilisateur authentifié (pour l'inscription)
-      allow create: if isAuthenticated();
-      
-      // Mise à jour: soi-même ou admin
-      allow update: if isOwner(userId) || isAdmin();
-      
-      // Suppression: admin uniquement
-      allow delete: if isAdmin();
-    }
-    
-    // ============================================================
-    // 💳 ABONNEMENTS
-    // ============================================================
-    match /subscriptions/{subscriptionId} {
-      // Lecture: propriétaire ou admin
-      allow read: if isAuthenticated() && 
-                    (resource.data.userId == request.auth.uid || isAdmin());
-      
-      // Création: utilisateur authentifié (pour payer)
-      allow create: if isAuthenticated() && 
-                      request.resource.data.userId == request.auth.uid;
-      
-      // Mise à jour: admin uniquement
+      // Lecture : tout utilisateur connecté.
+      // Nécessaire au classement, à la recherche, au parrainage et aux
+      // listes d'élèves. Phase 10 : exposer une projection publique
+      // `profiles` et restreindre `users` au propriétaire.
+      allow read: if isAuth();
+
+      // Inscription : on ne crée que son propre profil, sans privilèges
+      allow create: if isAuth() && uid() == userId
+                    && request.resource.data.get('role', '') != 'admin'
+                    && request.resource.data.get('role', '') != 'superadmin';
+
+      // Mise à jour par soi-même : privilèges verrouillés, gains plafonnés
+      allow update: if isAuth() && uid() == userId
+                    && locks(privilegedUserFields())
+                    && coinGainWithinCap()
+                    && xpGainWithinCap();
+
+      // Crédit sur le compte d'un tiers : uniquement les champs de
+      // transfert, sous un plafond plus large (un reversement vendeur
+      // légitime peut dépasser 100 NC).
+      allow update: if isAuth() && uid() != userId
+                    && touched().hasOnly(transferableFields())
+                    && transferWithinCap();
+
+      // L'admin peut tout modifier
       allow update: if isAdmin();
-      
-      // Suppression: admin uniquement
+
       allow delete: if isAdmin();
-      
-      // IMPORTANT: Permettre la lecture de tous les abonnements pour les admins
-      allow list: if isAdmin();
     }
-    
-    // ============================================================
-    // 💰 TRANSACTIONS
-    // ============================================================
-    match /transactions/{transactionId} {
-      // Lecture: propriétaire ou admin
-      allow read: if isAuthenticated() && 
-                    (resource.data.userId == request.auth.uid || isAdmin());
-      
-      // Création: utilisateur authentifié
-      allow create: if isAuthenticated() && 
-                      request.resource.data.userId == request.auth.uid;
-      
-      // Mise à jour/Suppression: admin uniquement
+
+    // ========================================================
+    // CONTENU PÉDAGOGIQUE
+    // Lecture : tout utilisateur connecté. Écriture : éducateurs.
+    // ========================================================
+
+    match /courses/{id}              { allow read: if isAuth(); allow write: if isEducator(); }
+    match /modules/{id}              { allow read: if isAuth(); allow write: if isEducator(); }
+    match /lessons/{id}              { allow read: if isAuth(); allow write: if isEducator(); }
+    match /chapters/{id}             { allow read: if isAuth(); allow write: if isEducator(); }
+    match /coursProChapitres/{id}    { allow read: if isAuth(); allow write: if isEducator(); }
+    match /coursProLessons/{id}      { allow read: if isAuth(); allow write: if isEducator(); }
+    match /paidCourses/{id}          { allow read: if isAuth(); allow write: if isEducator(); }
+    match /premiumCourses/{id}       { allow read: if isAuth(); allow write: if isEducator(); }
+    match /lessonVideos/{id}         { allow read: if isAuth(); allow write: if isEducator(); }
+    match /quizzes/{id}              { allow read: if isAuth(); allow write: if isEducator(); }
+    match /programmes/{id}           { allow read: if isAuth(); allow write: if isEducator(); }
+    match /assignments/{id}          { allow read: if isAuth(); allow write: if isEducator(); }
+    match /schoolBooks/{id}          { allow read: if isAuth(); allow write: if isEducator(); }
+    match /document_categories/{id}  { allow read: if isAuth(); allow write: if isEducator(); }
+
+    // Brouillons de cours : réservés à leur auteur
+    match /course_drafts/{id} {
+      allow read, update, delete: if owns('authorId') || isAdmin();
+      allow create: if willOwn('authorId') && isEducator();
+    }
+
+    // Devoirs : lus par tous, rendus par l'élève propriétaire
+    match /homework/{id} {
+      allow read: if isAuth();
+      allow create: if isAuth() && (willOwn('studentId') || isEducator());
+      allow update, delete: if owns('studentId') || isEducator();
+    }
+
+    // Documents (école / cours)
+    match /documents/{id} {
+      allow read: if isAuth();
+      allow create: if isAuth() && (willOwn('userId') || isEducator());
+      allow update, delete: if owns('userId') || isEducator();
+    }
+
+    // ========================================================
+    // PROGRESSION ÉLÈVE — propriétaire uniquement
+    // ========================================================
+
+    match /progress/{id}            { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /courseProgress/{id}      { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /lessonProgress/{id}      { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /tableauProgress/{id}     { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /adventure_progress/{id}  { allow read: if owns('userId'); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /quranProgress/{id}       { allow read: if owns('userId'); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /adaptiveQuizStats/{id}   { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /completedCourses/{id}    { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /enrolledCourses/{id}     { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /enrollments/{id}         { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /favorites/{id}           { allow read: if owns('userId'); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /courseNotes/{id}         { allow read: if owns('userId'); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /flashcards/{id}          { allow read: if owns('userId'); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /revision_sessions/{id}   { allow read: if owns('userId'); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /exo_help/{id}            { allow read: if owns('userId'); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+    match /activities/{id}          { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if owns('userId'); }
+
+    // ========================================================
+    // NOTES & RÉSULTATS — l'élève lit, l'éducateur écrit
+    // ========================================================
+
+    match /grades/{id}         { allow read: if owns('studentId') || owns('userId') || isEducator(); allow write: if isEducator(); }
+    match /quiz_results/{id}   { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if isEducator(); }
+    match /exam_results/{id}   { allow read: if owns('userId') || isEducator(); allow create: if willOwn('userId'); allow update, delete: if isEducator(); }
+    match /studentResults/{id} { allow read: if owns('studentId') || owns('userId') || isEducator(); allow write: if isEducator(); }
+    match /certificates/{id}   { allow read: if owns('userId') || isEducator(); allow write: if isEducator(); }
+    match /competency/{id}     { allow read: if owns('userId') || isEducator(); allow write: if isEducator(); }
+
+    // ========================================================
+    // ÉCONOMIE & ARGENT
+    // Le client peut demander, jamais approuver.
+    // ========================================================
+
+    // Demandes de retrait : création en "pending", pas de modification
+    match /withdrawals/{id} {
+      allow read: if owns('userId') || isAdmin();
+      allow create: if willOwn('userId') && createdPending();
       allow update, delete: if isAdmin();
-      
-      // Liste pour admin
-      allow list: if isAdmin();
     }
-    
-    // ============================================================
-    // 📚 COURS
-    // ============================================================
-    match /courses/{courseId} {
-      allow read: if true; // Cours publics lisibles par tous
+
+    match /withdrawal_requests/{id} {
+      allow read: if owns('userId') || owns('teacherId') || isAdmin();
+      allow create: if isAuth() && createdPending()
+                    && (willOwn('userId') || willOwn('teacherId'));
+      allow update, delete: if isAdmin();
+    }
+
+    match /withdraw_requests/{id} {
+      allow read: if owns('teacherId') || owns('userId') || isAdmin();
+      allow create: if isAuth() && createdPending()
+                    && (willOwn('teacherId') || willOwn('userId'));
+      allow update, delete: if isAdmin();
+    }
+
+    // Transactions du professeur (dont retraits)
+    match /profTransactions/{id} {
+      allow read: if owns('profId') || isAdmin();
+      allow create: if willOwn('profId') && createdPending();
+      allow update, delete: if isAdmin();
+    }
+
+    // Historique de transactions : lecture seule côté client
+    match /transactions/{id}        { allow read: if owns('userId') || isAdmin(); allow write: if isAdmin(); }
+    match /wallet_transactions/{id} { allow read: if owns('userId') || isAdmin(); allow write: if isAdmin(); }
+    match /teacher_wallets/{id}     { allow read: if owns('teacherId') || uid() == id || isAdmin(); allow write: if isAdmin(); }
+    match /platform_wallet/{id}     { allow read: if isAdmin(); allow write: if isAdmin(); }
+
+    // Paiements : le client initie, le serveur/admin confirme
+    match /payments/{id} {
+      allow read: if owns('userId') || isAdmin();
+      allow create: if willOwn('userId') && createdPending();
+      allow update, delete: if isAdmin();
+    }
+
+    match /pending_payments/{id} {
+      allow read: if owns('userId') || isAdmin();
+      allow create: if willOwn('userId') && createdPending();
+      allow update, delete: if isAdmin();
+    }
+
+    match /livePayments/{id} {
+      allow read: if owns('userId') || isAdmin();
+      allow create: if willOwn('userId') && createdPending();
+      allow update, delete: if isAdmin();
+    }
+
+    // Abonnements : jamais activés par le client
+    match /subscriptions/{id} {
+      allow read: if owns('userId') || isAdmin();
+      allow create: if willOwn('userId') && createdPending();
+      allow update, delete: if isAdmin();
+    }
+
+    // Achats (boutique, marketplace)
+    match /purchases/{id} {
+      allow read: if owns('userId') || isAdmin();
+      allow create: if willOwn('userId');
+      allow update, delete: if isAdmin();
+    }
+
+    match /gifts/{id} {
+      allow read: if owns('fromUserId') || owns('toUserId') || isAdmin();
+      allow create: if willOwn('fromUserId');
+      allow update, delete: if isAdmin();
+    }
+
+    // Marketplace : produits validés par l'admin
+    match /marketplace_products/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('sellerId') && !request.resource.data.get('approved', false);
+      allow update, delete: if owns('sellerId') || isAdmin();
+    }
+
+    // Loterie : tirage serveur uniquement
+    match /lottery/{id}        { allow read: if isAuth(); allow write: if isAdmin(); }
+    match /lotteryWinners/{id} { allow read: if isAuth(); allow write: if isAdmin(); }
+
+    // Parrainage / gamification agrégée : écriture serveur
+    match /gamification/{userId} {
+      allow read: if isAuth() && (uid() == userId || isAdmin());
       allow write: if isAdmin();
     }
-    
-    // ============================================================
-    // 📧 MESSAGES
-    // ============================================================
-    match /messages/{messageId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin() || 
-                              resource.data.senderId == request.auth.uid;
+
+    // ========================================================
+    // TARIFICATION — lecture publique authentifiée, écriture admin
+    // ========================================================
+
+    match /pricing_settings/{id} { allow read: if isAuth(); allow write: if isAdmin(); }
+    match /pricingConfigs/{id}   { allow read: if isAuth(); allow write: if isAdmin(); }
+    match /customPricing/{id}    { allow read: if isAuth(); allow write: if isAdmin(); }
+    match /promotions/{id}       { allow read: if isAuth(); allow write: if isAdmin(); }
+    match /advertisements/{id}   { allow read: if isAuth(); allow write: if isAdmin(); }
+    match /settings/{id}         { allow read: if isAuth(); allow write: if isAdmin(); }
+
+    // ========================================================
+    // SOCIAL & MESSAGERIE
+    // ========================================================
+
+    // Conversations : réservées aux participants
+    match /conversations/{id} {
+      allow read, update: if isAuth()
+        && request.auth.uid in resource.data.get('participants', []);
+      allow create: if isAuth()
+        && request.auth.uid in request.resource.data.get('participants', []);
+      allow delete: if isAdmin();
     }
-    
-    // ============================================================
-    // 🏫 ÉCOLES
-    // ============================================================
+
+    // Messages d'une conversation : réservés à ses participants
+    match /conversations/{convId}/messages/{msgId} {
+      allow read: if isAuth() && request.auth.uid in
+        get(/databases/$(database)/documents/conversations/$(convId))
+          .data.get('participants', []);
+      allow create: if isAuth() && request.auth.uid in
+        get(/databases/$(database)/documents/conversations/$(convId))
+          .data.get('participants', []);
+      allow update, delete: if owns('senderId') || owns('authorId') || isAdmin();
+    }
+
+    // Salons de discussion (classe / école / niveau) : pas de liste de
+    // participants, l'appartenance est implicite via le nom du salon.
+    match /chats/{room} {
+      allow read: if isAuth();
+      allow create, update: if isAuth();
+      allow delete: if isAdmin();
+    }
+
+    // Le champ d'auteur des salons est `authorId` (et non `senderId`).
+    match /chats/{room}/messages/{msgId} {
+      allow read: if isAuth();
+      allow create: if willOwn('authorId');
+      allow update, delete: if owns('authorId') || isAdmin();
+    }
+
+    // Messages : directs, diffusion générale ("all") ou diffusion école.
+    match /messages/{id} {
+      allow read: if isAuth() && (
+        resource.data.get('recipientId', '') == 'all' ||
+        owns('recipientId') ||
+        owns('senderId') ||
+        resource.data.get('schoolId', '#') == userDoc().get('schoolId', '?') ||
+        resource.data.get('schoolId', '#') == userDoc().get('schoolCode', '?') ||
+        isAdmin()
+      );
+      allow create: if willOwn('senderId');
+      allow update, delete: if owns('senderId') || isAdmin();
+    }
+
+    match /privateMessages/{id} {
+      allow read: if isAuth() && (owns('senderId') || owns('recipientId') || isAdmin());
+      allow create: if willOwn('senderId');
+      allow update, delete: if owns('senderId') || isAdmin();
+    }
+
+    match /school_messages/{id} {
+      allow read: if isAuth();
+      allow create: if isAuth() && (willOwn('senderId') || isEducator());
+      allow update, delete: if owns('senderId') || isEducator();
+    }
+
+    match /posts/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('authorId');
+      allow update, delete: if owns('authorId') || isAdmin();
+    }
+
+    match /likes/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('userId');
+      allow delete: if owns('userId');
+      allow update: if false;
+    }
+
+    match /stories/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('userId') || willOwn('authorId');
+      allow update, delete: if owns('userId') || owns('authorId') || isAdmin();
+    }
+
+    match /studyGroups/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('createdBy') || willOwn('ownerId');
+      allow update: if isAuth();
+      allow delete: if owns('createdBy') || owns('ownerId') || isAdmin();
+    }
+
+    match /guilds/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('createdBy') || willOwn('ownerId');
+      allow update: if isAuth();
+      allow delete: if owns('createdBy') || owns('ownerId') || isAdmin();
+    }
+
+    match /members/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('userId');
+      allow update, delete: if owns('userId') || isAdmin();
+    }
+
+    // Défis & duels : les deux joueurs peuvent écrire
+    match /duels/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('challengerId') || willOwn('userId');
+      allow update: if isAuth() && (
+        owns('challengerId') || owns('opponentId') || owns('userId')
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /challenges/{id} {
+      allow read: if isAuth();
+      allow create: if willOwn('userId') || willOwn('challengerId');
+      allow update: if isAuth();
+      allow delete: if isAdmin();
+    }
+
+    // Tutorat
+    match /bookings/{id} {
+      allow read: if owns('studentId') || owns('tutorId') || isAdmin();
+      allow create: if willOwn('studentId');
+      allow update: if owns('studentId') || owns('tutorId') || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================
+    // NOTIFICATIONS — le destinataire lit et marque comme lu
+    // ========================================================
+
+    match /notifications/{id} {
+      allow read: if owns('userId') || owns('recipientId') || isAdmin();
+      allow create: if isAuth();
+      allow update: if owns('userId') || owns('recipientId') || isAdmin();
+      allow delete: if owns('userId') || owns('recipientId') || isAdmin();
+    }
+
+    match /user_notifications/{id} {
+      allow read: if owns('userId') || isAdmin();
+      allow create: if isAuth();
+      allow update, delete: if owns('userId') || isAdmin();
+    }
+
+    match /admin_notifications/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ========================================================
+    // ÉCOLES — cloisonnement par schoolId
+    // ========================================================
+
     match /schools/{schoolId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin() || 
-                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'school';
+      allow read: if isAuth();
+      allow create: if isAuth() && uid() == schoolId;
+      allow update: if isAdmin() || (isSchool() && uid() == schoolId);
+      allow delete: if isAdmin();
     }
-    
-    // ============================================================
-    // 🔐 CODES 2FA
-    // ============================================================
-    match /2fa_codes/{codeId} {
-      allow read, write: if isAuthenticated() && 
-                           resource.data.userId == request.auth.uid;
-    }
-    
-    // ============================================================
-    // 📱 AUTRES COLLECTIONS
-    // ============================================================
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && 
-                              resource.data.authorId == request.auth.uid;
-    }
-    
-    match /chats/{chatId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    match /privateMessages/{messageId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    match /studyGroups/{groupId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-    }
-    
-    match /homework/{homeworkId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    match /bookings/{bookingId} {
-      allow read, write: if isAuthenticated();
-    }
-    
-    match /lottery/{lotteryId} {
-      allow read: if isAuthenticated();
+
+    match /students/{id}       { allow read: if isAuth() && (owns('userId') || ownsSchool() || isEducator()); allow create: if willOwnSchool() || isEducator(); allow update, delete: if ownsSchool() || isAdmin(); }
+    match /eleves/{id}         { allow read: if isAuth() && (owns('userId') || ownsSchool() || isEducator()); allow create: if willOwnSchool() || isEducator(); allow update, delete: if ownsSchool() || isAdmin(); }
+    match /teachers/{id}       { allow read: if isAuth(); allow create: if willOwnSchool() || isAdmin(); allow update, delete: if ownsSchool() || isAdmin(); }
+    match /staff/{id}          { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
+    match /directors/{id}      { allow read: if ownsSchool() || isAdmin(); allow write: if isAdmin(); }
+    match /classes/{id}        { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
+    match /absences/{id}       { allow read: if isAuth() && (owns('studentId') || ownsSchool() || isEducator() || isParent()); allow write: if ownsSchool() || isEducator(); }
+    match /timetables/{id}     { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
+    match /schoolEvents/{id}   { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
+    match /events/{id}         { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
+    match /schoolMeetings/{id} { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
+    match /schoolMetrics/{id}  { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
+    match /finance_team/{id}   { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
+
+    // ========================================================
+    // FINANCE ÉCOLE — strictement cloisonnée à l'école
+    // ========================================================
+
+    match /schoolFees/{id}         { allow read, write: if ownsSchool() || isAdmin(); }
+    match /finance_operations/{id} { allow read, write: if ownsSchool() || isAdmin(); }
+    match /finance_budgets/{id}    { allow read, write: if ownsSchool() || isAdmin(); }
+    match /finance_reports/{id}    { allow read, write: if ownsSchool() || isAdmin(); }
+    match /finance_logs/{id}       { allow read: if ownsSchool() || isAdmin(); allow write: if isAdmin(); }
+    match /operations/{id}         { allow read, write: if ownsSchool() || isAdmin(); }
+    match /depenses/{id}           { allow read, write: if ownsSchool() || isAdmin(); }
+    match /paiements/{id}          { allow read, write: if ownsSchool() || isAdmin(); }
+    match /factures/{id}           { allow read, write: if ownsSchool() || isAdmin(); }
+
+    // ========================================================
+    // ADMINISTRATION PLATEFORME
+    // ========================================================
+
+    match /admins/{id}               { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /adminInvites/{id}         { allow read: if isAdmin(); allow write: if isAdmin(); }
+    match /admin_logs/{id}           { allow read: if isAdmin(); allow write: if false; }
+    match /access_logs/{id}          { allow read: if isAdmin(); allow write: if false; }
+    match /sms_logs/{id}             { allow read: if isAdmin(); allow write: if false; }
+    match /courseReports/{id}        { allow read: if isAdmin() || isEducator(); allow create: if isAuth(); allow update, delete: if isAdmin(); }
+
+    // Codes de réinitialisation : jamais lisibles par le client
+    match /password_reset_codes/{id} { allow read, write: if false; }
+
+    // ========================================================
+    // RÉCOMPENSES CORAN — écriture serveur (valeur en NabeCoins)
+    // ========================================================
+
+    match /quranRewards/{id} {
+      allow read: if owns('userId') || isAdmin();
       allow write: if isAdmin();
     }
-    
-    match /sms_logs/{logId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated();
+
+    // ========================================================
+    // SOUS-COLLECTIONS
+    // Les règles ne cascadent pas : sans ces blocs, toutes les
+    // sous-collections seraient refusées.
+    // ========================================================
+
+    // users/{uid}/completedCourses, flashcards, courseNotes, favorites,
+    // activities, enrolledCourses, adaptiveQuizStats, tableauProgress,
+    // quranProgress, quranRewards…
+    match /users/{userId}/{sub}/{docId} {
+      allow read: if isAuth() && (uid() == userId || isAdmin() || isEducator());
+      allow write: if isAuth() && (uid() == userId || isAdmin());
     }
-    
-    match /adminInvites/{inviteId} {
-      allow read, write: if isAdmin();
+
+    // courses/{id}/chapters, courses/{id}/likes…
+    match /courses/{courseId}/{sub}/{docId} {
+      allow read: if isAuth();
+      // Les "likes" sont posés par l'élève, le reste par les éducateurs.
+      allow write: if isEducator() || (sub == 'likes' && isAuth());
     }
-    
-    // ============================================================
-    // 💼 PORTEFEUILLES ET RETRAITS
-    // ============================================================
-    match /teacher_wallets/{walletId} {
-      allow read: if isOwner(walletId) || isAdmin();
-      allow write: if isAdmin();
+
+    // schools/{id}/students, teachers, staff, timetables, payments,
+    // programmes, operations, members, documents, document_categories…
+    match /schools/{schoolId}/{sub}/{docId} {
+      // Restreint : ces documents contiennent des données nominatives
+      // d'élèves (et, aujourd'hui, des mots de passe en clair — à
+      // corriger, voir Phase 4).
+      allow read: if isAuth() && (uid() == schoolId || isAdmin() || isEducator());
+      allow write: if isAuth() && (uid() == schoolId || isAdmin() || isTeacher());
     }
-    
-    match /platform_wallet/{docId} {
-      allow read, write: if isAdmin();
+
+    // classes/{id}/students
+    match /classes/{classId}/{sub}/{docId} {
+      allow read: if isAuth();
+      allow write: if isEducator();
     }
-    
-    match /withdraw_requests/{requestId} {
-      allow read: if isAuthenticated() && 
-                    (resource.data.teacherId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
-    }
-    
-    match /profTransactions/{transId} {
-      allow read: if isAuthenticated() && 
-                    (resource.data.teacherId == request.auth.uid || isAdmin());
-      allow write: if isAdmin();
-    }
-    
-    // ============================================================
-    // 🛒 ACHATS
-    // ============================================================
-    match /purchases/{purchaseId} {
-      allow read: if isAuthenticated() && 
-                    (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated();
-      allow update, delete: if isAdmin();
+
+    // ========================================================
+    // REFUS PAR DÉFAUT
+    // ========================================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
