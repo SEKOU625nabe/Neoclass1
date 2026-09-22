@@ -362,7 +362,7 @@
     .cinematic-branding h2{margin:0;font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:0.05em;}
     .cinematic-branding p{margin:0;color:rgba(255,255,255,0.8);font-size:.95rem;}
     .navbar .logo{display:flex;align-items:center;gap:6px;font-size:1.15rem;font-weight:800;color:var(--primary);text-decoration:none;}
-    .navbar-logo-img{width:30px;height:30px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+    .navbar-logo-img{width:32px;height:32px;object-fit:contain;}
     .navbar .logo span{color:var(--accent);}
     
     .cinematic-title{font-size:3.5rem;font-weight:900;background:linear-gradient(135deg,#fff,#a78bfa,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:textGlow 3s ease-in-out infinite;letter-spacing:5px;margin-bottom:15px;text-transform:uppercase;}
@@ -620,7 +620,7 @@
     .navbar{position:fixed;top:0;left:0;width:100%;height:var(--nav-height);z-index:1000;background:var(--bg-card);border-bottom:1px solid var(--border);box-shadow:var(--shadow);display:flex;align-items:center;padding:0 12px;transition:all var(--transition);gap:8px;}
     .navbar .logo{display:flex;align-items:center;gap:6px;font-size:1.15rem;font-weight:800;color:var(--primary);text-decoration:none;}
     .navbar .logo span{color:var(--accent);}
-    .navbar-logo-img{width:30px;height:30px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+    .navbar-logo-img{width:32px;height:32px;object-fit:contain;}
     /* Drapeau Guinée */
     .guinea-flag{display:flex;height:24px;border-radius:4px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.15);}
     .guinea-flag .stripe{width:12px;height:100%;}
@@ -3382,6 +3382,11 @@ body.has-school-banner .school-banner {
     .nc-wordmark span{color:var(--nc-gold);}
     .nc-tagline{font-size:.8rem;font-weight:700;color:var(--nc-violet);margin-top:6px;}
     .nc-tagline em{color:var(--nc-gold);font-style:normal;}
+    /* Surtitre de l accueil : remplace le bloc de marque qui faisait
+       doublon avec la barre de navigation. */
+    .nc-eyebrow{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.16em;
+      text-transform:uppercase;color:var(--primary);background:rgba(108,99,255,.1);
+      padding:6px 13px;border-radius:99px;margin-bottom:18px;}
     .nc-welcome h1.nc-welcome-title{font-size:clamp(2rem,4.5vw,3.3rem);font-weight:900;line-height:1.08;color:var(--text);margin:0 0 16px;letter-spacing:-.02em;}
     .nc-welcome h1.nc-welcome-title span{color:var(--nc-violet);}
     .nc-welcome-sub{color:var(--text-secondary);font-size:1.05rem;line-height:1.6;margin:0 0 30px;max-width:520px;}
@@ -3550,7 +3555,7 @@ body.has-school-banner .school-banner {
       .sidebar .sidebar-link{padding:11px 14px;font-size:.9rem;}
       .sidebar .sidebar-group-header{padding:12px;font-size:.92rem;}
       .nc-drawer-brand{display:flex;align-items:center;gap:12px;padding:6px 6px 18px;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,.14);}
-      .nc-drawer-brand img{width:44px;height:44px;border-radius:12px;background:#fff;object-fit:contain;padding:3px;}
+      .nc-drawer-brand img{width:42px;height:42px;object-fit:contain;}
       .nc-drawer-brand strong{display:block;color:#fff;font-size:1.15rem;font-weight:900;}
       .nc-drawer-brand strong span{color:var(--nc-gold);}
       .nc-drawer-brand small{color:rgba(255,255,255,.7);font-size:.72rem;}
@@ -3558,6 +3563,88 @@ body.has-school-banner .school-banner {
 
       .nc-hero{border-radius:0 0 26px 26px;margin:-20px -20px 18px;padding:22px 20px 22px;}
       .nc-profile-head{border-radius:0 0 26px 26px;margin:-20px -20px 18px;}
+    }
+  </style>
+  <style id="nc-splash-style">
+    /* ============================================================
+       ÉCRAN D'OUVERTURE
+       Sobre et court : la marque, une barre de chargement, puis
+       l'application. Les règles .cinematic-* antérieures ne sont plus
+       utilisées par le balisage.
+       ============================================================ */
+    #cinematicOpening{
+      position:fixed;inset:0;z-index:999999;
+      display:flex;align-items:center;justify-content:center;
+      background:#1a1440;
+      background:radial-gradient(120% 90% at 50% 0%,#3a2a8c 0%,#241a63 45%,#150f36 100%);
+      cursor:pointer;overflow:hidden;
+      transition:opacity .45s ease,visibility .45s ease;
+    }
+    #cinematicOpening.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+
+    /* Halo doux derrière la marque, sans animation permanente. */
+    .nc-splash-glow{
+      position:absolute;width:520px;height:520px;border-radius:50%;
+      background:radial-gradient(circle,rgba(139,92,246,.42),transparent 65%);
+      filter:blur(50px);pointer-events:none;
+    }
+
+    .nc-splash-content{
+      position:relative;display:flex;flex-direction:column;align-items:center;
+      text-align:center;padding:24px;
+    }
+
+    .nc-splash-mark{
+      width:104px;height:104px;object-fit:contain;
+      filter:drop-shadow(0 14px 34px rgba(0,0,0,.4));
+      animation:ncSplashMark .7s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes ncSplashMark{
+      from{opacity:0;transform:translateY(14px) scale(.9);}
+      to{opacity:1;transform:none;}
+    }
+
+    .nc-splash-name{
+      margin-top:22px;font-size:1.9rem;font-weight:800;letter-spacing:-.02em;
+      color:#fff;line-height:1;
+      animation:ncSplashUp .6s cubic-bezier(.16,1,.3,1) .12s both;
+    }
+    .nc-splash-name span{color:#fbbf24;}
+
+    .nc-splash-baseline{
+      margin-top:9px;font-size:.8rem;font-weight:500;letter-spacing:.14em;
+      text-transform:uppercase;color:rgba(255,255,255,.62);
+      animation:ncSplashUp .6s cubic-bezier(.16,1,.3,1) .2s both;
+    }
+    @keyframes ncSplashUp{
+      from{opacity:0;transform:translateY(10px);}
+      to{opacity:1;transform:none;}
+    }
+
+    /* Barre de chargement : progression réelle sur la durée du splash. */
+    .nc-splash-bar{
+      margin-top:34px;width:132px;height:2px;border-radius:2px;
+      background:rgba(255,255,255,.16);overflow:hidden;
+      animation:ncSplashUp .6s ease .3s both;
+    }
+    .nc-splash-bar i{
+      display:block;height:100%;width:100%;border-radius:2px;
+      background:linear-gradient(90deg,#8b5cf6,#fbbf24);
+      transform-origin:left;
+      animation:ncSplashLoad 1.35s cubic-bezier(.4,0,.2,1) both;
+    }
+    @keyframes ncSplashLoad{from{transform:scaleX(0);}to{transform:scaleX(1);}}
+
+    @media(max-width:520px){
+      .nc-splash-mark{width:84px;height:84px;}
+      .nc-splash-name{font-size:1.6rem;}
+      .nc-splash-glow{width:340px;height:340px;}
+    }
+
+    /* Respecte le réglage système « réduire les animations ». */
+    @media(prefers-reduced-motion:reduce){
+      .nc-splash-mark,.nc-splash-name,.nc-splash-baseline,
+      .nc-splash-bar,.nc-splash-bar i{animation:none;}
     }
   </style>
 </head>
@@ -3574,60 +3661,23 @@ body.has-school-banner .school-banner {
     <div class="pet-emoji" id="petEmoji"><i class="fas fa-cat"></i></div>
   </div>
   
-  <!-- ✨ CINÉMATIQUE D'OUVERTURE PREMIUM -->
-  <div id="cinematicOpening">
-    <div class="cinematic-bg"></div>
-    <div class="cinematic-overlay"></div>
-    <div class="cinematic-stars" id="cinematicStars"></div>
-    <div class="cinematic-particles" id="cinematicParticles"></div>
-    
-    <div class="cinematic-logo-container">
-      <div class="cinematic-logo-shell">
-        <div class="cinematic-logo-glow"></div>
-        <img class="cinematic-icon-img" src="./assets/neoclass-logo.png" alt="Logo NeoClass" />
-      </div>
-      <div class="cinematic-branding">
-        <img src="./assets/neoclass-logo.png" alt="NeoClass" />
-        <div>
-          <h2>NeoClass</h2>
-          <p>Plateforme éducative professionnelle</p>
-        </div>
-      </div>
-      <h1 class="cinematic-title">Neo<span>class</span></h1>
-      <p class="cinematic-subtitle">L'excellence à portée de main</p>
-      <p class="cinematic-tagline">Apprendre, progresser et réussir dans un environnement moderne.</p>
-      <div class="cinematic-progress">
-        <div class="cinematic-progress-bar"></div>
-      </div>
+  <!-- ✦ ÉCRAN D'OUVERTURE
+       Remplace l'ancienne cinématique (étoiles, particules, musique
+       épique, 4 s d'attente, logo affiché deux fois). Ici : la marque,
+       une barre de chargement, 1,4 s, et on entre dans l'application.
+       L'identifiant #cinematicOpening est conservé : la logique de
+       fermeture existante continue de fonctionner. -->
+  <div id="cinematicOpening" onclick="if(typeof skipCinematic==='function')skipCinematic()" title="Cliquer pour passer">
+    <div class="nc-splash-glow"></div>
+    <div class="nc-splash-content">
+      <img class="nc-splash-mark" src="./assets/neoclass-mark.png" alt="" />
+      <div class="nc-splash-name">Neo<span>Class</span></div>
+      <div class="nc-splash-baseline">Apprendre · Progresser · Réussir</div>
+      <div class="nc-splash-bar"><i></i></div>
     </div>
-    
-    <button class="cinematic-skip" onclick="skipCinematic()">Passer</button>
-    <script>
-      function skipCinematic() {
-        var c = document.getElementById('cinematicOpening');
-        var p = document.getElementById('pageLoader');
-        if(c) { c.classList.add('hidden'); c.style.display = 'none'; }
-        if(p) { p.style.display = 'none'; }
-        // Attendre que navigate soit disponible puis naviguer
-        var checkNav = setInterval(function() {
-          if(typeof navigate === 'function') {
-            clearInterval(checkNav);
-            navigate('home');
-          }
-        }, 50);
-        // Timeout de secours après 3 secondes
-        setTimeout(function() {
-          clearInterval(checkNav);
-          if(typeof navigate !== 'function') {
-            window.location.hash = '#home';
-            window.location.reload();
-          }
-        }, 3000);
-      }
-    </script>
   </div>
-  
-  <!-- Ancien splash screen (caché) -->
+
+    <!-- Ancien splash screen (caché) -->
   <div id="splashScreen" style="display:none;"></div>
   
   <!-- Lecteur Lo-Fi -->
@@ -3668,7 +3718,7 @@ body.has-school-banner .school-banner {
       <img id="navProfileImg" src="" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);" onerror="this.parentElement.style.display='none'" />
     </div>
     <a href="#home" class="logo" onclick="if(typeof navigate==='function'){event.preventDefault();navigate('home');}">
-      <img class="navbar-logo-img" src="./assets/neoclass-logo.png" alt="Logo NeoClass" />
+      <img class="navbar-logo-img" src="./assets/neoclass-mark.png" alt="" />
       Neo<span>Class</span>
     </a>
     <!-- Drapeau Guinée -->
@@ -3693,7 +3743,10 @@ body.has-school-banner .school-banner {
   <audio id="soundClick" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
   
   <!-- Audio pour la cinématique -->
-  <audio id="cinematicMusic" src="https://assets.mixkit.co/music/preview/mixkit-epic-cinematic-trailer-109.mp3" preload="auto"></audio>
+  <!-- Musique d ouverture retiree : l ecran ne dure plus que 1,4 s, et
+       un son qui demarre seul est mal percu. La balise reste, vide, pour
+       ne pas casser un eventuel appel a getElementById. -->
+  <audio id="cinematicMusic" preload="none"></audio>
   <audio id="lofiMusic" src="https://assets.mixkit.co/music/preview/mixkit-sleepy-cat-135.mp3" preload="auto" loop></audio>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -9583,10 +9636,11 @@ Réponds en JSON:
         loadVoices();
       }
       
-      // Fermer la cinématique après 4 secondes
+      // Ouverture courte : 1,4 s suffisent à poser la marque sans
+      // retarder l'accès à l'application.
       setTimeout(() => {
         closeCinematic();
-      }, 4000);
+      }, 1400);
       
       // Sécurité: forcer la fermeture après 6 secondes maximum
       setTimeout(() => {
@@ -9594,7 +9648,7 @@ Réponds en JSON:
           console.log('Forçage de fermeture de la cinématique');
           forceCloseCinematic();
         }
-      }, 6000);
+      }, 2600);
     }
     
     function forceCloseCinematic() {
@@ -11065,6 +11119,10 @@ Réponds en JSON:
         // seul en choisissant « Élève » sans appartenir à aucune école.
         if(State.profile && State.profile.schoolId){
           directLinks.push({icon:'🎓',label:'Ma scolarité',page:'ma-scolarite'});
+        } else {
+          // Sans établissement, la progression personnelle tient lieu de
+          // scolarité : scores de quiz, niveau par matière, série, XP.
+          directLinks.push({icon:'📈',label:'Mes résultats',page:'mes-resultats'});
         }
         groups = [
           { id:'learn', icon:'📚', label:'Apprendre', items:[
@@ -11294,7 +11352,7 @@ Réponds en JSON:
       // En-tête du tiroir (visible sur mobile uniquement)
       let html = `
         <div class="nc-drawer-brand">
-          <img src="./assets/neoclass-logo.png" alt="" />
+          <img src="./assets/neoclass-mark.png" alt="" />
           <div><strong>Neo<span>Class</span></strong><small>Apprendre • Progresser • Réussir</small></div>
         </div>`;
 
@@ -11539,13 +11597,9 @@ Réponds en JSON:
         <div class="landing">
           <section class="nc-welcome"><div class="container nc-welcome-grid">
             <div class="animate-fade">
-              <div class="nc-brand">
-                <img src="./assets/neoclass-logo.png" alt="Logo NeoClass" />
-                <div>
-                  <div class="nc-wordmark">Neo<span>Class</span></div>
-                  <div class="nc-tagline">Apprendre • Progresser • <em>Réussir</em></div>
-                </div>
-              </div>
+              <!-- La marque est déjà portée par la barre de navigation :
+                   on n'en met qu'une seule, et on laisse le titre parler. -->
+              <div class="nc-eyebrow">Plateforme éducative</div>
               <h1 class="nc-welcome-title">Plateforme éducative pour une <span>Afrique meilleure</span></h1>
               <p class="nc-welcome-sub">Cours, formations, vidéos, exercices, examens et certifications. Avec DARX, ton assistant IA, et des NabeCoins à gagner en apprenant.</p>
               <div class="nc-cta">
@@ -11704,7 +11758,7 @@ Réponds en JSON:
       loginRedirectPage = 'dashboard';
       app.innerHTML=`<div class="auth-page"><div class="auth-card card animate-fade">
         <div class="auth-brand">
-          <img src="./assets/neoclass-logo.png" alt="NeoClass" />
+          <img src="./assets/neoclass-mark.png" alt="" />
           <div class="auth-brand-text"><h1>NeoClass</h1><p>Connexion sécurisée</p></div>
         </div>
         <h2>${t('login')}</h2><p class="sub">Accédez à votre espace de formation.</p>
@@ -11721,7 +11775,7 @@ Réponds en JSON:
       loginRedirectPage = 'cours-pro';
       app.innerHTML=`<div class="auth-page"><div class="auth-card card animate-fade">
         <div class="auth-brand">
-          <img src="./assets/neoclass-logo.png" alt="NeoClass" />
+          <img src="./assets/neoclass-mark.png" alt="" />
           <div class="auth-brand-text"><h1>NeoClass Pro</h1><p>Connexion aux cours professionnels</p></div>
         </div>
         <h2>${t('login')}</h2><p class="sub">${t('proLoginSub')}</p>
@@ -11792,7 +11846,7 @@ Réponds en JSON:
     function renderAdminLogin(app) {
       app.innerHTML=`<div class="auth-page"><div class="auth-card card animate-fade">
         <div class="auth-brand">
-          <img src="./assets/neoclass-logo.png" alt="NeoClass" />
+          <img src="./assets/neoclass-mark.png" alt="" />
           <div class="auth-brand-text"><h1>NeoClass</h1><p>Accès administrateur</p></div>
         </div>
         <h2>Admin Neoclass</h2><p class="sub">Gestion sécurisée de l’espace.</p>
@@ -11852,7 +11906,7 @@ Réponds en JSON:
     function renderSignup(app) {
       app.innerHTML=`<div class="auth-page"><div class="auth-card card animate-fade" id="signupBox">
         <div class="auth-brand">
-          <img src="./assets/neoclass-logo.png" alt="NeoClass" />
+          <img src="./assets/neoclass-mark.png" alt="" />
           <div class="auth-brand-text"><h1>NeoClass</h1><p>Création de compte</p></div>
         </div>
         ${renderSignupStep()}
@@ -12340,7 +12394,7 @@ Réponds en JSON:
         <!-- ⚡ ACCÈS RAPIDES -->
         <!-- Ma scolarite en premier : notes, bulletins, absences -->
         <div class="nc-quick">
-          ${p.schoolId ? ncQuickTile('fa-graduation-cap','Ma scolarité','nc-bg-violet',"navigate('ma-scolarite')") : ''}
+          ${p.schoolId ? ncQuickTile('fa-graduation-cap','Ma scolarité','nc-bg-violet',"navigate('ma-scolarite')") : ncQuickTile('fa-chart-line','Mes résultats','nc-bg-violet',"navigate('mes-resultats')")}
           ${ncQuickTile('fa-book-open','Mes cours','nc-bg-indigo',`navigate('${coursesPage}')`)}
           ${ncQuickTile('fa-pen-to-square','Exercices','nc-bg-green',"navigate('quizzes')")}
           ${ncQuickTile('fa-calendar-days','Emploi du temps','nc-bg-teal',"navigate('timetable')")}
@@ -45532,7 +45586,7 @@ function handleDocumentUpload(e) {
               'par votre école et vos absences. Il se remplit uniquement si un établissement ' +
               'vous a inscrit sur NeoClass.<br><br>' + U.esc(explication) + '</p>' +
             '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px;">' +
-              '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="navigate(&quot;competences&quot;)">' +
+              '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="navigate(&quot;mes-resultats&quot;)">' +
                 '<i class="fas fa-chart-line"></i> Ma progression</button>' +
               '<button class="sch-btn sch-btn-sm" onclick="navigate(&quot;my-certificates&quot;)">' +
                 '<i class="fas fa-certificate"></i> Mes certificats</button>' +
@@ -45861,6 +45915,225 @@ function handleDocumentUpload(e) {
   window.StudentSchool = API;
   window.NC_PAGES = window.NC_PAGES || {};
   window.NC_PAGES['ma-scolarite'] = render;
+})();
+
+</script>
+
+<!-- 📈 Mes résultats (élève indépendant) -->
+<script id="sch-resultats-v3">
+// ============================================================
+// 📈 NEOCLASS — MES RÉSULTATS (ÉLÈVE INDÉPENDANT)
+//
+// Un élève sans établissement n'a ni notes de professeur, ni bulletin.
+// Sa progression était éparpillée entre « Mes compétences », « Classement »
+// et « Mes certificats ». Cette page la regroupe en un seul endroit.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const C = U.COULEURS;
+
+  let _matieres = [];   // { nom, scores[], moyenne, dernier }
+  let _tous = [];       // tous les scores, dans l'ordre
+
+  function estEleve() {
+    if (typeof State === 'undefined' || !State.profile) return false;
+    const r = State.profile.role;
+    return r === 'student' || r === 'indep_student';
+  }
+
+  // Les scores de quiz vivent sur le profil : quizHistory par matière,
+  // quizScores pour la suite chronologique.
+  function agreger() {
+    const p = State.profile || {};
+    const hist = p.quizHistory && typeof p.quizHistory === 'object' ? p.quizHistory : {};
+
+    _matieres = Object.keys(hist).map(function (nom) {
+      const scores = (hist[nom] || [])
+        .map(function (v) { return parseFloat(v); })
+        .filter(function (v) { return !isNaN(v); });
+      return {
+        nom: nom,
+        scores: scores,
+        moyenne: U.moyenne(scores),
+        dernier: scores.length ? scores[scores.length - 1] : null
+      };
+    }).filter(function (m) { return m.scores.length; })
+      .sort(function (a, b) { return b.moyenne - a.moyenne; });
+
+    _tous = Array.isArray(p.quizScores)
+      ? p.quizScores.map(function (v) { return parseFloat(v); }).filter(function (v) { return !isNaN(v); })
+      : [];
+
+    if (!_tous.length) {
+      _matieres.forEach(function (m) { _tous = _tous.concat(m.scores); });
+    }
+  }
+
+  // ------------------------------------------------------------
+  function render(app) {
+    if (typeof State === 'undefined' || !State.user) { navigate('login'); return; }
+    if (!estEleve()) { navigate('dashboard'); return; }
+
+    const p = State.profile || {};
+    agreger();
+
+    const total = _tous.length;
+    const moy = U.moyenne(_tous);
+    const niveau = (typeof GamificationEngine !== 'undefined' && GamificationEngine.calculateLevel)
+      ? GamificationEngine.calculateLevel(p.totalXP || 0) : null;
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(p.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-chart-line"></i></div>' +
+              '<div><h1>Mes résultats</h1>' +
+              '<div class="sch-head-sub"><span>Toute ma progression au même endroit</span></div></div>' +
+            '</div>' +
+            '<div class="sch-head-actions">' +
+              '<button class="sch-btn" onclick="navigate(\'my-certificates\')">' +
+                '<i class="fas fa-certificate"></i> Mes certificats</button>' +
+              '<button class="sch-btn sch-btn-primary" onclick="navigate(\'quizzes\')">' +
+                '<i class="fas fa-play"></i> Faire un quiz</button>' +
+            '</div>' +
+          '</header>' +
+
+          '<div class="sch-kpis" style="margin-bottom:24px;">' +
+            tuile({
+              label: 'Score moyen', i: 'fa-bullseye',
+              c: moy == null ? C.slate : (moy >= 70 ? C.ok : moy >= 50 ? C.warn : C.bad),
+              v: moy == null ? null : U.pourcent(moy, 0), u: '%',
+              jauge: moy, note: total ? (U.nombre(total) + ' quiz réalisés') : 'Aucun quiz'
+            }) +
+            tuile({
+              label: 'Matières travaillées', i: 'fa-book', c: C.violet,
+              v: U.nombre(_matieres.length),
+              note: _matieres.length ? ('Meilleure : ' + U.esc(_matieres[0].nom)) : ''
+            }) +
+            tuile({
+              label: 'Série en cours', i: 'fa-fire',
+              c: (p.streakCurrent || p.streak) ? C.warn : C.slate,
+              v: U.nombre(p.streakCurrent || p.streak || 0), u: 'j',
+              note: 'Jours d\'affilée'
+            }) +
+            tuile({
+              label: 'Expérience', i: 'fa-bolt', c: C.info,
+              v: U.nombre(p.totalXP || 0), u: 'XP',
+              note: niveau ? ('Niveau ' + (niveau.level || niveau)) : ''
+            }) +
+            tuile({
+              label: 'NabeCoins', i: 'fa-coins', c: C.warn,
+              v: U.nombre(p.nabecoins || 0), note: 'Solde actuel'
+            }) +
+          '</div>' +
+
+          (total
+            ? '<div class="sch-charts">' +
+                '<div class="sch-card sch-col-6">' +
+                  '<div class="sch-card-head"><div>' +
+                    '<h3 class="sch-card-title">Niveau par matière</h3>' +
+                    '<p class="sch-card-sub">Moyenne de tes quiz, en pourcentage</p></div></div>' +
+                  '<div class="sch-chart-box"><canvas id="ncResMat"></canvas></div>' +
+                '</div>' +
+                '<div class="sch-card sch-col-6">' +
+                  '<div class="sch-card-head"><div>' +
+                    '<h3 class="sch-card-title">Évolution de tes scores</h3>' +
+                    '<p class="sch-card-sub">Tes ' + Math.min(total, 20) + ' derniers quiz</p></div></div>' +
+                  '<div class="sch-chart-box"><canvas id="ncResEvo"></canvas></div>' +
+                '</div>' +
+                '<div class="sch-card sch-col-12">' + detailMatieres() + '</div>' +
+              '</div>'
+            : '<div class="sch-card"><div class="sch-empty">' +
+                '<i class="fas fa-chart-simple"></i>' +
+                '<strong>Pas encore de résultats</strong>' +
+                '<p>Fais tes premiers quiz : ta moyenne, ton niveau par matière et ta progression ' +
+                'apparaîtront ici automatiquement.</p>' +
+                '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="navigate(\'quizzes\')">' +
+                  '<i class="fas fa-play"></i> Commencer un quiz</button>' +
+              '</div></div>') +
+
+        '</div></main>' +
+      '</div>';
+
+    if (total) requestAnimationFrame(dessinerGraphiques);
+  }
+
+  function tuile(o) {
+    const vide = o.v == null;
+    return '<div class="sch-kpi" style="--kpi-color:' + o.c + ';--kpi-soft:' + o.c + '1f">' +
+      '<div class="sch-kpi-top"><span class="sch-kpi-label">' + o.label + '</span>' +
+      '<span class="sch-kpi-ico"><i class="fas ' + o.i + '"></i></span></div>' +
+      '<div class="sch-kpi-val">' + (vide ? '—' : o.v) + (o.u && !vide ? '<small>' + o.u + '</small>' : '') + '</div>' +
+      (o.jauge != null && !vide ? '<div class="sch-meter"><span style="width:' + Math.max(0, Math.min(100, o.jauge)) + '%"></span></div>' : '') +
+      '<div class="sch-kpi-foot">' + (o.note || '') + '</div></div>';
+  }
+
+  function detailMatieres() {
+    return '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Détail par matière</h3>' +
+        '<p class="sch-card-sub">Classées de la mieux maîtrisée à celle qui demande le plus de travail</p>' +
+      '</div></div>' +
+      '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+        '<th>Matière</th><th class="num">Quiz</th><th class="num">Moyenne</th>' +
+        '<th class="num">Dernier</th><th>Niveau</th>' +
+      '</tr></thead><tbody>' +
+      _matieres.map(function (m) {
+        const bon = m.moyenne >= 70, moyen = m.moyenne >= 50;
+        const chip = bon ? 'ok' : moyen ? 'warn' : 'bad';
+        const label = bon ? 'Maîtrisé' : moyen ? 'À consolider' : 'À travailler';
+        return '<tr>' +
+          '<td><strong>' + U.esc(m.nom) + '</strong></td>' +
+          '<td class="num">' + m.scores.length + '</td>' +
+          '<td class="num">' + U.pourcent(m.moyenne, 0) + ' %</td>' +
+          '<td class="num">' + (m.dernier == null ? '—' : U.pourcent(m.dernier, 0) + ' %') + '</td>' +
+          '<td><span class="sch-chip sch-chip-' + chip + '">' + label + '</span></td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+
+  function dessinerGraphiques() {
+    if (!window.SchoolCharts || !SchoolCharts.disponible()) return;
+
+    SchoolCharts.dessiner('ncResMat', 'bar', {
+      labels: _matieres.map(function (m) { return m.nom; }),
+      datasets: [{
+        label: 'Moyenne', data: _matieres.map(function (m) { return m.moyenne; }),
+        backgroundColor: _matieres.map(function (m) {
+          return (m.moyenne >= 70 ? C.ok : m.moyenne >= 50 ? C.warn : C.bad) + 'cc';
+        }),
+        borderRadius: 5, maxBarThickness: 20
+      }]
+    }, {
+      indexAxis: 'y',
+      scales: { x: { max: 100, ticks: { callback: function (v) { return v + ' %'; } } }, y: { grid: { display: false } } },
+      plugins: { tooltip: { callbacks: { label: function (c) { return U.pourcent(c.parsed.x, 0) + ' %'; } } } }
+    });
+
+    const derniers = _tous.slice(-20);
+    const el = document.getElementById('ncResEvo');
+    const ctx = el && el.getContext('2d');
+    SchoolCharts.dessiner('ncResEvo', 'line', {
+      labels: derniers.map(function (_, i) { return '#' + (i + 1); }),
+      datasets: [{
+        label: 'Score', data: derniers,
+        borderColor: C.violet,
+        backgroundColor: ctx ? SchoolCharts._degrade(ctx, C.violet) : C.violet + '22',
+        borderWidth: 2.5, fill: true, tension: .35,
+        pointRadius: 3, pointHoverRadius: 6, pointBackgroundColor: C.violet
+      }]
+    }, {
+      scales: { y: { min: 0, max: 100, ticks: { callback: function (v) { return v + ' %'; } } } },
+      plugins: { tooltip: { callbacks: { label: function (c) { return U.pourcent(c.parsed.y, 0) + ' %'; } } } }
+    });
+  }
+
+  window.StudentResults = { render: render };
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['mes-resultats'] = render;
 })();
 
 </script>
