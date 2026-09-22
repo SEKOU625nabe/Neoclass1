@@ -557,6 +557,27 @@ service cloud.firestore {
     // regle generique schools/{schoolId}/{sub}/{docId} plus bas.
 
     // --------------------------------------------------------
+    // SIGNALEMENTS DE NOTES
+    // L'eleve signale, il ne corrige jamais. Le signalement lui
+    // appartient en lecture ; seuls l'etablissement et le corps
+    // enseignant peuvent le traiter et y repondre.
+    // --------------------------------------------------------
+
+    match /gradeReports/{id} {
+      allow read: if isAuth() && (owns('studentId') || ownsSchool() || isEducator());
+
+      // L'eleve ne peut deposer qu'en son propre nom, et le signalement
+      // demarre obligatoirement en 'open' : il ne peut pas s'auto-traiter.
+      allow create: if isAuth()
+        && request.resource.data.get('studentId', '') == uid()
+        && request.resource.data.get('status', '') == 'open';
+
+      // Le traitement est reserve a l'etablissement et aux enseignants.
+      allow update: if ownsSchool() || isEducator();
+      allow delete: if ownsSchool() || isAdmin();
+    }
+
+    // --------------------------------------------------------
     // INVITATIONS D'ENSEIGNANTS
     // Le LIEN est le secret : le jeton fait 30 caracteres aleatoires
     // tires du generateur cryptographique du navigateur. On autorise

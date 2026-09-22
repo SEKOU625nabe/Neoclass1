@@ -11504,6 +11504,7 @@ Réponds en JSON:
             {icon:'📄',label:'Bulletins',page:'school-bulletins'},
             {icon:'👁️',label:'Aperçu du bulletin',page:'school-bulletin-preview'},
             {icon:'📋',label:'Présences',page:'school-absences'},
+            {icon:'🚩',label:'Signalements de notes',page:'school-grade-reports'},
             {icon:'⚙️',label:'Règles de notation',page:'school-grades-config'},
             {icon:'🎨',label:'Modèle de bulletin',page:'school-bulletin-config'}
           ]},
@@ -12644,6 +12645,10 @@ Réponds en JSON:
         <div id="dashDarxAnswer" style="white-space:pre-wrap;line-height:1.7;"></div>
 
         <!-- ⚡ ACCÈS RAPIDES -->
+        <!-- Resume scolaire : rempli par le module eleve-resume pour les
+             eleves rattaches a un etablissement. Vide pour les autres. -->
+        ${p.schoolId ? '<div id="ncScolariteResume"></div>' : ''}
+
         <!-- Ma scolarite en premier : notes, bulletins, absences -->
         <div class="nc-quick">
           ${p.schoolId ? ncQuickTile('fa-graduation-cap','Ma scolarité','nc-bg-violet',"navigate('ma-scolarite')") : ncQuickTile('fa-chart-line','Mes résultats','nc-bg-violet',"navigate('mes-resultats')")}
@@ -47729,6 +47734,562 @@ function handleDocumentUpload(e) {
       }
     }, 600);
   });
+})();
+
+</script>
+
+<!-- Signalement de notes -->
+<script id="sch-grade-reports-v1">
+// ============================================================
+// 🚩 NEOCLASS — SIGNALEMENT D'UNE NOTE
+//
+// Un élève qui pense qu'une note est erronée ne doit jamais pouvoir la
+// corriger lui-même. Il ouvre un signalement ; l'enseignant concerné et
+// l'administration vérifient, et eux seuls peuvent modifier la note.
+//
+// Cycle : ouvert → en cours de vérification → traité | refusé
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+
+  const MOTIFS = [
+    { v: 'note_incorrecte', t: 'La note me semble incorrecte' },
+    { v: 'mauvaise_matiere', t: "Ce n'est pas la bonne matière" },
+    { v: 'mauvaise_eval', t: "Ce n'est pas la bonne évaluation" },
+    { v: 'note_manquante', t: 'Une note est manquante' },
+    { v: 'autre', t: 'Autre' }
+  ];
+  const STATUTS = {
+    open:     { t: 'En attente', chip: 'info',
+                msg: 'Votre signalement est en cours de vérification.' },
+    checking: { t: 'En cours de vérification', chip: 'warn',
+                msg: "Votre enseignant examine votre signalement." },
+    resolved: { t: 'Traité', chip: 'ok',
+                msg: 'Votre signalement a été traité.' },
+    rejected: { t: 'Refusé', chip: 'mute',
+                msg: "Après vérification, aucune modification n'a été effectuée." }
+  };
+
+  function lib(liste, v) {
+    const x = liste.filter(function (i) { return i.v === v; })[0];
+    return x ? x.t : (v || '—');
+  }
+  function col() { return db.collection('gradeReports'); }
+
+  let _miens = [];
+
+  // ------------------------------------------------------------
+  // CÔTÉ ÉLÈVE
+  // ------------------------------------------------------------
+
+  function charger() {
+    if (typeof State === 'undefined' || !State.user) return Promise.resolve([]);
+    return col().where('studentId', '==', State.user.uid).get()
+      .then(function (s) {
+        _miens = s.docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+        return _miens;
+      })
+      .catch(function (e) {
+        console.warn('[Signalement] lecture :', e.code || e.message);
+        _miens = [];
+        return [];
+      });
+  }
+
+  // Signalement déjà déposé pour cette note ?
+  function existant(cle) {
+    return _miens.filter(function (r) { return r.gradeKey === cle; })[0] || null;
+  }
+
+  // Petit bouton à placer à côté d'une note.
+  function bouton(info) {
+    const cle = cleDe(info);
+    const deja = existant(cle);
+    if (deja) {
+      const st = STATUTS[deja.status] || STATUTS.open;
+      return '<button class="sch-chip sch-chip-' + st.chip + '" style="border:0;cursor:pointer;font-family:inherit;" ' +
+        'title="' + U.esc(st.msg) + '" onclick="GradeReports.voir(\'' + deja.id + '\')">' +
+        'Signalé · ' + st.t + '</button>';
+    }
+    return '<button class="sch-btn sch-btn-sm sch-btn-ghost" title="Signaler un problème sur cette note" ' +
+      'onclick="GradeReports.ouvrir(' + encodeURIComponent(JSON.stringify(info)).replace(/'/g, '%27') + ')">' +
+      '<i class="fas fa-flag"></i></button>';
+  }
+
+  // Le bouton passe l'info encodée : pas de guillemets à échapper.
+  function cleDe(info) {
+    return [info.matiere || '', info.periode || '', info.type || '', info.valeur].join('|');
+  }
+
+  function ouvrir(encode) {
+    let info;
+    try { info = JSON.parse(decodeURIComponent(encode)); }
+    catch (e) { console.error('[Signalement]', e); return; }
+
+    openModal('' +
+      '<h3 style="margin-bottom:6px;">Signaler un problème</h3>' +
+      '<p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:16px;">' +
+        'Votre enseignant et l\'administration vérifieront. ' +
+        '<strong>Vous ne pouvez pas modifier une note vous-même</strong> — c\'est ce qui garantit ' +
+        'la valeur de vos résultats.</p>' +
+
+      '<div class="sch-card" style="padding:12px;margin-bottom:16px;background:var(--bg);">' +
+        '<div style="display:flex;justify-content:space-between;gap:12px;font-size:.88rem;">' +
+          '<span><strong>' + U.esc(info.matiere || '') + '</strong>' +
+            (info.type ? ' · ' + U.esc(info.type) : '') + '</span>' +
+          '<strong>' + U.esc(info.valeur) + '/' + U.esc(info.max || 20) + '</strong>' +
+        '</div>' +
+        '<div style="font-size:.76rem;color:var(--text-secondary);margin-top:4px;">' +
+          U.esc(info.periodeLabel || info.periode || '') + '</div>' +
+      '</div>' +
+
+      '<div class="form-group"><label>Type de problème *</label>' +
+        '<select class="form-input" id="grRaison">' +
+          MOTIFS.map(function (m) { return '<option value="' + m.v + '">' + m.t + '</option>'; }).join('') +
+        '</select></div>' +
+      '<div class="form-group"><label>Expliquez le problème *</label>' +
+        '<textarea class="form-input" id="grMessage" rows="4" ' +
+        'placeholder="Décrivez précisément ce qui vous semble anormal."></textarea></div>' +
+
+      '<div style="display:flex;gap:10px;margin-top:16px;">' +
+        '<button class="sch-btn sch-btn-primary" style="flex:1" ' +
+          'onclick="GradeReports.envoyer(' + encodeURIComponent(JSON.stringify(info)).replace(/'/g, '%27') + ')">' +
+          '<i class="fas fa-paper-plane"></i> Envoyer le signalement</button>' +
+        '<button class="sch-btn" onclick="closeModal()">Annuler</button>' +
+      '</div>');
+  }
+
+  function envoyer(encode) {
+    let info;
+    try { info = JSON.parse(decodeURIComponent(encode)); } catch (e) { return; }
+
+    const message = (document.getElementById('grMessage').value || '').trim();
+    if (!message) { showToast('Expliquez le problème', 'error'); return; }
+
+    const p = State.profile || {};
+    col().add({
+      studentId: State.user.uid,
+      studentName: p.fullName || '',
+      schoolId: p.schoolId || '',
+      classId: p.classId || '',
+      className: p.className || '',
+      gradeKey: cleDe(info),
+      gradeId: info.gradeId || '',
+      teacherId: info.teacherId || '',
+      subject: info.matiere || '',
+      evalType: info.type || '',
+      period: info.periode || '',
+      value: info.valeur,
+      maxValue: info.max || 20,
+      reason: document.getElementById('grRaison').value,
+      message: message,
+      status: 'open',
+      response: '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      // Prévenir l'établissement.
+      return db.collection('messages').add({
+        recipientId: p.schoolId || '',
+        senderId: State.user.uid,
+        senderName: p.fullName || 'Élève',
+        schoolId: p.schoolId || '',
+        type: 'grade_report',
+        title: 'Signalement de note — ' + (info.matiere || ''),
+        body: (p.fullName || 'Un élève') + ' signale un problème sur une note de ' +
+              (info.matiere || '') + ' (' + lib(MOTIFS, document.getElementById('grRaison').value) + ').',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        read: false
+      }).catch(function () { /* la notification ne doit pas bloquer */ });
+    }).then(function () {
+      closeModal();
+      showToast('Signalement envoyé. Vous serez informé du résultat.', 'success');
+      charger().then(function () {
+        if (window.StudentSchool && State.currentPage === 'ma-scolarite') {
+          const app = document.getElementById('app');
+          if (app) StudentSchool.render(app);
+        }
+      });
+    }).catch(function (e) {
+      console.error('[Signalement] envoi :', e);
+      showToast('Erreur : ' + (e.message || e), 'error');
+    });
+  }
+
+  function voir(id) {
+    const r = _miens.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    const st = STATUTS[r.status] || STATUTS.open;
+    const d = U.toDate(r.createdAt);
+
+    openModal('' +
+      '<h3 style="margin-bottom:6px;">Mon signalement</h3>' +
+      '<div style="margin-bottom:14px;"><span class="sch-chip sch-chip-' + st.chip + '">' + st.t + '</span></div>' +
+      '<div class="sch-note"><i class="fas fa-circle-info"></i><div>' + U.esc(st.msg) + '</div></div>' +
+
+      '<div class="sch-card" style="padding:12px;margin-top:14px;background:var(--bg);font-size:.86rem;">' +
+        '<div><strong>' + U.esc(r.subject || '') + '</strong>' + (r.evalType ? ' · ' + U.esc(r.evalType) : '') +
+          ' — ' + U.esc(r.value) + '/' + U.esc(r.maxValue || 20) + '</div>' +
+        '<div style="color:var(--text-secondary);margin-top:6px;">' + U.esc(lib(MOTIFS, r.reason)) + '</div>' +
+        '<div style="margin-top:8px;white-space:pre-wrap;">' + U.esc(r.message || '') + '</div>' +
+        '<div style="font-size:.74rem;color:var(--text-secondary);margin-top:8px;">' +
+          'Envoyé le ' + (d ? d.toLocaleDateString('fr-FR') : '—') + '</div>' +
+      '</div>' +
+
+      (r.response
+        ? '<div style="margin-top:14px;"><strong style="font-size:.8rem;">Réponse de l\'établissement</strong>' +
+          '<div class="sch-card" style="padding:12px;margin-top:6px;font-size:.88rem;white-space:pre-wrap;">' +
+          U.esc(r.response) + '</div></div>'
+        : '') +
+
+      '<button class="sch-btn" style="width:100%;margin-top:16px;" onclick="closeModal()">Fermer</button>');
+  }
+
+  // ------------------------------------------------------------
+  // CÔTÉ ÉCOLE — traiter les signalements
+  // ------------------------------------------------------------
+
+  let _tous = [];
+
+  function renderAdmin(app) {
+    const p = (typeof State !== 'undefined' && State.profile) || {};
+    if (p.role !== 'school' && p.role !== 'admin') { navigate('dashboard'); return; }
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(p.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-flag"></i></div>' +
+              '<div><h1>Signalements de notes</h1>' +
+              '<div class="sch-head-sub"><span id="grResume">Chargement…</span></div></div></div>' +
+          '</header>' +
+          '<div id="grListe"><div class="sch-card"><div class="sch-skel" style="height:140px"></div></div></div>' +
+        '</div></main></div>';
+
+    col().where('schoolId', '==', State.user.uid).get().then(function (s) {
+      _tous = s.docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .sort(function (a, b) {
+          const da = U.toDate(a.createdAt), dbb = U.toDate(b.createdAt);
+          return (dbb ? dbb.getTime() : 0) - (da ? da.getTime() : 0);
+        });
+      afficherAdmin();
+    }).catch(function (e) {
+      const el = document.getElementById('grListe');
+      if (el) el.innerHTML = '<div class="sch-card"><div class="sch-note warn">' +
+        '<i class="fas fa-triangle-exclamation"></i><div>Lecture impossible : ' +
+        U.esc(e.code || e.message) + '</div></div></div>';
+    });
+  }
+
+  function afficherAdmin() {
+    const ouverts = _tous.filter(function (r) { return r.status === 'open' || r.status === 'checking'; });
+    const res = document.getElementById('grResume');
+    if (res) res.textContent = _tous.length
+      ? (_tous.length + ' signalement' + (_tous.length > 1 ? 's' : '') + ' · ' + ouverts.length + ' à traiter')
+      : 'Aucun signalement';
+
+    const el = document.getElementById('grListe');
+    if (!el) return;
+
+    if (!_tous.length) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty"><i class="fas fa-circle-check"></i>' +
+        '<strong>Aucun signalement</strong><p>Vos élèves n\'ont signalé aucun problème sur leurs notes.</p>' +
+        '</div></div>';
+      return;
+    }
+
+    el.innerHTML = '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+      '<th>Élève</th><th>Note concernée</th><th>Motif</th><th>Statut</th><th></th>' +
+      '</tr></thead><tbody>' +
+      _tous.map(function (r) {
+        const st = STATUTS[r.status] || STATUTS.open;
+        return '<tr>' +
+          '<td><strong>' + U.esc(r.studentName || '—') + '</strong>' +
+            '<div style="font-size:.74rem;color:var(--text-secondary);">' + U.esc(r.className || '') + '</div></td>' +
+          '<td>' + U.esc(r.subject || '') + (r.evalType ? ' · ' + U.esc(r.evalType) : '') +
+            '<div style="font-size:.74rem;color:var(--text-secondary);">' + U.esc(r.value) + '/' + U.esc(r.maxValue || 20) + '</div></td>' +
+          '<td>' + U.esc(lib(MOTIFS, r.reason)) + '</td>' +
+          '<td><span class="sch-chip sch-chip-' + st.chip + '">' + st.t + '</span></td>' +
+          '<td style="text-align:right;"><button class="sch-btn sch-btn-sm" ' +
+            'onclick="GradeReports.traiter(\'' + r.id + '\')">Traiter</button></td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table></div>' +
+      '<div class="sch-note" style="margin-top:14px;"><i class="fas fa-circle-info"></i><div>' +
+        'Traiter un signalement ne modifie pas la note. Si une correction est nécessaire, ' +
+        'elle se fait dans « Notes à valider », et reste tracée.</div></div>';
+  }
+
+  function traiter(id) {
+    const r = _tous.filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    const d = U.toDate(r.createdAt);
+
+    openModal('' +
+      '<h3 style="margin-bottom:12px;">Signalement de ' + U.esc(r.studentName || '') + '</h3>' +
+      '<div class="sch-card" style="padding:13px;background:var(--bg);font-size:.87rem;margin-bottom:16px;">' +
+        '<div><strong>' + U.esc(r.subject || '') + '</strong>' + (r.evalType ? ' · ' + U.esc(r.evalType) : '') +
+          ' — <strong>' + U.esc(r.value) + '/' + U.esc(r.maxValue || 20) + '</strong></div>' +
+        '<div style="color:var(--text-secondary);margin-top:5px;">' + U.esc(lib(MOTIFS, r.reason)) + '</div>' +
+        '<div style="margin-top:9px;white-space:pre-wrap;">' + U.esc(r.message || '') + '</div>' +
+        '<div style="font-size:.73rem;color:var(--text-secondary);margin-top:8px;">' +
+          (d ? d.toLocaleString('fr-FR') : '') + '</div>' +
+      '</div>' +
+      '<div class="form-group"><label>Réponse à l\'élève</label>' +
+        '<textarea class="form-input" id="grReponse" rows="3" ' +
+        'placeholder="Expliquez la décision.">' + U.esc(r.response || '') + '</textarea></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">' +
+        '<button class="sch-btn sch-btn-sm" onclick="GradeReports.statuer(\'' + r.id + '\',\'checking\')">En vérification</button>' +
+        '<button class="sch-btn sch-btn-sm sch-btn-primary" onclick="GradeReports.statuer(\'' + r.id + '\',\'resolved\')">Traité</button>' +
+        '<button class="sch-btn sch-btn-sm" onclick="GradeReports.statuer(\'' + r.id + '\',\'rejected\')">Aucune modification</button>' +
+        '<button class="sch-btn sch-btn-sm sch-btn-ghost" onclick="closeModal()">Fermer</button>' +
+      '</div>');
+  }
+
+  function statuer(id, statut) {
+    const rep = document.getElementById('grReponse');
+    col().doc(id).update({
+      status: statut,
+      response: rep ? rep.value.trim() : '',
+      resolvedBy: State.user.uid,
+      resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function () {
+      const r = _tous.filter(function (x) { return x.id === id; })[0];
+      if (r) { r.status = statut; r.response = rep ? rep.value.trim() : ''; }
+      // Informer l'élève.
+      if (r) {
+        db.collection('messages').add({
+          recipientId: r.studentId,
+          senderId: State.user.uid,
+          senderName: (State.profile || {}).schoolName || 'Établissement',
+          schoolId: State.user.uid,
+          type: 'grade_report',
+          title: 'Votre signalement a été traité',
+          body: (STATUTS[statut] || STATUTS.open).msg + (r.response ? '\n\n' + r.response : ''),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          read: false
+        }).catch(function () { /* sans conséquence */ });
+      }
+      closeModal();
+      showToast('Signalement mis à jour', 'success');
+      afficherAdmin();
+    }).catch(function (e) { showToast('Erreur : ' + (e.message || e), 'error'); });
+  }
+
+  window.GradeReports = {
+    MOTIFS: MOTIFS, STATUTS: STATUTS,
+    charger: charger, existant: existant, bouton: bouton, cleDe: cleDe,
+    ouvrir: ouvrir, envoyer: envoyer, voir: voir,
+    renderAdmin: renderAdmin, traiter: traiter, statuer: statuer
+  };
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['school-grade-reports'] = renderAdmin;
+})();
+
+</script>
+
+<!-- Resume scolaire eleve -->
+<script id="sch-eleve-resume-v1">
+// ============================================================
+// 🎒 NEOCLASS — RÉSUMÉ SCOLAIRE SUR LE TABLEAU DE BORD ÉLÈVE
+//
+// Un élève rattaché à un établissement doit voir l'essentiel de sa
+// scolarité dès l'accueil : sa moyenne, ses dernières notes, son
+// prochain examen, son dernier bulletin.
+//
+// N'apparaît que si l'élève a un schoolId. L'élève indépendant garde
+// son accueil inchangé.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const C = U.COULEURS;
+
+  function estEleveEcole() {
+    const p = (typeof State !== 'undefined' && State.profile) || {};
+    return (p.role === 'student' || p.role === 'indep_student') && !!p.schoolId;
+  }
+
+  function injecter() {
+    if (!estEleveEcole()) return;
+    const cible = document.getElementById('ncScolariteResume');
+    if (!cible || cible.dataset.rempli) return;
+    cible.dataset.rempli = '1';
+    cible.innerHTML = squelette();
+    charger(cible);
+  }
+
+  function squelette() {
+    return '<div class="sch-card" style="margin-bottom:18px;">' +
+      '<div class="sch-skel" style="height:96px"></div></div>';
+  }
+
+  function charger(cible) {
+    const p = State.profile || {};
+    const uid = State.user.uid;
+    const ecole = p.schoolId;
+    const G = window.SchoolGrading;
+
+    const pConfig = db.collection('users').doc(ecole).get()
+      .then(function (d) { return G.normaliser((d.data() || {}).gradesConfig || {}); })
+      .catch(function () { return G.normaliser({}); });
+
+    Promise.all([
+      pConfig,
+      db.collection('grades').where('schoolId', '==', ecole).get().catch(function () { return { docs: [] }; }),
+      db.collection('bulletins').where('studentId', '==', uid).get().catch(function () { return { docs: [] }; }),
+      db.collection('exams').where('schoolId', '==', ecole).get().catch(function () { return { docs: [] }; })
+    ]).then(function (r) {
+      const cfg = r[0];
+      const VALIDES = ['validated', 'locked', 'published'];
+
+      // Notes de l'élève, à plat, les plus récentes d'abord.
+      const notes = [];
+      r[1].docs.forEach(function (d) {
+        const g = d.data() || {};
+        if (VALIDES.indexOf(g.status) === -1) return;
+        (g.grades || []).forEach(function (n) {
+          if ((n.studentId || '') !== uid) return;
+          const v = parseFloat(n.grade);
+          if (isNaN(v)) return;
+          notes.push({
+            valeur: v, matiere: g.subject || '', periode: g.period || '',
+            type: g.evalType || '', max: parseFloat(g.maxGrade) || cfg.maxGrade,
+            date: U.toDate(g.updatedAt || g.createdAt)
+          });
+        });
+      });
+      notes.sort(function (a, b) {
+        return (b.date ? b.date.getTime() : 0) - (a.date ? a.date.getTime() : 0);
+      });
+
+      // Moyenne générale de la période la plus récente qui a des notes.
+      const periodes = G.periodes(cfg);
+      let periode = '', moyenne = null;
+      for (let i = periodes.length - 1; i >= 0; i--) {
+        const dans = notes.filter(function (n) { return n.periode === periodes[i].v; });
+        if (!dans.length) continue;
+        periode = periodes[i].v;
+        const parMat = {};
+        dans.forEach(function (n) {
+          (parMat[n.matiere] = parMat[n.matiere] || { auto: [] }).auto.push(n.valeur);
+        });
+        const mats = Object.keys(parMat).map(function (nom) {
+          return { nom: nom, coef: G.coefMatiere(nom, cfg),
+                   moyenne: G.moyenneMatiere({ auto: parMat[nom].auto }, cfg) };
+        });
+        moyenne = G.moyenneGenerale(mats, cfg);
+        break;
+      }
+
+      const bulletins = r[2].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .filter(function (b) { return b.status === 'published'; });
+
+      const maintenant = new Date();
+      const examens = r[3].docs.map(function (d) { return d.data() || {}; })
+        .filter(function (e) {
+          if (e.classId && p.classId && e.classId !== p.classId) return false;
+          const dt = U.toDate(e.date);
+          return dt && dt >= maintenant;
+        })
+        .sort(function (a, b) {
+          return U.toDate(a.date).getTime() - U.toDate(b.date).getTime();
+        });
+
+      afficher(cible, { cfg: cfg, notes: notes, moyenne: moyenne, periode: periode,
+                        bulletins: bulletins, examens: examens });
+    }).catch(function (e) {
+      console.warn('[Élève] résumé scolaire :', e);
+      cible.innerHTML = '';
+    });
+  }
+
+  function afficher(cible, d) {
+    const p = State.profile || {};
+    const G = window.SchoolGrading;
+    const max = d.cfg.maxGrade;
+    const dernieres = d.notes.slice(0, 3);
+    const prochain = d.examens[0];
+    const bulletin = d.bulletins[d.bulletins.length - 1];
+
+    const couleurMoy = d.moyenne == null ? C.slate
+      : (G.admis(d.moyenne, d.cfg) ? C.ok : C.warn);
+
+    cible.innerHTML =
+      '<section class="sch-card" style="margin-bottom:18px;border-left:3px solid ' + C.violet + ';">' +
+        '<div class="sch-card-head"><div>' +
+          '<h3 class="sch-card-title">Ma scolarité</h3>' +
+          '<p class="sch-card-sub">' + U.esc(p.className || p.level || '') +
+            (p.schoolName ? ' · ' + U.esc(p.schoolName) : '') + '</p>' +
+        '</div>' +
+        '<button class="sch-btn sch-btn-sm" onclick="navigate(\'ma-scolarite\')">Tout voir</button></div>' +
+
+        '<div style="display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));">' +
+
+          // Moyenne
+          '<div>' +
+            '<div class="sch-kpi-label">Moyenne' + (d.periode ? ' — ' + U.esc(G.libellePeriode(d.periode, d.cfg)) : '') + '</div>' +
+            '<div style="font-size:1.9rem;font-weight:800;color:' + couleurMoy + ';line-height:1.1;margin-top:4px;">' +
+              (d.moyenne == null ? '—' : U.pourcent(d.moyenne, d.cfg.decimals)) +
+              '<small style="font-size:.9rem;color:var(--text-secondary);">/' + max + '</small></div>' +
+            (d.moyenne != null
+              ? '<div class="sch-meter" style="--kpi-color:' + couleurMoy + ';margin-top:7px;">' +
+                '<span style="width:' + ((d.moyenne / max) * 100) + '%"></span></div>'
+              : '<div style="font-size:.76rem;color:var(--text-secondary);margin-top:5px;">Aucune note publiée</div>') +
+          '</div>' +
+
+          // Dernières notes
+          '<div>' +
+            '<div class="sch-kpi-label">Dernières notes</div>' +
+            (dernieres.length
+              ? '<div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;">' +
+                dernieres.map(function (n) {
+                  const bon = n.valeur >= d.cfg.passingGrade;
+                  return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:.85rem;">' +
+                    '<span style="color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' +
+                      U.esc(n.matiere) + '</span>' +
+                    '<strong style="color:' + (bon ? C.ok : C.warn) + ';">' +
+                      U.pourcent(n.valeur, 2) + '/' + n.max + '</strong></div>';
+                }).join('') + '</div>'
+              : '<div style="font-size:.8rem;color:var(--text-secondary);margin-top:7px;">Aucune note pour le moment</div>') +
+          '</div>' +
+
+          // Prochain examen
+          '<div>' +
+            '<div class="sch-kpi-label">Prochain examen</div>' +
+            (prochain
+              ? '<div style="margin-top:7px;">' +
+                '<strong style="font-size:.95rem;">' + U.esc(prochain.subject || prochain.title || 'Examen') + '</strong>' +
+                '<div style="font-size:.8rem;color:var(--text-secondary);margin-top:3px;">' +
+                  U.esc(U.toDate(prochain.date).toLocaleDateString('fr-FR',
+                    { weekday: 'long', day: 'numeric', month: 'long' })) +
+                  (prochain.heure ? ' · ' + U.esc(prochain.heure) : '') + '</div></div>'
+              : '<div style="font-size:.8rem;color:var(--text-secondary);margin-top:7px;">Aucun examen planifié</div>') +
+          '</div>' +
+
+          // Bulletin
+          '<div>' +
+            '<div class="sch-kpi-label">Dernier bulletin</div>' +
+            (bulletin
+              ? '<div style="margin-top:7px;">' +
+                '<strong style="font-size:.9rem;">' + U.esc(G.libellePeriode(bulletin.period, d.cfg)) + '</strong>' +
+                '<button class="sch-btn sch-btn-sm sch-btn-primary" style="display:block;margin-top:7px;" ' +
+                  'onclick="navigate(\'ma-scolarite\')">Consulter</button></div>'
+              : '<div style="font-size:.8rem;color:var(--text-secondary);margin-top:7px;">Aucun bulletin publié</div>') +
+          '</div>' +
+
+        '</div>' +
+      '</section>';
+  }
+
+  // Le tableau de bord se reconstruit à chaque navigation.
+  document.addEventListener('DOMContentLoaded', function () {
+    setInterval(injecter, 700);
+  });
+  window.EleveResume = { injecter: injecter };
 })();
 
 </script>
