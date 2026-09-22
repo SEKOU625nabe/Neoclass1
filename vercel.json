@@ -1,26 +1,33 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
-    { "source": "/.netlify/functions/darx", "destination": "/api/darx" },
-    { "source": "/.netlify/functions/darx-vision", "destination": "/api/darx-vision" },
-    { "source": "/.netlify/functions/mistral-api", "destination": "/api/darx" },
-    { "source": "/", "destination": "/Neoclass3.html" },
-    { "source": "/app", "destination": "/Neoclass3.html" }
+  "version": 2,
+  "builds": [
+    { "src": "api/*.js", "use": "@vercel/node" },
+    { "src": "**", "use": "@vercel/static" }
   ],
-  "headers": [
+  "routes": [
+    { "src": "/\\.netlify/functions/darx", "dest": "/api/darx" },
+    { "src": "/\\.netlify/functions/darx-vision", "dest": "/api/darx-vision" },
+    { "src": "/\\.netlify/functions/mistral-api", "dest": "/api/darx" },
+
     {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
-      ]
+      "src": "/assets/(.*)",
+      "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+      "continue": true
     },
     {
-      "source": "/assets/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
-      ]
-    }
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Referrer-Policy": "strict-origin-when-cross-origin"
+      },
+      "continue": true
+    },
+
+    { "handle": "filesystem" },
+
+    { "src": "/", "dest": "/Neoclass3.html" },
+    { "src": "/app", "dest": "/Neoclass3.html" },
+    { "src": "/(.*)", "dest": "/Neoclass3.html" }
   ]
 }
