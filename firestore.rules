@@ -557,6 +557,38 @@ service cloud.firestore {
     // regle generique schools/{schoolId}/{sub}/{docId} plus bas.
 
     // --------------------------------------------------------
+    // INVITATIONS D'ENSEIGNANTS
+    // Le LIEN est le secret : le jeton fait 30 caracteres aleatoires
+    // tires du generateur cryptographique du navigateur. On autorise
+    // donc la lecture d'UN document a qui connait son identifiant,
+    // mais jamais le parcours de la collection : sans get() public,
+    // l'enseignant invite ne pourrait pas voir de qui vient l'invitation
+    // avant d'avoir un compte.
+    // Seules les invitations encore en attente sont lisibles ainsi.
+    // --------------------------------------------------------
+
+    match /schoolInvites/{token} {
+      allow get: if resource.data.get('status', '') == 'pending';
+      allow get, list: if isSchool() || isAdmin();
+
+      allow create: if willOwnSchool() || isAdmin();
+
+      // L'ecole gere ses invitations (revocation, relance).
+      allow update: if ownsSchool() || isAdmin();
+
+      // Un invite fraichement inscrit cloture SON invitation : il ne
+      // peut que passer 'pending' a 'accepted' et se designer lui-meme.
+      allow update: if isAuth()
+        && resource.data.get('status', '') == 'pending'
+        && request.resource.data.get('status', '') == 'accepted'
+        && request.resource.data.get('acceptedBy', '') == uid()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'acceptedBy', 'acceptedAt']);
+
+      allow delete: if ownsSchool() || isAdmin();
+    }
+
+    // --------------------------------------------------------
     // SUPPORT CLIENT
     // Un ticket peut contenir des informations sensibles sur
     // l'etablissement : seuls son auteur et l'equipe NeoClass y accedent.

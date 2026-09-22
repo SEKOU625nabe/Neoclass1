@@ -11412,42 +11412,74 @@ Réponds en JSON:
         }
         
       } else if(role==='teacher'||role==='indep_teacher'){
-        groups = [
-          { id:'courses', icon:'📚', label:'Mes Cours', items:[
-            {icon:'📚',label:'Cours Pro',page:'cours-pro'},
-            {icon:'📁',label:'Studio Création',page:'course-manager'},
-            {icon:'🎬',label:'Studio Cours Pro',page:'prof-course-studio'},
-            {icon:'🤖',label:'Cours IA',page:'prof-ia-courses'},
-            {icon:'📺',label:'Cours Live',page:'live'}
-          ]},
-          { id:'eval', icon:'✅', label:'Évaluation', items:[
-            {icon:'✅',label:t('createQuiz'),page:'prof-quiz'},
-            {icon:'📝',label:t('gradeStudents'),page:'prof-grades'},
-            {icon:'�',label:'Saisie Notes',page:'prof-grades-entry'},
-            {icon:'📈',label:t('trackProgress'),page:'prof-progress'},
-            {icon:'🤖',label:'Générer exercices',page:'generate-exercises'},
-            {icon:'📋',label:'Devoirs/PDF',page:'homework-generator'},
-            {icon:'🏅',label:'Certificats',page:'certificates'}
-          ]},
-          { id:'revenue', icon:'💰', label:'Revenus & Stats', items:[
-            {icon:'💰',label:'Cours payants',page:'prof-paid'},
-            {icon:'💵',label:'Mes Revenus',page:'prof-earnings'},
-            {icon:'👨‍🏫',label:'Cours Particuliers',page:'prof-tutoring'},
-            {icon:'🏪',label:'Marketplace',page:'marketplace-admin'},
-            {icon:'📊',label:'Stats',page:'prof-stats'},
-            {icon:'📊',label:'Analytics',page:'teacher-analytics'}
-          ]},
-          { id:'comm', icon:'💬', label:'Communication', items:[
-            {icon:'🌐',label:t('social'),page:'social'},
-            {icon:'💬',label:'Messagerie',page:'messaging'},
-            {icon:'📬',label:t('inbox'),page:'inbox'}
-          ]},
-          { id:'profil', icon:'📋', label:'Mon Profil', items:[
-            {icon:'📋',label:'Mon Dossier',page:'prof-validation'},
-            {icon:'⚙️',label:'Paramètres',page:'settings'}
-          ]}
-        ];
-        
+        // Deux métiers différents sous un même rôle technique.
+        // L'enseignant d'un établissement gère des classes, des élèves et
+        // des notes ; il n'a rien à faire dans Marketplace, Cours payants
+        // ou Revenus, qui concernent le professeur indépendant vendant
+        // ses contenus sur la plateforme.
+        const profEcole = !!(State.profile && State.profile.schoolId);
+
+        if (profEcole) {
+          groups = [
+            { id:'classes', icon:'🏫', label:'Mes classes', items:[
+              {icon:'🏫',label:'Mes classes',page:'prof-mes-classes'},
+              {icon:'🎓',label:'Mes élèves',page:'prof-mes-eleves'},
+              {icon:'📅',label:'Mon emploi du temps',page:'timetable'}
+            ]},
+            { id:'eval', icon:'📝', label:'Évaluations', items:[
+              {icon:'📝',label:'Saisie des notes',page:'prof-grades-entry'},
+              {icon:'✅',label:'Créer un exercice',page:'prof-quiz'},
+              {icon:'📋',label:'Devoirs',page:'homework-generator'},
+              {icon:'🤖',label:'Générer des exercices',page:'generate-exercises'},
+              {icon:'📈',label:'Suivi des élèves',page:'prof-progress'}
+            ]},
+            { id:'cours', icon:'📚', label:'Mes cours', items:[
+              {icon:'📁',label:'Gestion des cours',page:'course-manager'},
+              {icon:'🎬',label:'Studio de cours',page:'prof-course-studio'},
+              {icon:'🤖',label:'Cours assistés par IA',page:'prof-ia-courses'},
+              {icon:'📺',label:'Cours en direct',page:'live'}
+            ]},
+            { id:'comm', icon:'💬', label:'Communication', items:[
+              {icon:'💬',label:'Messagerie',page:'messaging'},
+              {icon:'📬',label:'Boîte de réception',page:'inbox'}
+            ]}
+          ];
+        } else {
+          groups = [
+            { id:'courses', icon:'📚', label:'Mes cours', items:[
+              {icon:'📚',label:'Cours Pro',page:'cours-pro'},
+              {icon:'📁',label:'Studio de création',page:'course-manager'},
+              {icon:'🎬',label:'Studio Cours Pro',page:'prof-course-studio'},
+              {icon:'🤖',label:'Cours assistés par IA',page:'prof-ia-courses'},
+              {icon:'📺',label:'Cours en direct',page:'live'}
+            ]},
+            { id:'eval', icon:'✅', label:'Évaluation', items:[
+              {icon:'✅',label:t('createQuiz'),page:'prof-quiz'},
+              {icon:'📝',label:t('gradeStudents'),page:'prof-grades'},
+              {icon:'📈',label:t('trackProgress'),page:'prof-progress'},
+              {icon:'🤖',label:'Générer des exercices',page:'generate-exercises'},
+              {icon:'📋',label:'Devoirs et PDF',page:'homework-generator'},
+              {icon:'🏅',label:'Certificats',page:'certificates'}
+            ]},
+            { id:'revenue', icon:'💰', label:'Revenus et statistiques', items:[
+              {icon:'💰',label:'Cours payants',page:'prof-paid'},
+              {icon:'💵',label:'Mes revenus',page:'prof-earnings'},
+              {icon:'👨‍🏫',label:'Cours particuliers',page:'prof-tutoring'},
+              {icon:'🏪',label:'Marketplace',page:'marketplace-admin'},
+              {icon:'📊',label:'Statistiques',page:'prof-stats'},
+              {icon:'📊',label:'Analytique',page:'teacher-analytics'}
+            ]},
+            { id:'comm', icon:'💬', label:'Communication', items:[
+              {icon:'🌐',label:t('social'),page:'social'},
+              {icon:'💬',label:'Messagerie',page:'messaging'},
+              {icon:'📬',label:t('inbox'),page:'inbox'}
+            ]},
+            { id:'profil', icon:'📋', label:'Mon profil', items:[
+              {icon:'📋',label:'Mon dossier',page:'prof-validation'},
+              {icon:'⚙️',label:'Paramètres',page:'settings'}
+            ]}
+          ];
+        }
       } else if(role==='school'){
         // Hiérarchie École : 6 rubriques thématiques plutôt qu'une
         // accumulation de boutons au même endroit. Chaque entrée pointe
@@ -46869,6 +46901,834 @@ function handleDocumentUpload(e) {
   window.renderAbout = render;
   window.NC_PAGES = window.NC_PAGES || {};
   window.NC_PAGES['about'] = render;
+})();
+
+</script>
+
+<!-- ✉️ Invitations enseignants -->
+<script id="sch-invites-v1">
+// ============================================================
+// ✉️ NEOCLASS — INVITATION DES ENSEIGNANTS
+//
+// L'ancien fonctionnement générait un identifiant et un mot de passe,
+// stockés EN CLAIR dans Firestore, que l'école devait recopier au
+// professeur. Deux problèmes : le mot de passe circulait à découvert,
+// et l'école connaissait le mot de passe de ses enseignants.
+//
+// Ici, l'école décrit l'enseignant et NeoClass produit un lien à usage
+// unique. L'enseignant ouvre ce lien et choisit lui-même son mot de
+// passe : personne d'autre ne le connaît. Son compte est rattaché
+// automatiquement à l'établissement, avec ses matières et ses classes.
+//
+// Le lien est le secret : le jeton fait 40 caractères aléatoires, et
+// l'invitation expire.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const JOURS_VALIDITE = 14;
+
+  function estEcole() {
+    return typeof State !== 'undefined' && State.profile && State.profile.role === 'school';
+  }
+  function col() { return db.collection('schoolInvites'); }
+
+  // Jeton imprévisible : on s'appuie sur le générateur cryptographique
+  // du navigateur, pas sur Math.random().
+  function jeton() {
+    const a = new Uint8Array(30);
+    (window.crypto || window.msCrypto).getRandomValues(a);
+    let s = '';
+    const alpha = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    for (let i = 0; i < a.length; i++) s += alpha[a[i] % alpha.length];
+    return s;
+  }
+
+  function lienDe(t) {
+    const base = window.location.origin + window.location.pathname;
+    return base + '?invitation=' + t;
+  }
+
+  // ------------------------------------------------------------
+  // CÔTÉ ÉCOLE — créer et suivre les invitations
+  // ------------------------------------------------------------
+
+  let _classes = [];
+  let _invites = [];
+
+  function chargerContexte() {
+    const uid = State.user.uid;
+    return Promise.all([
+      db.collection('classes').where('schoolId', '==', uid).get().catch(function () { return { docs: [] }; }),
+      col().where('schoolId', '==', uid).get().catch(function (e) {
+        console.warn('[Invitations] lecture :', e.code || e.message); return { docs: [] };
+      })
+    ]).then(function (r) {
+      _classes = r[0].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _invites = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .sort(function (a, b) {
+          const da = U.toDate(a.createdAt), dbb = U.toDate(b.createdAt);
+          return (dbb ? dbb.getTime() : 0) - (da ? da.getTime() : 0);
+        });
+    });
+  }
+
+  function ouvrirFormulaire() {
+    if (!estEcole()) return;
+    chargerContexte().then(function () {
+      const matieres = ((State.profile.gradesConfig || {}).subjects || []).map(function (s) { return s.name; });
+
+      openModal('' +
+        '<h3 style="margin-bottom:6px;">Inviter un enseignant</h3>' +
+        '<p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:18px;">' +
+          'Vous décrivez l\'enseignant, NeoClass produit un lien. Il choisira lui-même son mot de passe.</p>' +
+
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Prénom *</label><input class="form-input" id="invPrenom" /></div>' +
+          '<div class="form-group"><label>Nom *</label><input class="form-input" id="invNom" /></div>' +
+        '</div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>Email</label><input class="form-input" type="email" id="invEmail" placeholder="pour l\'envoi par email" /></div>' +
+          '<div class="form-group"><label>Téléphone</label><input class="form-input" id="invTel" placeholder="+224 6XX XX XX XX" /></div>' +
+        '</div>' +
+        '<div class="form-group"><label>Matières enseignées *</label>' +
+          (matieres.length
+            ? '<select class="form-input" id="invMatieres" multiple size="' + Math.min(6, matieres.length) + '">' +
+              matieres.map(function (m) { return '<option value="' + U.esc(m) + '">' + U.esc(m) + '</option>'; }).join('') +
+              '</select><small style="color:var(--text-secondary);font-size:.75rem;">Maintenez Ctrl pour en choisir plusieurs.</small>'
+            : '<input class="form-input" id="invMatieresTexte" placeholder="Mathématiques, Physique…" />' +
+              '<small style="color:var(--text-secondary);font-size:.75rem;">Astuce : déclarez vos matières dans « Règles de notation » pour les choisir dans une liste.</small>') +
+        '</div>' +
+        '<div class="form-group"><label>Classes affectées *</label>' +
+          (_classes.length
+            ? '<select class="form-input" id="invClasses" multiple size="' + Math.min(6, _classes.length) + '">' +
+              _classes.map(function (c) { return '<option value="' + c.id + '">' + U.esc(c.name) + '</option>'; }).join('') +
+              '</select>'
+            : '<div class="sch-note warn"><i class="fas fa-triangle-exclamation"></i><div>Aucune classe créée. ' +
+              '<a onclick="closeModal();navigate(\'school-classes\')">Créer une classe d\'abord</a></div></div>') +
+        '</div>' +
+
+        '<div style="display:flex;gap:10px;margin-top:18px;">' +
+          '<button class="sch-btn sch-btn-primary" style="flex:1" onclick="SchoolInvites.creer()">' +
+            '<i class="fas fa-link"></i> Générer le lien</button>' +
+          '<button class="sch-btn" onclick="closeModal()">Annuler</button>' +
+        '</div>');
+    });
+  }
+
+  function creer() {
+    const prenom = (document.getElementById('invPrenom').value || '').trim();
+    const nom = (document.getElementById('invNom').value || '').trim();
+    if (!prenom || !nom) { showToast('Prénom et nom obligatoires', 'error'); return; }
+
+    const selMat = document.getElementById('invMatieres');
+    const txtMat = document.getElementById('invMatieresTexte');
+    const matieres = selMat
+      ? Array.prototype.map.call(selMat.selectedOptions, function (o) { return o.value; })
+      : (txtMat ? txtMat.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : []);
+    if (!matieres.length) { showToast('Indiquez au moins une matière', 'error'); return; }
+
+    const selCl = document.getElementById('invClasses');
+    const classes = selCl ? Array.prototype.map.call(selCl.selectedOptions, function (o) { return o.value; }) : [];
+    if (!classes.length) { showToast('Affectez au moins une classe', 'error'); return; }
+
+    const t = jeton();
+    const expire = new Date(Date.now() + JOURS_VALIDITE * 86400000);
+    const p = State.profile || {};
+
+    col().doc(t).set({
+      token: t,
+      schoolId: State.user.uid,
+      schoolName: p.schoolName || p.fullName || 'Établissement',
+      schoolLogo: p.schoolLogo || '',
+      role: 'teacher',
+      firstName: prenom,
+      lastName: nom,
+      email: (document.getElementById('invEmail').value || '').trim(),
+      phone: (document.getElementById('invTel').value || '').trim(),
+      subjects: matieres,
+      classIds: classes,
+      classNames: classes.map(function (id) {
+        const c = _classes.filter(function (x) { return x.id === id; })[0];
+        return c ? c.name : id;
+      }),
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      expiresAt: expire
+    }).then(function () {
+      closeModal();
+      afficherLien(t, prenom + ' ' + nom,
+        (document.getElementById('invEmail') || {}).value,
+        (document.getElementById('invTel') || {}).value);
+    }).catch(function (e) {
+      console.error('[Invitations] création :', e);
+      showToast('Erreur : ' + (e.message || e), 'error');
+    });
+  }
+
+  function afficherLien(t, nomComplet, email, tel) {
+    const lien = lienDe(t);
+    const ecole = (State.profile || {}).schoolName || 'notre établissement';
+    const msg = 'Bonjour ' + nomComplet + ', vous avez été invité à rejoindre ' + ecole +
+                ' sur NeoClass. Ouvrez ce lien pour créer votre compte enseignant : ' + lien;
+
+    const waNum = String(tel || '').replace(/[^0-9]/g, '');
+    const wa = 'https://wa.me/' + waNum + '?text=' + encodeURIComponent(msg);
+    const mail = 'mailto:' + encodeURIComponent(email || '') +
+      '?subject=' + encodeURIComponent('Invitation à rejoindre ' + ecole + ' sur NeoClass') +
+      '&body=' + encodeURIComponent(msg);
+
+    openModal('' +
+      '<div style="text-align:center;margin-bottom:18px;">' +
+        '<div style="font-size:2.4rem;">✉️</div>' +
+        '<h3 style="margin:8px 0 4px;">Invitation prête</h3>' +
+        '<p style="color:var(--text-secondary);font-size:.86rem;">' +
+          'Envoyez ce lien à <strong>' + U.esc(nomComplet) + '</strong>. ' +
+          'Il crée son compte et choisit son mot de passe lui-même.</p>' +
+      '</div>' +
+
+      '<div class="form-group"><label>Lien d\'invitation</label>' +
+        '<input class="form-input" id="invLien" readonly value="' + U.esc(lien) + '" ' +
+        'onclick="this.select()" style="font-size:.8rem;" /></div>' +
+
+      '<div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:14px;">' +
+        '<button class="sch-btn" onclick="SchoolInvites.copier()"><i class="fas fa-copy"></i> Copier le lien</button>' +
+        (waNum ? '<a class="sch-btn" style="background:#25D366;color:#fff;border-color:transparent;" href="' + wa + '" target="_blank" rel="noopener">' +
+          '<i class="fab fa-whatsapp"></i> WhatsApp</a>' : '') +
+        (email ? '<a class="sch-btn" href="' + mail + '"><i class="fas fa-envelope"></i> Email</a>' : '') +
+      '</div>' +
+
+      '<div class="sch-note" style="margin-top:16px;"><i class="fas fa-circle-info"></i><div>' +
+        'Ce lien expire dans ' + JOURS_VALIDITE + ' jours et ne fonctionne qu\'une seule fois. ' +
+        'Vous pouvez le révoquer à tout moment depuis la liste des enseignants.</div></div>' +
+
+      '<button class="sch-btn sch-btn-primary" style="width:100%;margin-top:16px;" ' +
+        'onclick="closeModal();if(typeof renderTeachersManagement===\'function\')navigate(\'school-teachers\')">Terminé</button>');
+  }
+
+  function copier() {
+    const el = document.getElementById('invLien');
+    if (!el) return;
+    el.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(el.value)
+        .then(function () { showToast('Lien copié', 'success'); })
+        .catch(function () { showToast('Copie impossible, sélectionnez le lien à la main', 'error'); });
+    } else {
+      try { document.execCommand('copy'); showToast('Lien copié', 'success'); }
+      catch (e) { showToast('Copie impossible', 'error'); }
+    }
+  }
+
+  // Bloc récapitulatif à insérer dans la page « Enseignants ».
+  function htmlListe() {
+    if (!_invites.length) return '';
+    const attente = _invites.filter(function (i) { return i.status === 'pending'; });
+    if (!attente.length) return '';
+
+    return '<div class="sch-card" style="margin-bottom:20px;">' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">Invitations en attente</h3>' +
+        '<p class="sch-card-sub">Ces enseignants n\'ont pas encore créé leur compte</p></div>' +
+        '<span class="sch-chip sch-chip-warn">' + attente.length + '</span></div>' +
+      '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+        '<th>Enseignant</th><th>Matières</th><th>Classes</th><th>Expire</th><th></th>' +
+      '</tr></thead><tbody>' +
+      attente.map(function (i) {
+        const exp = U.toDate(i.expiresAt);
+        const perime = exp && exp < new Date();
+        return '<tr>' +
+          '<td><strong>' + U.esc(i.firstName + ' ' + i.lastName) + '</strong>' +
+            (i.email ? '<div style="font-size:.75rem;color:var(--text-secondary);">' + U.esc(i.email) + '</div>' : '') + '</td>' +
+          '<td>' + U.esc((i.subjects || []).join(', ')) + '</td>' +
+          '<td>' + U.esc((i.classNames || []).join(', ')) + '</td>' +
+          '<td>' + (perime
+            ? '<span class="sch-chip sch-chip-bad">Expirée</span>'
+            : (exp ? exp.toLocaleDateString('fr-FR') : '—')) + '</td>' +
+          '<td style="text-align:right;white-space:nowrap;">' +
+            '<button class="sch-btn sch-btn-sm sch-btn-ghost" title="Revoir le lien" ' +
+              'onclick="SchoolInvites.revoirLien(\'' + i.id + '\')"><i class="fas fa-link"></i></button>' +
+            '<button class="sch-btn sch-btn-sm sch-btn-ghost" title="Révoquer" ' +
+              'onclick="SchoolInvites.revoquer(\'' + i.id + '\')"><i class="fas fa-ban"></i></button>' +
+          '</td></tr>';
+      }).join('') +
+      '</tbody></table></div></div>';
+  }
+
+  function revoirLien(id) {
+    const i = _invites.filter(function (x) { return x.id === id; })[0];
+    if (!i) return;
+    afficherLien(i.token || i.id, i.firstName + ' ' + i.lastName, i.email, i.phone);
+  }
+
+  function revoquer(id) {
+    openModal('<h3>Révoquer cette invitation ?</h3>' +
+      '<p style="color:var(--text-secondary);margin:12px 0 20px;">Le lien cessera immédiatement de fonctionner. ' +
+      'Vous pourrez en générer un nouveau.</p>' +
+      '<div style="display:flex;gap:10px;">' +
+        '<button class="sch-btn sch-btn-danger" style="flex:1" onclick="SchoolInvites.confirmerRevocation(\'' + id + '\')">Révoquer</button>' +
+        '<button class="sch-btn" onclick="closeModal()">Annuler</button></div>');
+  }
+
+  function confirmerRevocation(id) {
+    col().doc(id).update({ status: 'revoked', revokedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function () {
+        showToast('Invitation révoquée', 'success');
+        closeModal();
+        if (typeof renderTeachersManagement === 'function') navigate('school-teachers');
+      })
+      .catch(function (e) { showToast('Erreur : ' + (e.message || e), 'error'); });
+  }
+
+  window.SchoolInvites = {
+    ouvrirFormulaire: ouvrirFormulaire,
+    creer: creer,
+    copier: copier,
+    revoirLien: revoirLien,
+    revoquer: revoquer,
+    confirmerRevocation: confirmerRevocation,
+    chargerContexte: chargerContexte,
+    htmlListe: htmlListe,
+    lienDe: lienDe
+  };
+})();
+
+</script>
+
+<!-- 🎟️ Acceptation d'invitation -->
+<script id="sch-invite-accept-v1">
+// ============================================================
+// 🎟️ NEOCLASS — ACCEPTATION D'UNE INVITATION
+//
+// Page atteinte par l'enseignant depuis le lien reçu. Il y crée son
+// compte : c'est LUI qui choisit son mot de passe, l'établissement ne
+// le connaît jamais.
+//
+// À la création, le compte est rattaché à l'établissement avec les
+// matières et les classes définies par l'école, et l'invitation est
+// marquée comme utilisée.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  let _invite = null;
+  let _token = '';
+
+  // Le jeton peut arriver en paramètre d'URL ou dans le fragment,
+  // selon la façon dont le lien a été partagé et recollé.
+  function jetonDepuisUrl() {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('invitation')) return p.get('invitation');
+      const h = String(window.location.hash || '');
+      const m = h.match(/invitation[=\/]([A-Za-z0-9]+)/);
+      if (m) return m[1];
+    } catch (e) { /* URL inhabituelle */ }
+    return '';
+  }
+
+  function cadre(contenu) {
+    return '<div class="auth-page"><div class="auth-card card animate-fade" style="max-width:520px;">' +
+      contenu + '</div></div>';
+  }
+
+  function render(app, token) {
+    _token = token || jetonDepuisUrl();
+    if (!_token) { navigate('home'); return; }
+
+    app.innerHTML = cadre(
+      '<div style="text-align:center;padding:26px 0;">' +
+        '<div class="sch-skel" style="height:64px;width:64px;border-radius:18px;margin:0 auto 16px;"></div>' +
+        '<div class="sch-skel sch-skel-line" style="width:60%;margin:0 auto 8px;"></div>' +
+        '<div class="sch-skel sch-skel-line" style="width:40%;margin:0 auto;"></div>' +
+      '</div>');
+
+    db.collection('schoolInvites').doc(_token).get().then(function (d) {
+      if (!d.exists) return echec('Cette invitation n\'existe pas.',
+        'Le lien est peut-être incomplet. Demandez à votre établissement de vous en renvoyer un.');
+
+      _invite = d.data() || {};
+
+      if (_invite.status === 'accepted') return echec('Invitation déjà utilisée',
+        'Un compte a déjà été créé avec ce lien. Connectez-vous avec vos identifiants.', true);
+      if (_invite.status === 'revoked') return echec('Invitation annulée',
+        'Votre établissement a annulé cette invitation. Contactez-le pour en obtenir une nouvelle.');
+
+      const exp = U.toDate(_invite.expiresAt);
+      if (exp && exp < new Date()) return echec('Invitation expirée',
+        'Ce lien n\'est plus valable. Demandez à votre établissement de vous en générer un nouveau.');
+
+      formulaire();
+    }).catch(function (e) {
+      console.error('[Invitation] lecture :', e);
+      echec('Impossible de lire cette invitation',
+        'Vérifiez votre connexion, puis réessayez. Si le problème persiste, contactez votre établissement.');
+    });
+  }
+
+  function echec(titre, texte, proposerConnexion) {
+    const app = document.getElementById('app');
+    if (!app) return;
+    app.innerHTML = cadre(
+      '<div style="text-align:center;">' +
+        '<div style="font-size:2.6rem;margin-bottom:10px;">🔒</div>' +
+        '<h2 style="margin:0 0 8px;">' + U.esc(titre) + '</h2>' +
+        '<p style="color:var(--text-secondary);font-size:.9rem;line-height:1.6;margin-bottom:22px;">' + U.esc(texte) + '</p>' +
+        (proposerConnexion
+          ? '<button class="btn btn-primary btn-block" onclick="navigate(\'login\')">Se connecter</button>'
+          : '') +
+        '<button class="btn btn-ghost btn-block mt-1" onclick="navigate(\'home\')">Retour à l\'accueil</button>' +
+      '</div>');
+  }
+
+  function formulaire() {
+    const app = document.getElementById('app');
+    if (!app) return;
+    const i = _invite;
+    const nom = ((i.firstName || '') + ' ' + (i.lastName || '')).trim();
+
+    app.innerHTML = cadre(
+      '<div style="text-align:center;margin-bottom:22px;">' +
+        (i.schoolLogo
+          ? '<img src="' + U.esc(i.schoolLogo) + '" alt="" style="width:64px;height:64px;border-radius:16px;object-fit:cover;" />'
+          : '<img src="./assets/neoclass-mark.png" alt="" style="width:64px;height:64px;object-fit:contain;" />') +
+        '<h2 style="margin:14px 0 6px;font-size:1.25rem;">Vous avez été invité à rejoindre<br>' +
+          '<span style="color:var(--primary);">' + U.esc(i.schoolName || 'un établissement') + '</span></h2>' +
+        '<p style="color:var(--text-secondary);font-size:.88rem;">sur NeoClass, en tant qu\'enseignant.</p>' +
+      '</div>' +
+
+      '<div class="sch-card" style="padding:14px;margin-bottom:18px;background:var(--bg);">' +
+        '<div style="display:grid;gap:9px;font-size:.85rem;">' +
+          ligne('Nom', nom) +
+          ligne('Matières', (i.subjects || []).join(', ')) +
+          ligne('Classes', (i.classNames || i.classIds || []).join(', ')) +
+        '</div>' +
+      '</div>' +
+
+      '<p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:14px;">' +
+        'Créez votre mot de passe. <strong>Votre établissement ne le connaîtra pas.</strong></p>' +
+
+      '<div class="form-group"><label>Votre email *</label>' +
+        '<input class="form-input" type="email" id="invAccEmail" value="' + U.esc(i.email || '') + '" ' +
+        'placeholder="vous@exemple.com" autocomplete="email" /></div>' +
+      '<div class="form-group"><label>Téléphone</label>' +
+        '<input class="form-input" id="invAccTel" value="' + U.esc(i.phone || '') + '" autocomplete="tel" /></div>' +
+      '<div class="form-group"><label>Mot de passe * <small style="color:var(--text-secondary);font-weight:400;">(8 caractères minimum)</small></label>' +
+        '<input class="form-input" type="password" id="invAccPwd" autocomplete="new-password" /></div>' +
+      '<div class="form-group"><label>Confirmer le mot de passe *</label>' +
+        '<input class="form-input" type="password" id="invAccPwd2" autocomplete="new-password" /></div>' +
+
+      '<button class="btn btn-primary btn-block btn-lg" id="invAccBtn" onclick="SchoolInviteAccept.creerCompte()">' +
+        'Créer mon compte enseignant</button>' +
+      '<p class="text-center mt-2" style="font-size:.8rem;color:var(--text-secondary);">' +
+        'Vous avez déjà un compte ? <a href="#" style="color:var(--primary);font-weight:600;" ' +
+        'onclick="event.preventDefault();navigate(\'login\')">Se connecter</a></p>');
+  }
+
+  function ligne(cle, val) {
+    return '<div style="display:flex;justify-content:space-between;gap:12px;">' +
+      '<span style="color:var(--text-secondary);">' + cle + '</span>' +
+      '<strong style="text-align:right;">' + U.esc(val || '—') + '</strong></div>';
+  }
+
+  function creerCompte() {
+    const email = (document.getElementById('invAccEmail').value || '').trim();
+    const tel = (document.getElementById('invAccTel').value || '').trim();
+    const pwd = document.getElementById('invAccPwd').value;
+    const pwd2 = document.getElementById('invAccPwd2').value;
+
+    if (!email) { showToast('Indiquez votre email', 'error'); return; }
+    if (!pwd || pwd.length < 8) { showToast('Mot de passe : 8 caractères minimum', 'error'); return; }
+    if (pwd !== pwd2) { showToast('Les deux mots de passe diffèrent', 'error'); return; }
+
+    const btn = document.getElementById('invAccBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Création en cours…'; }
+
+    const i = _invite;
+    const nom = ((i.firstName || '') + ' ' + (i.lastName || '')).trim();
+
+    auth.createUserWithEmailAndPassword(email, pwd).then(function (cred) {
+      const uid = cred.user.uid;
+      const profil = {
+        uid: uid,
+        fullName: nom,
+        firstName: i.firstName || '',
+        lastName: i.lastName || '',
+        email: email,
+        phone: tel,
+        // Enseignant d'établissement : distinct de « indep_teacher »,
+        // qui vend ses cours sur la plateforme.
+        role: 'teacher',
+        schoolId: i.schoolId,
+        schoolName: i.schoolName || '',
+        schoolLogo: i.schoolLogo || '',
+        subjects: i.subjects || [],
+        classIds: i.classIds || [],
+        classNames: i.classNames || [],
+        invitedBy: i.schoolId,
+        invitationToken: _token,
+        photoURL: '',
+        system: 'guinea',
+        contentType: 'mixte',
+        nabecoins: 0, streak: 0, totalXP: 0,
+        isOnline: true, isBanned: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      return db.collection('users').doc(uid).set(profil).then(function () {
+        // Fiche enseignant côté établissement, reliée au compte.
+        return db.collection('teachers').add({
+          uid: uid,
+          schoolId: i.schoolId,
+          name: nom,
+          firstName: i.firstName || '',
+          lastName: i.lastName || '',
+          email: email,
+          phone: tel,
+          subjects: i.subjects || [],
+          classIds: i.classIds || [],
+          classNames: i.classNames || [],
+          status: 'active',
+          isActive: true,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(function (e) {
+          // La fiche est secondaire : le compte existe déjà, on ne
+          // bloque pas l'enseignant pour autant.
+          console.warn('[Invitation] fiche enseignant :', e.code || e.message);
+        });
+      }).then(function () {
+        return db.collection('schoolInvites').doc(_token).update({
+          status: 'accepted',
+          acceptedBy: uid,
+          acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(function (e) { console.warn('[Invitation] clôture :', e.code || e.message); });
+      }).then(function () {
+        State.profile = profil;
+        // Nettoie l'URL pour que le jeton ne reste pas dans l'historique.
+        try { window.history.replaceState({}, '', window.location.pathname); } catch (e) { /* ignore */ }
+        showToast('Bienvenue ' + (i.firstName || '') + ' ! Votre compte est prêt.', 'success');
+        navigate('dashboard');
+      });
+    }).catch(function (e) {
+      console.error('[Invitation] création de compte :', e);
+      if (btn) { btn.disabled = false; btn.textContent = 'Créer mon compte enseignant'; }
+      const messages = {
+        'auth/email-already-in-use': 'Cet email a déjà un compte NeoClass. Connectez-vous, puis demandez à votre établissement de rattacher ce compte.',
+        'auth/invalid-email': 'Cet email n\'est pas valide.',
+        'auth/weak-password': 'Mot de passe trop simple. Choisissez-en un plus long.'
+      };
+      showToast(messages[e.code] || ('Erreur : ' + (e.message || e)), 'error');
+    });
+  }
+
+  window.SchoolInviteAccept = { render: render, creerCompte: creerCompte, jetonDepuisUrl: jetonDepuisUrl };
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['invitation'] = render;
+
+  // Un lien d'invitation ouvre directement cette page, avant toute
+  // tentative de connexion.
+  document.addEventListener('DOMContentLoaded', function () {
+    const t = jetonDepuisUrl();
+    if (!t) return;
+    let essais = 0;
+    const attendre = setInterval(function () {
+      essais++;
+      if (typeof navigate === 'function' && typeof db !== 'undefined') {
+        clearInterval(attendre);
+        const splash = document.getElementById('cinematicOpening');
+        if (splash) { splash.classList.add('hidden'); splash.style.display = 'none'; }
+        navigate('invitation');
+      } else if (essais > 60) {
+        clearInterval(attendre);
+      }
+    }, 120);
+  });
+})();
+
+</script>
+
+<!-- 🏫 Espace enseignant d'établissement -->
+<script id="sch-prof-espace-v1">
+// ============================================================
+// 🏫 NEOCLASS — ESPACE DE L'ENSEIGNANT D'ÉTABLISSEMENT
+//
+// Un enseignant ne voit QUE les classes auxquelles son école l'a
+// affecté, et QUE les élèves de ces classes. Le filtrage se fait sur
+// classIds, renseigné à la création de son compte par invitation.
+//
+// Il ne peut modifier aucune donnée administrative : ces pages sont en
+// consultation, la saisie se fait dans « Saisie des notes ».
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const C = U.COULEURS;
+
+  let _classes = [];
+  let _eleves = [];
+  let _notes = [];
+  let _filtre = '';
+  let _classeOuverte = '';
+
+  function estProfEcole() {
+    const p = (typeof State !== 'undefined' && State.profile) || {};
+    return (p.role === 'teacher' || p.role === 'indep_teacher') && !!p.schoolId;
+  }
+  function mesClasseIds() {
+    const p = State.profile || {};
+    return Array.isArray(p.classIds) ? p.classIds : [];
+  }
+
+  function charger() {
+    const p = State.profile || {};
+    const ids = mesClasseIds();
+
+    return Promise.all([
+      db.collection('classes').where('schoolId', '==', p.schoolId).get()
+        .catch(function () { return { docs: [] }; }),
+      db.collection('schools').doc(p.schoolId).collection('students').get()
+        .catch(function (e) { console.warn('[Prof] élèves :', e.code || e.message); return { docs: [] }; }),
+      db.collection('grades').where('schoolId', '==', p.schoolId).get()
+        .catch(function () { return { docs: [] }; })
+    ]).then(function (r) {
+      // Seules les classes affectées à cet enseignant.
+      _classes = r[0].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .filter(function (c) { return ids.indexOf(c.id) !== -1; });
+
+      const miennes = _classes.map(function (c) { return c.id; });
+      _eleves = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .filter(function (e) { return miennes.indexOf(e.classId) !== -1; });
+
+      // Seules les notes saisies par cet enseignant.
+      _notes = r[2].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .filter(function (g) { return g.teacherId === State.user.uid; });
+    });
+  }
+
+  function entete(titre, sous, actions) {
+    return '<header class="sch-head">' +
+      '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-chalkboard-user"></i></div>' +
+        '<div><h1>' + U.esc(titre) + '</h1>' +
+        '<div class="sch-head-sub"><span>' + U.esc(sous) + '</span></div></div></div>' +
+      '<div class="sch-head-actions">' + (actions || '') + '</div></header>';
+  }
+
+  function coquille(contenu) {
+    return '<div class="layout-dashboard">' +
+      '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(State.profile.role) + '</aside>' +
+      '<main class="main-content animate-fade"><div class="sch-page">' + contenu + '</div></main></div>';
+  }
+
+  function sansAffectation() {
+    return '<div class="sch-card"><div class="sch-empty">' +
+      '<i class="fas fa-school"></i><strong>Aucune classe ne vous est affectée</strong>' +
+      '<p>C\'est votre établissement qui vous affecte des classes et des matières. ' +
+      'Contactez son administration pour qu\'elle complète votre affectation.</p>' +
+      '<button class="sch-btn sch-btn-sm" onclick="navigate(\'inbox\')">' +
+        '<i class="fas fa-envelope"></i> Écrire à l\'établissement</button>' +
+      '</div></div>';
+  }
+
+  // ------------------------------------------------------------
+  // MES CLASSES
+  // ------------------------------------------------------------
+  function renderClasses(app) {
+    if (!estProfEcole()) { navigate('dashboard'); return; }
+    const p = State.profile || {};
+
+    app.innerHTML = coquille(
+      entete('Mes classes', (p.subjects || []).join(' · ') || 'Enseignant') +
+      '<div id="profClassesCorps"><div class="sch-card"><div class="sch-skel" style="height:150px"></div></div></div>');
+
+    charger().then(function () {
+      const el = document.getElementById('profClassesCorps');
+      if (!el) return;
+      if (!_classes.length) { el.innerHTML = sansAffectation(); return; }
+
+      el.innerHTML = '<div class="sch-charts">' + _classes.map(function (c) {
+        const eleves = _eleves.filter(function (e) { return e.classId === c.id; });
+        const lots = _notes.filter(function (g) { return g.classId === c.id; });
+        const enAttente = lots.filter(function (g) { return g.status === 'draft'; }).length;
+
+        return '<div class="sch-card sch-col-4">' +
+          '<div class="sch-card-head"><div>' +
+            '<h3 class="sch-card-title">' + U.esc(c.name) + '</h3>' +
+            '<p class="sch-card-sub">' + U.esc(c.level || '') +
+              (c.room ? ' · Salle ' + U.esc(c.room) : '') + '</p></div>' +
+            (enAttente ? '<span class="sch-chip sch-chip-warn">' + enAttente + ' brouillon' + (enAttente > 1 ? 's' : '') + '</span>' : '') +
+          '</div>' +
+          '<div style="display:flex;gap:18px;margin:12px 0;">' +
+            bloc(eleves.length, 'élèves', C.violet) +
+            bloc(lots.length, 'évaluations', C.teal) +
+          '</div>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+            '<button class="sch-btn sch-btn-sm sch-btn-primary" onclick="ProfEspace.ouvrirClasse(\'' + c.id + '\')">' +
+              '<i class="fas fa-users"></i> Les élèves</button>' +
+            '<button class="sch-btn sch-btn-sm" onclick="navigate(\'prof-grades-entry\')">' +
+              '<i class="fas fa-pen"></i> Noter</button>' +
+          '</div></div>';
+      }).join('') + '</div>';
+    });
+  }
+
+  function bloc(n, libelle, couleur) {
+    return '<div><div style="font-size:1.5rem;font-weight:800;color:' + couleur + ';line-height:1;">' + U.nombre(n) + '</div>' +
+      '<div style="font-size:.74rem;color:var(--text-secondary);font-weight:600;margin-top:3px;">' + libelle + '</div></div>';
+  }
+
+  // ------------------------------------------------------------
+  // MES ÉLÈVES
+  // ------------------------------------------------------------
+  function renderEleves(app) {
+    if (!estProfEcole()) { navigate('dashboard'); return; }
+
+    app.innerHTML = coquille(
+      entete('Mes élèves', 'Uniquement les élèves de vos classes',
+        '<div class="sch-search"><i class="fas fa-magnifying-glass"></i>' +
+        '<input type="search" placeholder="Rechercher un élève…" oninput="ProfEspace.filtrer(this.value)" /></div>') +
+      '<div class="sch-toolbar"><select class="sch-select" id="profFiltreClasse" ' +
+        'onchange="ProfEspace.filtrerClasse(this.value)"><option value="">Chargement…</option></select></div>' +
+      '<div id="profElevesCorps"><div class="sch-card"><div class="sch-skel" style="height:150px"></div></div></div>');
+
+    charger().then(function () {
+      const sel = document.getElementById('profFiltreClasse');
+      if (sel) {
+        sel.innerHTML = '<option value="">Toutes mes classes</option>' + _classes.map(function (c) {
+          return '<option value="' + c.id + '"' + (_classeOuverte === c.id ? ' selected' : '') + '>' + U.esc(c.name) + '</option>';
+        }).join('');
+      }
+      afficherEleves();
+    });
+  }
+
+  function afficherEleves() {
+    const el = document.getElementById('profElevesCorps');
+    if (!el) return;
+    if (!_classes.length) { el.innerHTML = sansAffectation(); return; }
+
+    const q = _filtre.toLowerCase();
+    const liste = _eleves.filter(function (e) {
+      if (_classeOuverte && e.classId !== _classeOuverte) return false;
+      if (!q) return true;
+      return ((e.firstName || '') + ' ' + (e.lastName || '') + ' ' + (e.fullName || '')).toLowerCase().indexOf(q) !== -1;
+    });
+
+    if (!liste.length) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty"><i class="fas fa-user-group"></i>' +
+        '<strong>Aucun élève</strong><p>' +
+        (_eleves.length ? 'Aucun élève ne correspond à votre recherche.' : 'Vos classes ne comptent encore aucun élève inscrit.') +
+        '</p></div></div>';
+      return;
+    }
+
+    el.innerHTML = '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+      '<th>Élève</th><th>Classe</th><th class="num">Ma moyenne</th><th>Notes saisies</th>' +
+      '</tr></thead><tbody>' +
+      liste.map(function (e) {
+        const cle = e.uid || e.id;
+        const classe = _classes.filter(function (c) { return c.id === e.classId; })[0];
+        const siennes = [];
+        _notes.forEach(function (g) {
+          (g.grades || []).forEach(function (n) {
+            if ((n.studentId || '') === cle) {
+              const v = parseFloat(n.grade);
+              if (!isNaN(v)) siennes.push(v);
+            }
+          });
+        });
+        const moy = U.moyenne(siennes);
+        const nom = ((e.firstName || '') + ' ' + (e.lastName || '')).trim() || e.fullName || 'Sans nom';
+        return '<tr>' +
+          '<td><strong>' + U.esc(nom) + '</strong></td>' +
+          '<td>' + U.esc(classe ? classe.name : (e.className || '—')) + '</td>' +
+          '<td class="num">' + (moy == null ? '—' : U.pourcent(moy, 2)) + '</td>' +
+          '<td>' + (siennes.length
+            ? '<span class="sch-chip sch-chip-ok">' + siennes.length + '</span>'
+            : '<span class="sch-chip sch-chip-mute">aucune</span>') + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table></div>' +
+      '<div class="sch-note" style="margin-top:14px;"><i class="fas fa-circle-info"></i><div>' +
+        'La moyenne affichée ne porte que sur <strong>vos</strong> évaluations. ' +
+        'Les notes saisies par vos collègues ne vous sont pas accessibles.</div></div>';
+  }
+
+  window.ProfEspace = {
+    renderClasses: renderClasses,
+    renderEleves: renderEleves,
+    filtrer: function (q) { _filtre = (q || '').trim(); afficherEleves(); },
+    filtrerClasse: function (id) { _classeOuverte = id; afficherEleves(); },
+    ouvrirClasse: function (id) {
+      _classeOuverte = id;
+      const app = document.getElementById('app');
+      if (app) renderEleves(app);
+    }
+  };
+
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['prof-mes-classes'] = renderClasses;
+  window.NC_PAGES['prof-mes-eleves'] = renderEleves;
+})();
+
+</script>
+
+<!-- Branchement des invitations -->
+<script id="sch-hook-invites-v1">
+// ============================================================
+// Branchement des invitations sur la page « Enseignants ».
+//
+// renderTeachersManagement vit dans neoclass-school-v2.js et construit
+// sa page d'un bloc. Plutôt que de la réécrire, on l'enveloppe : elle
+// s'exécute normalement, puis on insère le bouton d'invitation et la
+// liste des invitations en attente.
+// ============================================================
+(function () {
+  'use strict';
+
+  function injecter() {
+    const main = document.querySelector('.main-content');
+    if (!main || document.getElementById('invZone')) return;
+
+    // La page des enseignants se reconnaît à son titre.
+    const titre = main.querySelector('h1, h2');
+    if (!titre || !/enseignant|professeur/i.test(titre.textContent || '')) return;
+
+    const zone = document.createElement('div');
+    zone.id = 'invZone';
+    zone.innerHTML =
+      '<div class="sch-note" style="margin:16px 0;"><i class="fas fa-shield-halved"></i><div>' +
+        '<strong>Les mots de passe ne se distribuent plus.</strong><br>' +
+        'Invitez l\'enseignant : il reçoit un lien, crée son compte et choisit son mot de passe. ' +
+        'Vous ne le connaîtrez jamais, et son compte est rattaché automatiquement à votre établissement.' +
+      '</div></div>' +
+      '<button class="sch-btn sch-btn-primary" style="margin-bottom:18px;" ' +
+        'onclick="SchoolInvites.ouvrirFormulaire()">' +
+        '<i class="fas fa-paper-plane"></i> Inviter un enseignant</button>' +
+      '<div id="invListe"></div>';
+
+    titre.parentNode.insertBefore(zone, titre.nextSibling);
+
+    if (window.SchoolInvites) {
+      SchoolInvites.chargerContexte().then(function () {
+        const l = document.getElementById('invListe');
+        if (l) l.innerHTML = SchoolInvites.htmlListe();
+      });
+    }
+  }
+
+  // La page se reconstruit à chaque navigation : on surveille.
+  document.addEventListener('DOMContentLoaded', function () {
+    setInterval(function () {
+      if (typeof State !== 'undefined' && State.profile &&
+          State.profile.role === 'school' && State.currentPage === 'school-teachers') {
+        injecter();
+      }
+    }, 600);
+  });
 })();
 
 </script>
