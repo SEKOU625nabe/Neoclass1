@@ -3647,6 +3647,226 @@ body.has-school-banner .school-banner {
       .nc-splash-bar,.nc-splash-bar i{animation:none;}
     }
   </style>
+  <style id="neo-player-style">
+    /* ============================================================
+       LECTEUR VIDÉO DE MARQUE
+       Habillage NeoClass : le logo s'affiche au lancement, puis se
+       replie en filigrane en bas à droite pendant toute la lecture.
+       ============================================================ */
+    .neo-player{
+      position:relative;width:100%;aspect-ratio:var(--neo-ratio,16/9);
+      background:#0b0b14;border-radius:14px;overflow:hidden;
+      box-shadow:0 10px 34px rgba(0,0,0,.28);
+    }
+    .neo-player>iframe,.neo-player>video{
+      position:absolute;inset:0;width:100%;height:100%;border:0;
+      display:block;background:#000;object-fit:contain;
+    }
+
+    /* --- Intro : logo centré, puis effacement --- */
+    .neo-player-intro{
+      position:absolute;inset:0;z-index:3;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+      background:radial-gradient(120% 90% at 50% 40%,#2d2170 0%,#16103c 60%,#0b0b14 100%);
+      transition:opacity .55s ease,visibility .55s ease;
+      pointer-events:none;
+    }
+    .neo-player-intro img{
+      width:88px;height:88px;object-fit:contain;
+      filter:drop-shadow(0 10px 26px rgba(0,0,0,.45));
+      animation:neoIntroMark .75s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes neoIntroMark{
+      from{opacity:0;transform:scale(.72) translateY(10px);}
+      to{opacity:1;transform:none;}
+    }
+    .neo-player-intro-nom{
+      font-size:1.25rem;font-weight:800;color:#fff;letter-spacing:-.01em;
+      animation:neoIntroTexte .6s ease .16s both;
+    }
+    .neo-player-intro-nom span{color:#fbbf24;}
+    .neo-player-intro-titre{
+      font-size:.8rem;color:rgba(255,255,255,.66);max-width:80%;text-align:center;
+      animation:neoIntroTexte .6s ease .26s both;
+    }
+    @keyframes neoIntroTexte{
+      from{opacity:0;transform:translateY(8px);}
+      to{opacity:1;transform:none;}
+    }
+    /* Une fois l'intro terminée, elle disparaît et laisse la vidéo. */
+    .neo-player-intro.neo-fini{opacity:0;visibility:hidden;}
+
+    /* --- Filigrane permanent, à la manière des grandes plateformes --- */
+    .neo-player-filigrane{
+      position:absolute;right:12px;bottom:12px;z-index:2;
+      width:34px;height:34px;object-fit:contain;
+      opacity:.62;pointer-events:none;
+      filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));
+      transition:opacity .25s ease;
+      /* Apparaît quand l'intro s'efface. */
+      animation:neoFiligrane .5s ease 1.5s both;
+    }
+    @keyframes neoFiligrane{from{opacity:0;}to{opacity:.62;}}
+    .neo-player:hover .neo-player-filigrane{opacity:.85;}
+
+    /* Sur un lecteur natif, les contrôles occupent le bas : on remonte
+       le filigrane pour ne pas le recouvrir. */
+    .neo-player>video ~ .neo-player-filigrane{bottom:46px;}
+
+    /* --- Étiquette de provenance --- */
+    .neo-player-source{
+      position:absolute;left:12px;top:12px;z-index:2;
+      display:inline-flex;align-items:center;gap:6px;
+      padding:4px 10px;border-radius:99px;
+      background:rgba(0,0,0,.52);backdrop-filter:blur(6px);
+      color:rgba(255,255,255,.82);font-size:.7rem;font-weight:600;
+      opacity:0;transition:opacity .25s ease;pointer-events:none;
+    }
+    .neo-player:hover .neo-player-source{opacity:1;}
+
+    /* --- État vide / lien invalide --- */
+    .neo-player-vide{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:9px;text-align:center;padding:26px;
+      color:rgba(255,255,255,.66);background:#14141f;
+    }
+    .neo-player-vide i{font-size:1.9rem;opacity:.5;}
+    .neo-player-vide span{font-size:.9rem;font-weight:600;color:rgba(255,255,255,.86);}
+    .neo-player-vide small{font-size:.76rem;max-width:400px;line-height:1.5;}
+
+    @media(max-width:520px){
+      .neo-player-intro img{width:64px;height:64px;}
+      .neo-player-intro-nom{font-size:1.05rem;}
+      .neo-player-filigrane{width:26px;height:26px;right:9px;bottom:9px;}
+    }
+
+    @media(prefers-reduced-motion:reduce){
+      .neo-player-intro img,.neo-player-intro-nom,
+      .neo-player-intro-titre,.neo-player-filigrane{animation:none;}
+      .neo-player-filigrane{opacity:.62;}
+    }
+  </style>
+  <style id="apropos-style">
+    /* ============================================================
+       PAGE « QUI NOUS SOMMES »
+       ============================================================ */
+    .apropos{padding-top:var(--nav-height);background:var(--bg);color:var(--text);}
+    .apropos-conteneur{max-width:1080px;margin:0 auto;padding:0 24px;}
+
+    /* --- Bandeau --- */
+    .apropos-hero{
+      position:relative;overflow:hidden;text-align:center;
+      padding:70px 0 64px;
+      background:radial-gradient(120% 100% at 50% 0%,#3a2a8c 0%,#241a63 48%,#150f36 100%);
+      color:#fff;
+    }
+    .apropos-logo{width:78px;height:78px;object-fit:contain;margin-bottom:22px;
+      filter:drop-shadow(0 12px 30px rgba(0,0,0,.4));}
+    .apropos-hero h1{
+      font-size:clamp(1.7rem,4.2vw,2.9rem);font-weight:900;line-height:1.14;
+      margin:0 0 18px;letter-spacing:-.025em;color:#fff;
+    }
+    .apropos-hero h1 span{color:#fbbf24;}
+    .apropos-chapeau{
+      max-width:660px;margin:0 auto 28px;font-size:1.02rem;line-height:1.65;
+      color:rgba(255,255,255,.76);
+    }
+    .apropos-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+
+    /* --- Sections --- */
+    .apropos-section{padding:58px 0;border-bottom:1px solid var(--border);}
+    .apropos-surtitre{
+      display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.16em;
+      text-transform:uppercase;color:var(--primary);
+      background:rgba(108,99,255,.1);padding:5px 12px;border-radius:99px;margin-bottom:14px;
+    }
+    .apropos-section h2{
+      font-size:clamp(1.35rem,2.6vw,1.95rem);font-weight:800;
+      margin:0 0 14px;letter-spacing:-.02em;line-height:1.2;
+    }
+    .apropos-intro{color:var(--text-secondary);font-size:.97rem;margin:0 0 30px;max-width:640px;}
+
+    .apropos-recit{max-width:720px;}
+    .apropos-recit p{
+      font-size:1rem;line-height:1.78;color:var(--text-secondary);margin:0 0 15px;
+    }
+    .apropos-recit strong{color:var(--text);font-weight:700;}
+
+    /* --- Cartes publics --- */
+    .apropos-grille{
+      display:grid;gap:20px;
+      grid-template-columns:repeat(auto-fit,minmax(268px,1fr));
+    }
+    .apropos-carte{
+      position:relative;background:var(--bg-card);border:1px solid var(--border);
+      border-radius:16px;padding:24px;overflow:hidden;
+      transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+    }
+    .apropos-carte::before{
+      content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--c);
+    }
+    .apropos-carte:hover{
+      transform:translateY(-3px);border-color:var(--c);
+      box-shadow:0 12px 34px rgba(0,0,0,.09);
+    }
+    .apropos-carte-icone{
+      display:flex;align-items:center;justify-content:center;
+      width:44px;height:44px;border-radius:12px;margin-bottom:15px;
+      background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);font-size:1.15rem;
+    }
+    .apropos-carte h3{font-size:1.05rem;font-weight:800;margin:0 0 9px;}
+    .apropos-carte p{font-size:.9rem;line-height:1.62;color:var(--text-secondary);margin:0 0 15px;}
+    .apropos-carte ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:7px;}
+    .apropos-carte li{
+      display:flex;align-items:flex-start;gap:8px;
+      font-size:.84rem;font-weight:600;color:var(--text);
+    }
+    .apropos-carte li i{color:var(--c);font-size:.72rem;margin-top:4px;flex:0 0 auto;}
+
+    /* --- Darx --- */
+    .apropos-darx{
+      display:grid;grid-template-columns:1.6fr 1fr;gap:34px;align-items:center;
+      padding:44px;margin:58px 0;border-radius:20px;
+      background:linear-gradient(135deg,rgba(124,92,255,.1),rgba(14,165,164,.08));
+      border:1px solid var(--border);
+    }
+    .apropos-darx h2{font-size:clamp(1.3rem,2.4vw,1.8rem);font-weight:800;margin:0 0 14px;letter-spacing:-.02em;}
+    .apropos-darx p{font-size:.97rem;line-height:1.72;color:var(--text-secondary);margin:0 0 13px;}
+    .apropos-darx-visuel{
+      display:flex;align-items:center;justify-content:center;
+      aspect-ratio:1;border-radius:20px;
+      background:linear-gradient(135deg,#7c5cff,#0ea5a4);
+      color:#fff;font-size:4.4rem;
+      box-shadow:0 18px 44px rgba(124,92,255,.32);
+    }
+
+    /* --- Valeurs --- */
+    .apropos-valeurs{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
+    .apropos-valeur{display:flex;gap:15px;align-items:flex-start;}
+    .apropos-valeur-icone{
+      display:flex;align-items:center;justify-content:center;flex:0 0 42px;
+      width:42px;height:42px;border-radius:11px;
+      background:rgba(108,99,255,.11);color:var(--primary);font-size:1.02rem;
+    }
+    .apropos-valeur h3{font-size:.99rem;font-weight:800;margin:0 0 6px;}
+    .apropos-valeur p{font-size:.88rem;line-height:1.66;color:var(--text-secondary);margin:0;}
+
+    /* --- Contact --- */
+    .apropos-contact{text-align:center;padding:58px 0 76px;}
+    .apropos-contact h2{font-size:clamp(1.35rem,2.6vw,1.95rem);font-weight:800;margin:0 0 12px;letter-spacing:-.02em;}
+    .apropos-contact p{color:var(--text-secondary);max-width:520px;margin:0 auto 26px;line-height:1.66;}
+
+    @media(max-width:860px){
+      .apropos-darx{grid-template-columns:1fr;padding:30px;}
+      .apropos-darx-visuel{aspect-ratio:2.4;font-size:3.2rem;}
+    }
+    @media(max-width:520px){
+      .apropos-hero{padding:48px 0 44px;}
+      .apropos-conteneur{padding:0 16px;}
+      .apropos-section{padding:42px 0;}
+      .apropos-actions .nc-btn{width:100%;}
+    }
+  </style>
 </head>
   <div class="page-loader" id="pageLoader" style="display:none;"><div class="spinner"></div><span style="font-weight:600;color:var(--text-secondary);">Chargement de Neoclass...</span></div>
   <div class="blue-light-filter" id="blueLightFilter"></div>
@@ -13451,41 +13671,23 @@ function normalizeClassTag(value) {
         // Affichage vidéo intégrée
         let videoSection = '';
         if(c.videoUrl) {
-          const youtubeId = extractYouTubeId(c.videoUrl);
-          if(youtubeId) {
-            // Vidéo YouTube intégrée dans l'app
-            videoSection = `
-              <div class="mt-3" style="border-radius:15px;overflow:hidden;background:#000;">
-                <div style="position:relative;padding-bottom:56.25%;height:0;">
-                  <iframe src="https://www.youtube.com/embed/${youtubeId}?rel=0" 
-                    style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen></iframe>
-                </div>
-                <div style="padding:10px;background:#f5f5f5;display:flex;gap:10px;flex-wrap:wrap;">
-                  <button onclick="closeModal();openVideoPlayer('https://www.youtube.com/embed/${youtubeId}?rel=0&autoplay=1', 'youtube')" 
-                    class="btn btn-primary btn-sm" style="flex:1;min-width:120px;">
-                    🎬 Mode plein écran
-                  </button>
-                </div>
-              </div>
-            `;
-          } else if(c.videoUrl.startsWith('http')) {
-            // Vidéo uploadée ou autre URL
-            videoSection = `
-              <div class="mt-3" style="border-radius:15px;overflow:hidden;background:#000;">
-                <video controls style="width:100%;max-height:300px;">
-                  <source src="${c.videoUrl}">
-                </video>
-                <div style="padding:10px;background:#f5f5f5;display:flex;gap:10px;flex-wrap:wrap;">
-                  <button onclick="closeModal();openVideoPlayer('${c.videoUrl}', 'local', ${JSON.stringify(c.subtitles || [])})" 
-                    class="btn btn-primary btn-sm" style="flex:1;min-width:120px;">
-                    🎬 Mode plein écran avec sous-titres
-                  </button>
-                </div>
-              </div>
-            `;
-          }
+          // Un seul lecteur pour toutes les sources (YouTube, Vimeo, Drive,
+          // Dailymotion, fichier direct). L'ancienne version fabriquait
+          // l'URL d'integration a la main : un lien non reconnu par
+          // l'expression reguliere produisait un lecteur vide.
+          //
+          // encodeURIComponent evite tout echappement de guillemets dans
+          // l'attribut onclick, et neutralise au passage une injection
+          // possible par un titre ou une URL malveillants.
+          const urlCodee = encodeURIComponent(c.videoUrl || '');
+          const titreCode = encodeURIComponent(c.title || '');
+          videoSection = `
+            <div class="mt-3">
+              ${NeoPlayer.html(c.videoUrl, { titre: c.title || '' })}
+              <button onclick="closeModal();NeoPlayer.ouvrir(decodeURIComponent('${urlCodee}'),decodeURIComponent('${titreCode}'))"
+                class="btn btn-primary btn-sm mt-2" style="width:100%;">Mode plein écran</button>
+            </div>
+          `;
         }
         
         // Affichage des chapitres si disponibles
@@ -15552,19 +15754,11 @@ function normalizeClassTag(value) {
                                 <span id="likeCount${vi}">${v.likes || 0}</span>
                               </button>
                             </div>
-                            ${v.videoUrl ? `
-                              ${v.videoUrl.includes('youtube') || v.videoUrl.includes('youtu.be') ? `
-                                <div style="position:relative;padding-top:56.25%;border-radius:8px;overflow:hidden;">
-                                  <iframe src="https://www.youtube.com/embed/${extractYoutubeId(v.videoUrl)}" 
-                                          style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;" 
-                                          allowfullscreen></iframe>
-                                </div>
-                              ` : `
-                                <video controls style="width:100%;border-radius:8px;">
-                                  <source src="${v.videoUrl}" type="video/mp4">
-                                </video>
-                              `}
-                            ` : '<p style="color:var(--text-secondary);">Vidéo non disponible</p>'}
+                            ${/* Le lecteur de marque reconnait YouTube, Vimeo, Drive,
+                                 Dailymotion et les fichiers directs. L ancienne version
+                                 construisait l URL d integration a la main : un lien non
+                                 reconnu produisait un lecteur vide. */''}
+                            ${NeoPlayer.html(v.videoUrl, { titre: v.title || '' })}
                           </div>
                         `).join('')}
                       </div>
@@ -46134,6 +46328,547 @@ function handleDocumentUpload(e) {
   window.StudentResults = { render: render };
   window.NC_PAGES = window.NC_PAGES || {};
   window.NC_PAGES['mes-resultats'] = render;
+})();
+
+</script>
+
+<!-- ▶️ Lecteur vidéo de marque -->
+<script id="neo-player-v1">
+// ============================================================
+// ▶️ NEOCLASS — LECTEUR VIDÉO DE MARQUE
+//
+// Une seule source de vérité pour toutes les vidéos de la plateforme.
+//
+// 1. Les vidéos ne sont plus téléversées : on enregistre un LIEN
+//    (YouTube, Vimeo, Google Drive, Dailymotion, ou fichier direct).
+//    L'hébergement et la bande passante sont assurés par la plateforme
+//    d'origine, la base ne stocke qu'une chaîne de caractères.
+//
+// 2. Chaque lecture commence par l'habillage NeoClass : le logo apparaît
+//    au centre, puis se replie en filigrane en bas à droite, comme sur
+//    les grandes plateformes.
+//
+// Deux extracteurs d'identifiant YouTube coexistaient dans le code avec
+// des expressions régulières incompatibles : l'un exigeait exactement
+// 11 caractères, l'autre acceptait n'importe quoi. Les liens courts et
+// les liens avec paramètres échouaient selon l'endroit où ils étaient
+// lus. Tout passe désormais par analyser().
+// ============================================================
+(function () {
+  'use strict';
+
+  const LOGO = './assets/neoclass-mark.png';
+
+  // ------------------------------------------------------------
+  // Analyse des liens
+  // ------------------------------------------------------------
+
+  const SOURCES = [
+    {
+      type: 'youtube',
+      nom: 'YouTube',
+      icone: 'fa-youtube',
+      motifs: [
+        /youtu\.be\/([\w-]{11})/,
+        /youtube\.com\/embed\/([\w-]{11})/,
+        /youtube\.com\/shorts\/([\w-]{11})/,
+        /youtube\.com\/v\/([\w-]{11})/,
+        /youtube\.com\/live\/([\w-]{11})/,
+        /[?&]v=([\w-]{11})/
+      ],
+      embed: function (id, o) {
+        const p = ['rel=0', 'modestbranding=1', 'playsinline=1'];
+        if (o && o.autoplay) p.push('autoplay=1');
+        if (o && o.debut) p.push('start=' + Math.floor(o.debut));
+        return 'https://www.youtube.com/embed/' + id + '?' + p.join('&');
+      }
+    },
+    {
+      type: 'vimeo',
+      nom: 'Vimeo',
+      icone: 'fa-vimeo',
+      motifs: [/vimeo\.com\/(?:video\/)?(\d{6,})/, /player\.vimeo\.com\/video\/(\d{6,})/],
+      embed: function (id, o) {
+        return 'https://player.vimeo.com/video/' + id + (o && o.autoplay ? '?autoplay=1' : '');
+      }
+    },
+    {
+      type: 'drive',
+      nom: 'Google Drive',
+      icone: 'fa-google-drive',
+      motifs: [/drive\.google\.com\/file\/d\/([\w-]+)/, /drive\.google\.com\/open\?id=([\w-]+)/],
+      embed: function (id) { return 'https://drive.google.com/file/d/' + id + '/preview'; }
+    },
+    {
+      type: 'dailymotion',
+      nom: 'Dailymotion',
+      icone: 'fa-dailymotion',
+      motifs: [/dailymotion\.com\/video\/([\w]+)/, /dai\.ly\/([\w]+)/],
+      embed: function (id, o) {
+        return 'https://www.dailymotion.com/embed/video/' + id + (o && o.autoplay ? '?autoplay=1' : '');
+      }
+    }
+  ];
+
+  // Retourne { type, nom, id, embedUrl, direct } ou null si le lien est
+  // vide ; { type:'inconnu' } si le lien n'est reconnu par aucune source.
+  function analyser(url, options) {
+    const u = String(url || '').trim();
+    if (!u) return null;
+
+    for (let i = 0; i < SOURCES.length; i++) {
+      const s = SOURCES[i];
+      for (let j = 0; j < s.motifs.length; j++) {
+        const m = u.match(s.motifs[j]);
+        if (m && m[1]) {
+          return {
+            type: s.type, nom: s.nom, icone: s.icone, id: m[1],
+            embedUrl: s.embed(m[1], options || {}), direct: false, source: u
+          };
+        }
+      }
+    }
+
+    // Fichier vidéo servi directement (Storage, CDN, serveur de l'école).
+    if (/^https?:\/\//i.test(u)) {
+      const estVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(u);
+      return {
+        type: estVideo ? 'direct' : 'inconnu',
+        nom: estVideo ? 'Fichier vidéo' : 'Lien non reconnu',
+        icone: estVideo ? 'fa-file-video' : 'fa-circle-question',
+        id: '', embedUrl: u, direct: estVideo, source: u
+      };
+    }
+
+    return { type: 'inconnu', nom: 'Lien invalide', icone: 'fa-triangle-exclamation', id: '', embedUrl: '', direct: false, source: u };
+  }
+
+  function estValide(url) {
+    const a = analyser(url);
+    return !!(a && a.type !== 'inconnu');
+  }
+
+  // ------------------------------------------------------------
+  // Rendu
+  // ------------------------------------------------------------
+
+  let _compteur = 0;
+
+  // Produit le HTML du lecteur. `options` :
+  //   autoplay  : démarre la lecture
+  //   intro     : false pour sauter l'habillage (aperçus, vignettes)
+  //   filigrane : false pour retirer le logo permanent
+  //   titre     : affiché pendant l'intro
+  //   ratio     : '16/9' par défaut
+  function html(url, options) {
+    const o = options || {};
+    const a = analyser(url, o);
+    const id = 'neoP' + (++_compteur);
+
+    if (!a) {
+      return '<div class="neo-player neo-player-vide"><i class="fas fa-video-slash"></i>' +
+        '<span>Aucune vidéo associée à ce contenu.</span></div>';
+    }
+    if (a.type === 'inconnu') {
+      return '<div class="neo-player neo-player-vide"><i class="fas fa-triangle-exclamation"></i>' +
+        '<span>Lien vidéo non reconnu.</span>' +
+        '<small>Formats acceptés : YouTube, Vimeo, Google Drive, Dailymotion, ou un fichier .mp4 accessible en ligne.</small></div>';
+    }
+
+    const corps = a.direct
+      ? '<video id="' + id + '_v" controls playsinline preload="metadata"' +
+          (o.autoplay ? ' autoplay' : '') + ' src="' + esc(a.embedUrl) + '"></video>'
+      : '<iframe id="' + id + '_v" src="' + esc(a.embedUrl) + '" frameborder="0" ' +
+          'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ' +
+          'allowfullscreen loading="lazy"></iframe>';
+
+    const intro = o.intro === false ? '' :
+      '<div class="neo-player-intro" data-neo-intro="' + id + '">' +
+        '<img src="' + LOGO + '" alt="" />' +
+        '<div class="neo-player-intro-nom">Neo<span>Class</span></div>' +
+        (o.titre ? '<div class="neo-player-intro-titre">' + esc(o.titre) + '</div>' : '') +
+      '</div>';
+
+    const filigrane = o.filigrane === false ? '' :
+      '<img class="neo-player-filigrane" src="' + LOGO + '" alt="NeoClass" title="NeoClass" />';
+
+    return '<div class="neo-player" id="' + id + '" style="--neo-ratio:' + (o.ratio || '16/9') + '">' +
+      corps + intro + filigrane +
+      '<span class="neo-player-source"><i class="fab ' + a.icone + '"></i> ' + esc(a.nom) + '</span>' +
+    '</div>';
+  }
+
+  // À appeler après insertion dans le DOM : lance le repli de l'intro.
+  function activer(racine) {
+    const zone = racine || document;
+    zone.querySelectorAll('[data-neo-intro]').forEach(function (el) {
+      if (el.dataset.neoLance) return;
+      el.dataset.neoLance = '1';
+      // L'intro s'efface d'elle-même ; le filigrane prend le relais.
+      setTimeout(function () { el.classList.add('neo-fini'); }, 1500);
+    });
+  }
+
+  // Raccourci : injecte le lecteur dans un conteneur et l'active.
+  function monter(conteneur, url, options) {
+    const el = typeof conteneur === 'string' ? document.getElementById(conteneur) : conteneur;
+    if (!el) return false;
+    el.innerHTML = html(url, options);
+    activer(el);
+    return true;
+  }
+
+  // Ouvre la vidéo en grand dans la fenêtre modale de l'application.
+  function ouvrir(url, titre) {
+    if (typeof openModal !== 'function') return;
+    openModal(
+      (titre ? '<h3 style="margin-bottom:14px;">' + esc(titre) + '</h3>' : '') +
+      html(url, { autoplay: true, titre: titre }) +
+      '<button class="sch-btn" style="width:100%;margin-top:14px;" onclick="closeModal()">Fermer</button>'
+    );
+    setTimeout(function () { activer(document); }, 30);
+  }
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  window.NeoPlayer = {
+    SOURCES: SOURCES,
+    analyser: analyser,
+    estValide: estValide,
+    html: html,
+    activer: activer,
+    monter: monter,
+    ouvrir: ouvrir
+  };
+
+  // Les lecteurs insérés par d'autres écrans s'activent tout seuls.
+  document.addEventListener('DOMContentLoaded', function () {
+    setInterval(function () { activer(document); }, 800);
+  });
+})();
+
+</script>
+
+<!-- 🔒 Cloisonnement des contenus -->
+<script id="neo-cloisonnement-v1">
+// ============================================================
+// 🔒 NEOCLASS — CLOISONNEMENT DES CONTENUS
+//
+// Deux fuites corrigées ici :
+//
+// 1. ENTRE ÉTABLISSEMENTS. isCourseVisibleForStudent() ne regardait
+//    jamais le schoolId : un cours publié par l'école A apparaissait
+//    aux élèves de l'école B. C'est la fuite la plus grave.
+//
+// 2. ENTRE CLASSES. La règle « if (!courseClass) return true » rendait
+//    visible à tout le monde tout cours sans étiquette de classe. Un
+//    contenu de Terminale se retrouvait dans la liste d'un élève de 6e.
+//
+// La fonction d'origine est conservée et toujours appelée : on ne fait
+// qu'ajouter des conditions par-dessus. Aucun contenu qu'elle refusait
+// ne devient visible.
+// ============================================================
+(function () {
+  'use strict';
+
+  const original = window.isCourseVisibleForStudent;
+  if (typeof original !== 'function') {
+    console.warn('[Cloisonnement] isCourseVisibleForStudent introuvable : cloisonnement non appliqué.');
+    return;
+  }
+
+  function txt(v) { return String(v == null ? '' : v).trim(); }
+  function maj(v) { return txt(v).toUpperCase(); }
+
+  // Les classes s'écrivent de vingt façons : « 6e », « 6ème », « 6EME B »,
+  // « Terminale SM », « TSM »… On compare sur une forme réduite.
+  //
+  // Le suffixe ordinal n'est retiré qu'APRÈS un chiffre : retirer le « e »
+  // final de n'importe quel mot transformerait « Terminale SE » en « TS »,
+  // qui ne correspondrait plus à « TSE ».
+  function reduire(v) {
+    return maj(v)
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/TERMINALE?/g, 'T')
+      .replace(/(\d+)\s*(?:IEME|EME|ERE|ER|E|ND|ND?E)\b/g, '$1')
+      .replace(/[^A-Z0-9]/g, '');
+  }
+
+  function memeClasse(a, b) {
+    const ra = reduire(a), rb = reduire(b);
+    if (!ra || !rb) return false;
+    return ra === rb;
+  }
+
+  // Étiquettes de classe portées par un cours, quel que soit le champ.
+  function etiquettes(c) {
+    const brut = []
+      .concat(c.classIds || [], c.classes || [], c.targetClasses || [])
+      .concat([c.classId, c.className, c.classe, c.classLevel].filter(Boolean));
+    return brut.map(txt).filter(Boolean);
+  }
+
+  window.isCourseVisibleForStudent = function (course, options) {
+    // 1) La logique existante fait toujours autorité pour refuser.
+    if (!original.call(this, course, options)) return false;
+
+    const c = course || {};
+    const p = (typeof State !== 'undefined' && State.profile) || {};
+
+    // Un administrateur voit tout ; un éducateur voit ce qui le concerne.
+    if (p.role === 'admin' || p.role === 'superadmin') return true;
+
+    // ── Cloisonnement entre établissements ────────────────────
+    const ecoleCours = txt(c.schoolId);
+    const ecoleEleve = txt(p.schoolId);
+
+    if (ecoleCours) {
+      // Un cours rattaché à une école n'est visible que par ses membres.
+      if (ecoleCours !== ecoleEleve) return false;
+    }
+
+    // ── Cloisonnement entre classes ───────────────────────────
+    const tags = etiquettes(c);
+    const classeEleve = p.className || p.classId || p.classLevel || p.level;
+
+    if (tags.length) {
+      // Le cours cible des classes précises : l'élève doit en faire partie.
+      const ok = tags.some(function (t) {
+        return memeClasse(t, classeEleve) || maj(t) === 'TOUS' || maj(t) === 'ALL';
+      });
+      if (!ok) return false;
+    } else if (ecoleCours && ecoleCours === ecoleEleve) {
+      // Cours de l'établissement sans classe précisée : destiné à toute
+      // l'école. On le laisse passer, c'est un choix délibéré du chef
+      // d'établissement.
+      return true;
+    }
+
+    return true;
+  };
+
+  // ------------------------------------------------------------
+  // Diagnostic : compter ce qui est masqué et pourquoi.
+  // Utile quand une école dit « mes élèves ne voient plus rien ».
+  // ------------------------------------------------------------
+  window.diagnostiquerVisibilite = function (cours) {
+    const liste = cours || [];
+    const p = (typeof State !== 'undefined' && State.profile) || {};
+    const res = { total: liste.length, visibles: 0, autreEcole: 0, autreClasse: 0, autreMotif: 0 };
+
+    liste.forEach(function (c) {
+      if (window.isCourseVisibleForStudent(c)) { res.visibles++; return; }
+      const ecoleCours = txt(c.schoolId), ecoleEleve = txt(p.schoolId);
+      if (ecoleCours && ecoleCours !== ecoleEleve) { res.autreEcole++; return; }
+      const tags = etiquettes(c);
+      const classeEleve = p.className || p.classId || p.classLevel || p.level;
+      if (tags.length && !tags.some(function (t) { return memeClasse(t, classeEleve); })) {
+        res.autreClasse++; return;
+      }
+      res.autreMotif++;
+    });
+    return res;
+  };
+
+  window.NeoCloisonnement = {
+    memeClasse: memeClasse,
+    reduire: reduire,
+    etiquettes: etiquettes
+  };
+})();
+
+</script>
+
+<!-- ℹ️ Qui nous sommes -->
+<script id="apropos-v1">
+// ============================================================
+// ℹ️ NEOCLASS — QUI NOUS SOMMES
+//
+// Page destinée aux visiteurs : familles, chefs d'établissement,
+// enseignants. Elle décrit ce que fait réellement le produit.
+//
+// Aucun chiffre n'est avancé (nombre d'écoles, d'élèves, date de
+// création) : ces éléments doivent venir de l'équipe. Les emplacements
+// prévus sont signalés par data-a-completer dans le code.
+// ============================================================
+(function () {
+  'use strict';
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  const PUBLICS = [
+    {
+      icone: 'fa-school', couleur: '#7c5cff', titre: 'Les établissements',
+      texte: "Inscrire les élèves, constituer les classes, affecter les enseignants aux salles, " +
+             "suivre les présences, encaisser les scolarités et éditer les bulletins — depuis un seul tableau de bord.",
+      points: ['Tableau de bord et indicateurs', 'Gestion financière et impayés', 'Bulletins automatisés', 'Règles de notation configurables']
+    },
+    {
+      icone: 'fa-chalkboard-user', couleur: '#0ea5a4', titre: 'Les enseignants',
+      texte: "Un espace limité à ce qui les concerne : leurs classes, leurs élèves, leurs matières. " +
+             "Ils saisissent leurs notes, créent leurs exercices et transmettent à l'administration.",
+      points: ['Uniquement leurs classes', 'Saisie des notes par type', 'Exercices et évaluations', 'Cycle brouillon → validation']
+    },
+    {
+      icone: 'fa-user-graduate', couleur: '#f59e0b', titre: 'Les élèves',
+      texte: "Cours, exercices et notes réunis au même endroit. Chacun ne voit que le contenu de sa classe, " +
+             "et consulte ses résultats, ses absences et ses bulletins dès leur publication.",
+      points: ['Cours de sa classe uniquement', 'Notes et moyennes', 'Bulletins consultables', 'Assistant Darx']
+    },
+    {
+      icone: 'fa-people-roof', couleur: '#ec4899', titre: 'Les parents',
+      texte: "Le suivi de leur enfant sans avoir à se déplacer : notes, absences, retards, emploi du temps " +
+             "et frais de scolarité. En consultation, jamais en modification.",
+      points: ['Résultats et moyennes', 'Absences et retards', 'Frais de scolarité', 'Messages de l\'école']
+    }
+  ];
+
+  const VALEURS = [
+    {
+      icone: 'fa-lock', titre: 'Le cloisonnement des données',
+      texte: "Les données d'un établissement ne sortent pas de cet établissement. Une classe ne voit " +
+             "que ses contenus. Un enseignant n'accède qu'à ses élèves. Ces règles sont appliquées " +
+             "au niveau de la base de données, pas seulement dans l'interface."
+    },
+    {
+      icone: 'fa-signal', titre: 'Pensé pour nos connexions',
+      texte: "Les vidéos sont diffusées par lien plutôt que stockées, un mode faible consommation " +
+             "de données est disponible, et l'essentiel reste consultable hors ligne. " +
+             "Une application lourde n'a aucun intérêt si elle ne se charge pas."
+    },
+    {
+      icone: 'fa-hand-holding-heart', titre: 'Le travail reconnu',
+      texte: "Les NabeCoins récompensent l'effort des élèves, et les enseignants qui publient " +
+             "du contenu sont rémunérés. Apprendre et enseigner doivent avoir une valeur concrète."
+    },
+    {
+      icone: 'fa-flag', titre: 'Ancré en Guinée',
+      texte: "Programmes guinéens et français, système franco-arabe, monnaie locale, " +
+             "et un accompagnement dans la langue de nos utilisateurs. " +
+             "NeoClass est construit ici, pour nos écoles."
+    }
+  ];
+
+  function render(app) {
+    const connecte = typeof State !== 'undefined' && State.user;
+
+    app.innerHTML = '' +
+      '<div class="apropos">' +
+
+        // ── Bandeau ──────────────────────────────────────────
+        '<section class="apropos-hero">' +
+          '<div class="apropos-conteneur">' +
+            '<img class="apropos-logo" src="./assets/neoclass-mark.png" alt="" />' +
+            '<h1>Nous construisons l\'école numérique<br><span>dont nos établissements ont besoin</span></h1>' +
+            '<p class="apropos-chapeau">' +
+              'NeoClass réunit dans un seul outil la gestion administrative d\'un établissement, ' +
+              'le travail pédagogique des enseignants et le suivi quotidien des élèves et de leurs familles.' +
+            '</p>' +
+            '<div class="apropos-actions">' +
+              (connecte
+                ? '<button class="nc-btn nc-btn-primary" onclick="navigate(\'dashboard\')">Mon espace <i class="fas fa-arrow-right"></i></button>'
+                : '<button class="nc-btn nc-btn-primary" onclick="navigate(\'signup\')">Créer un compte <i class="fas fa-arrow-right"></i></button>') +
+              '<button class="nc-btn nc-btn-outline" onclick="navigate(\'' + (connecte ? 'support' : 'pro-login') + '\')">' +
+                (connecte ? 'Nous écrire' : 'Espace établissement') + '</button>' +
+            '</div>' +
+          '</div>' +
+        '</section>' +
+
+        '<div class="apropos-conteneur">' +
+
+          // ── Le problème ────────────────────────────────────
+          '<section class="apropos-section">' +
+            '<span class="apropos-surtitre">Notre point de départ</span>' +
+            '<h2>Le problème que nous voulions régler</h2>' +
+            '<div class="apropos-recit">' +
+              '<p>Dans beaucoup d\'établissements, les notes vivent dans un cahier, les scolarités ' +
+              'dans un carnet, les absences sur une feuille, et les bulletins se recopient à la main ' +
+              'chaque trimestre. Quand un parent demande où en est son enfant, il faut chercher ' +
+              'dans trois endroits différents.</p>' +
+              '<p>Les logiciels existants sont conçus ailleurs, pour d\'autres réalités : ils supposent ' +
+              'une connexion stable, des moyens de paiement qui n\'existent pas ici, et des programmes ' +
+              'scolaires qui ne sont pas les nôtres.</p>' +
+              '<p><strong>NeoClass part de l\'inverse</strong> : les programmes guinéens et français, ' +
+              'le franco-arabe, le franc guinéen, le mobile money, et des pages qui se chargent ' +
+              'même quand le réseau faiblit.</p>' +
+            '</div>' +
+          '</section>' +
+
+          // ── Pour qui ───────────────────────────────────────
+          '<section class="apropos-section">' +
+            '<span class="apropos-surtitre">Pour qui</span>' +
+            '<h2>Quatre métiers, quatre espaces distincts</h2>' +
+            '<p class="apropos-intro">Chacun accède à ce qui le concerne, et à rien d\'autre.</p>' +
+            '<div class="apropos-grille">' +
+              PUBLICS.map(function (p) {
+                return '<article class="apropos-carte" style="--c:' + p.couleur + '">' +
+                  '<span class="apropos-carte-icone"><i class="fas ' + p.icone + '"></i></span>' +
+                  '<h3>' + esc(p.titre) + '</h3>' +
+                  '<p>' + esc(p.texte) + '</p>' +
+                  '<ul>' + p.points.map(function (x) {
+                    return '<li><i class="fas fa-check"></i>' + esc(x) + '</li>';
+                  }).join('') + '</ul>' +
+                '</article>';
+              }).join('') +
+            '</div>' +
+          '</section>' +
+
+          // ── Darx ───────────────────────────────────────────
+          '<section class="apropos-darx">' +
+            '<div class="apropos-darx-texte">' +
+              '<span class="apropos-surtitre">Notre assistant</span>' +
+              '<h2>Darx, un professeur particulier pour chacun</h2>' +
+              '<p>Tous les élèves n\'ont pas quelqu\'un à qui demander de l\'aide le soir. ' +
+              'Darx explique une notion, corrige un exercice photographié, prépare des fiches de ' +
+              'révision et s\'adapte au niveau réel de l\'élève — pas à celui de sa classe.</p>' +
+              '<p>Il assiste aussi les enseignants dans la préparation de leurs cours et de leurs ' +
+              'évaluations.</p>' +
+            '</div>' +
+            '<div class="apropos-darx-visuel"><i class="fas fa-robot"></i></div>' +
+          '</section>' +
+
+          // ── Valeurs ────────────────────────────────────────
+          '<section class="apropos-section">' +
+            '<span class="apropos-surtitre">Nos engagements</span>' +
+            '<h2>Ce sur quoi nous ne transigeons pas</h2>' +
+            '<div class="apropos-valeurs">' +
+              VALEURS.map(function (v) {
+                return '<div class="apropos-valeur">' +
+                  '<span class="apropos-valeur-icone"><i class="fas ' + v.icone + '"></i></span>' +
+                  '<div><h3>' + esc(v.titre) + '</h3><p>' + esc(v.texte) + '</p></div>' +
+                '</div>';
+              }).join('') +
+            '</div>' +
+          '</section>' +
+
+          // ── Contact ────────────────────────────────────────
+          '<section class="apropos-contact">' +
+            '<h2>Parlons de votre établissement</h2>' +
+            '<p>Une question, une démonstration, un accompagnement à la mise en route : ' +
+            'notre équipe répond directement.</p>' +
+            '<div class="apropos-actions">' +
+              (connecte
+                ? '<button class="nc-btn nc-btn-primary" onclick="navigate(\'support\')"><i class="fas fa-headset"></i> Contacter le support</button>'
+                : '<button class="nc-btn nc-btn-primary" onclick="navigate(\'signup\')">Créer un compte établissement</button>') +
+              '<button class="nc-btn nc-btn-outline" onclick="navigate(\'home\')">Retour à l\'accueil</button>' +
+            '</div>' +
+          '</section>' +
+
+        '</div>' +
+      '</div>';
+  }
+
+  window.renderAbout = render;
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['about'] = render;
 })();
 
 </script>
