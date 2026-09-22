@@ -527,37 +527,57 @@ service cloud.firestore {
     match /events/{id}         { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
     match /schoolMeetings/{id} { allow read: if isAuth(); allow write: if ownsSchool() || isEducator(); }
     match /schoolMetrics/{id}  { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
+    match /finance_team/{id}   { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
 
-    // --- Collections introduites par la refonte Ecole ---
-    // Sans ces regles, le refus par defaut empeche le tableau de bord de
-    // lire ces collections et les indicateurs restent vides.
+    // --------------------------------------------------------
+    // COLLECTIONS AJOUTEES PAR LA REFONTE ECOLE
+    // Sans ces regles, le refus par defaut s'applique : le tableau de
+    // bord ne peut pas lire ces collections et les indicateurs
+    // correspondants restent vides.
+    // --------------------------------------------------------
 
-    // Examens : consultables par toute la communaute de l ecole,
-    // modifiables par l etablissement et les enseignants.
-    // --- Support client ---
-    // L auteur du ticket et les administrateurs NeoClass y ont acces.
-    // Personne d autre : un ticket peut contenir des informations
-    // sensibles sur l etablissement.
+    // Examens : consultables par toute la communaute de l'ecole,
+    // planifiables par l'etablissement et les enseignants.
+    match /exams/{id} {
+      allow read: if isAuth();
+      allow create: if willOwnSchool() || isEducator();
+      allow update, delete: if ownsSchool() || isEducator();
+    }
+
+    // Bulletins : l'eleve concerne, ses parents, son ecole et le corps
+    // enseignant. Seul l'etablissement valide et publie ; l'eleve et le
+    // parent sont strictement en lecture.
+    match /bulletins/{id} {
+      allow read: if isAuth() && (owns('studentId') || ownsSchool() || isEducator() || isParent());
+      allow create: if willOwnSchool() || isEducator();
+      allow update, delete: if ownsSchool() || isAdmin();
+    }
+
+    // Salles de classe declarees par l'etablissement : couvertes par la
+    // regle generique schools/{schoolId}/{sub}/{docId} plus bas.
+
+    // --------------------------------------------------------
+    // SUPPORT CLIENT
+    // Un ticket peut contenir des informations sensibles sur
+    // l'etablissement : seuls son auteur et l'equipe NeoClass y accedent.
+    // --------------------------------------------------------
+
     match /supportTickets/{id} {
       allow read: if isAuth() && (owns('userId') || isAdmin());
-      allow create: if isAuth() && request.resource.data.userId == uid();
+      // L'auteur declare est verifie a la creation : on ne peut pas
+      // ouvrir un ticket au nom de quelqu'un d'autre.
+      allow create: if isAuth() && request.resource.data.get('userId', '') == uid();
       allow update: if isAuth() && (owns('userId') || isAdmin());
       allow delete: if isAdmin();
 
       match /messages/{msgId} {
         allow read: if isAuth() && (isAdmin() ||
-          get(/databases/$(database)/documents/supportTickets/$(id)).data.userId == uid());
-        allow create: if isAuth() && request.resource.data.authorId == uid();
+          get(/databases/$(database)/documents/supportTickets/$(id)).data.get('userId', '') == uid());
+        allow create: if isAuth() && request.resource.data.get('authorId', '') == uid();
+        // Un message envoye ne se modifie plus : l'historique fait foi.
         allow update, delete: if isAdmin();
       }
     }
-
-    match /exams/{id}     { allow read: if isAuth(); allow create: if willOwnSchool() || isEducator(); allow update, delete: if ownsSchool() || isEducator(); }
-
-    // Bulletins : l eleve concerne, son ecole et le corps enseignant.
-    // Seul l etablissement publie ; l eleve et le parent sont en lecture.
-    match /bulletins/{id} { allow read: if isAuth() && (owns("studentId") || ownsSchool() || isEducator() || isParent()); allow create: if willOwnSchool() || isEducator(); allow update, delete: if ownsSchool() || isAdmin(); }
-    match /finance_team/{id}   { allow read: if ownsSchool() || isAdmin(); allow write: if ownsSchool() || isAdmin(); }
 
     // ========================================================
     // FINANCE ÉCOLE — strictement cloisonnée à l'école
