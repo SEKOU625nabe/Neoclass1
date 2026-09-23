@@ -11501,6 +11501,7 @@ Réponds en JSON:
           { id:'academic', icon:'📊', label:'Vie scolaire', items:[
             {icon:'📝',label:'Notes à valider',page:'school-grades-entry'},
             {icon:'📊',label:'Résultats & classements',page:'school-grades-results'},
+            {icon:'🏆',label:'Publier les résultats',page:'school-results'},
             {icon:'📄',label:'Bulletins',page:'school-bulletins'},
             {icon:'👁️',label:'Aperçu du bulletin',page:'school-bulletin-preview'},
             {icon:'📋',label:'Présences',page:'school-absences'},
@@ -45730,6 +45731,7 @@ function handleDocumentUpload(e) {
   let _notes = [];        // notes de l'élève, à plat
   let _bulletins = [];
   let _absences = [];
+  let _resultats = [];
   let _periode = '';
   let _onglet = 'notes';
   let _charge = false;
@@ -45779,6 +45781,7 @@ function handleDocumentUpload(e) {
             '<button class="sch-tab active" data-t="notes" onclick="StudentSchool.onglet(\'notes\')">Mes notes</button>' +
             '<button class="sch-tab" data-t="bulletins" onclick="StudentSchool.onglet(\'bulletins\')">Mes bulletins</button>' +
             '<button class="sch-tab" data-t="absences" onclick="StudentSchool.onglet(\'absences\')">Mes absences</button>' +
+            '<button class="sch-tab" data-t="resultats" onclick="StudentSchool.onglet(\'resultats\')">Mes résultats</button>' +
           '</div>' +
 
           '<div id="schElvCorps"><div class="sch-card"><div class="sch-skel" style="height:160px"></div></div></div>' +
@@ -45851,7 +45854,8 @@ function handleDocumentUpload(e) {
       pConfig,
       ecole ? lire('notes', db.collection('grades').where('schoolId', '==', ecole).get()) : Promise.resolve({ docs: [] }),
       lire('bulletins', db.collection('bulletins').where('studentId', '==', uid).get()),
-      lire('absences', db.collection('absences').where('studentId', '==', uid).get())
+      lire('absences', db.collection('absences').where('studentId', '==', uid).get()),
+      lire('résultats', db.collection('studentResults').where('studentId', '==', uid).get())
     ]).then(function (r) {
       _config = r[0];
 
@@ -45888,6 +45892,10 @@ function handleDocumentUpload(e) {
           const da = U.toDate(a.date || a.createdAt), dbb = U.toDate(b.date || b.createdAt);
           return (dbb ? dbb.getTime() : 0) - (da ? da.getTime() : 0);
         });
+
+      // Résultats de période publiés par l'établissement (§10-11).
+      _resultats = r[4].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; })
+        .sort(function (a, b) { return String(a.period || '').localeCompare(String(b.period || '')); });
 
       _charge = true;
 
@@ -45999,6 +46007,7 @@ function handleDocumentUpload(e) {
 
     if (_onglet === 'notes') html += vueNotes(mats, moy, max);
     else if (_onglet === 'bulletins') html += vueBulletins();
+    else if (_onglet === 'resultats') html += vueResultats();
     else html += vueAbsences();
 
     el.innerHTML = html;
@@ -46088,6 +46097,87 @@ function handleDocumentUpload(e) {
       '</tbody></table></div></div>';
   }
 
+  // ------------------------------------------------------------
+  // Résultats de période publiés par l'établissement (§10-11).
+  // Un document par élève : l'élève ne lit que le sien, jamais ceux
+  // de ses camarades. Le rang et la moyenne de classe lui sont donnés
+  // comme repères, sans aucune note d'autrui.
+  function vueResultats() {
+    if (!_resultats.length) {
+      return '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-ranking-star"></i><strong>Aucun résultat publié</strong>' +
+        '<p>Vos résultats apparaîtront ici lorsque votre établissement les aura calculés ' +
+        'et publiés pour la période.</p></div></div>';
+    }
+
+    return _resultats.map(function (r) {
+      const max = r.maxGrade || _config.maxGrade;
+      const admis = r.passed;
+      const couleur = admis ? U.COULEURS.ok : U.COULEURS.warn;
+
+      const matieres = (r.subjectAvgs || []).map(function (m) {
+        const v = m.average;
+        const bon = v != null && v >= _config.passingGrade;
+        return '<tr>' +
+          '<td>' + U.esc(m.name) + '</td>' +
+          '<td class="num" style="color:' + (bon ? U.COULEURS.ok : U.COULEURS.warn) + ';font-weight:700;">' +
+            (v == null ? '—' : U.pourcent(v, _config.decimals)) + '</td>' +
+          '<td class="num">×' + U.esc(m.coef) + '</td></tr>';
+      }).join('');
+
+      return '<div class="sch-card" style="margin-bottom:18px;">' +
+        '<div class="sch-card-head"><div>' +
+          '<h3 class="sch-card-title">' + U.esc(r.periodLabel || r.period) + '</h3>' +
+          '<p class="sch-card-sub">' + U.esc(r.className || '') +
+            (r.year ? ' · ' + U.esc(r.year) : '') + '</p></div>' +
+          '<span class="sch-chip sch-chip-' + (admis ? 'ok' : 'bad') + '">' +
+            (admis ? 'Admis' : 'Non admis') + '</span></div>' +
+
+        '<div class="sch-kpis" style="margin-bottom:16px;">' +
+          '<div class="sch-kpi" style="--kpi-color:' + couleur + ';--kpi-soft:' + couleur + '1f">' +
+            '<div class="sch-kpi-top"><span class="sch-kpi-label">Moyenne générale</span></div>' +
+            '<div class="sch-kpi-val">' + U.pourcent(r.generalAvg, _config.decimals) +
+              '<small>/' + max + '</small></div>' +
+            '<div class="sch-meter"><span style="width:' + ((r.generalAvg / max) * 100) + '%"></span></div>' +
+            '<div class="sch-kpi-foot">' + U.esc(r.mention || '') + '</div></div>' +
+
+          (r.rank ? '<div class="sch-kpi" style="--kpi-color:' + U.COULEURS.violet + ';--kpi-soft:' + U.COULEURS.violet + '1f">' +
+            '<div class="sch-kpi-top"><span class="sch-kpi-label">Mon rang</span></div>' +
+            '<div class="sch-kpi-val">' + r.rank + '<small>/ ' + (r.totalStudents || '—') + '</small></div>' +
+            '<div class="sch-kpi-foot">dans la classe</div></div>' : '') +
+
+          (r.classAverage != null ? '<div class="sch-kpi" style="--kpi-color:' + U.COULEURS.teal + ';--kpi-soft:' + U.COULEURS.teal + '1f">' +
+            '<div class="sch-kpi-top"><span class="sch-kpi-label">Moyenne de la classe</span></div>' +
+            '<div class="sch-kpi-val">' + U.pourcent(r.classAverage, _config.decimals) + '<small>/' + max + '</small></div>' +
+            '<div class="sch-kpi-foot">' + (r.generalAvg >= r.classAverage ? 'vous êtes au-dessus' : 'vous êtes en dessous') + '</div></div>' : '') +
+
+          '<div class="sch-kpi" style="--kpi-color:' + (r.absences ? U.COULEURS.bad : U.COULEURS.ok) + ';--kpi-soft:' + (r.absences ? U.COULEURS.bad : U.COULEURS.ok) + '1f">' +
+            '<div class="sch-kpi-top"><span class="sch-kpi-label">Absences</span></div>' +
+            '<div class="sch-kpi-val">' + U.nombre(r.absences || 0) + '</div>' +
+            '<div class="sch-kpi-foot">' + U.nombre(r.retards || 0) + ' retard' + ((r.retards || 0) > 1 ? 's' : '') + '</div></div>' +
+        '</div>' +
+
+        (matieres ? '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+          '<th>Matière</th><th class="num">Moyenne</th><th class="num">Coef</th>' +
+          '</tr></thead><tbody>' + matieres + '</tbody></table></div>' : '') +
+
+        ((r.strongSubjects || []).length || (r.weakSubjects || []).length
+          ? '<div style="display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:14px;">' +
+            ((r.strongSubjects || []).length
+              ? '<div><div class="sch-kpi-label">Vos points forts</div>' +
+                '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">' +
+                r.strongSubjects.map(function (s) { return '<span class="sch-chip sch-chip-ok">' + U.esc(s) + '</span>'; }).join('') +
+                '</div></div>' : '') +
+            ((r.weakSubjects || []).length
+              ? '<div><div class="sch-kpi-label">À renforcer</div>' +
+                '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">' +
+                r.weakSubjects.map(function (s) { return '<span class="sch-chip sch-chip-warn">' + U.esc(s) + '</span>'; }).join('') +
+                '</div></div>' : '') +
+            '</div>' : '') +
+
+      '</div>';
+    }).join('');
+  }
   // ------------------------------------------------------------
   function vueAbsences() {
     if (!_absences.length) {
@@ -48290,6 +48380,426 @@ function handleDocumentUpload(e) {
     setInterval(injecter, 700);
   });
   window.EleveResume = { injecter: injecter };
+})();
+
+</script>
+
+<!-- Resultats de periode -->
+<script id="sch-results-v1">
+// ============================================================
+// 🏆 NEOCLASS — RÉSULTATS DE PÉRIODE (§10-11)
+//
+// Le maillon qui manquait entre les notes validées et les bulletins :
+// le directeur calcule les résultats d'une classe pour une période,
+// les vérifie, puis les publie.
+//
+// Cloisonnement (§17) : un document studentResults par élève, contenant
+// SES seules données. Les règles Firestore autorisent déjà la lecture
+// au seul propriétaire et au corps enseignant — un élève ne peut donc
+// pas lire les résultats d'un camarade, même en devinant l'identifiant.
+// ============================================================
+(function () {
+  'use strict';
+
+  const U = window.SchoolUtils;
+  const G = window.SchoolGrading;
+  const C = U.COULEURS;
+
+  let _config = null;
+  let _classes = [];
+  let _eleves = [];
+  let _notes = [];
+  let _absences = [];
+  let _calcul = null;      // { classId, className, periode, eleves:[…] }
+  let _selection = {};     // studentId -> bool
+  let _dejaPublies = {};   // studentId -> date de publication
+
+  function estDirection() {
+    const p = (typeof State !== 'undefined' && State.profile) || {};
+    return p.role === 'school' || p.role === 'admin';
+  }
+
+  // ------------------------------------------------------------
+  function render(app) {
+    if (!estDirection()) { navigate('dashboard'); return; }
+    _config = G.lire();
+    const per = G.periodes(_config);
+
+    app.innerHTML = '' +
+      '<div class="layout-dashboard">' +
+        '<aside class="sidebar"><div class="sidebar-section">Menu</div>' + getSidebarLinks(State.profile.role) + '</aside>' +
+        '<main class="main-content animate-fade"><div class="sch-page">' +
+          '<header class="sch-head">' +
+            '<div class="sch-head-id"><div class="sch-logo"><i class="fas fa-ranking-star"></i></div>' +
+              '<div><h1>Résultats de période</h1>' +
+              '<div class="sch-head-sub"><span>Calculer, vérifier, puis publier aux élèves</span></div></div></div>' +
+          '</header>' +
+
+          '<div class="sch-card" style="margin-bottom:20px;">' +
+            '<div class="sch-toolbar" style="margin:0;">' +
+              '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Classe</label>' +
+                '<select class="sch-select" id="resClasse"><option value="">Chargement…</option></select></div>' +
+              '<div><label class="sch-kpi-label" style="display:block;margin-bottom:6px;">Période</label>' +
+                '<select class="sch-select" id="resPeriode">' +
+                  per.map(function (p) { return '<option value="' + p.v + '">' + p.t + '</option>'; }).join('') +
+                '</select></div>' +
+              '<div class="sch-toolbar-spacer"></div>' +
+              '<button class="sch-btn sch-btn-primary" onclick="SchoolResults.calculer()">' +
+                '<i class="fas fa-calculator"></i> Calculer les résultats</button>' +
+            '</div>' +
+            '<div class="sch-note" style="margin-top:14px;"><i class="fas fa-circle-info"></i><div>' +
+              'Le calcul applique vos règles de notation : types d\'évaluation, poids, coefficients, ' +
+              'barème sur ' + _config.maxGrade + ' et moyenne de passage à ' + _config.passingGrade + '. ' +
+              '<a onclick="navigate(\'school-grades-config\')">Les modifier</a></div></div>' +
+          '</div>' +
+
+          '<div id="resCorps"><div class="sch-card"><div class="sch-empty">' +
+            '<i class="fas fa-ranking-star"></i><strong>Choisissez une classe et une période</strong>' +
+            '<p>Les résultats seront calculés à partir des notes validées, puis affichés ici pour vérification avant publication.</p>' +
+          '</div></div></div>' +
+
+        '</div></main></div>';
+
+    charger();
+  }
+
+  function charger() {
+    const uid = State.user.uid;
+    Promise.all([
+      db.collection('classes').where('schoolId', '==', uid).get().catch(function () { return { docs: [] }; }),
+      db.collection('schools').doc(uid).collection('students').get().catch(function () { return { docs: [] }; }),
+      db.collection('grades').where('schoolId', '==', uid).get().catch(function () { return { docs: [] }; }),
+      db.collection('absences').where('schoolId', '==', uid).get().catch(function () { return { docs: [] }; })
+    ]).then(function (r) {
+      _classes = r[0].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _eleves = r[1].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _notes = r[2].docs.map(function (d) { const o = d.data() || {}; o.id = d.id; return o; });
+      _absences = r[3].docs.map(function (d) { return d.data() || {}; });
+
+      const sel = document.getElementById('resClasse');
+      if (sel) {
+        sel.innerHTML = _classes.length
+          ? '<option value="">— Choisir —</option>' + _classes.map(function (c) {
+              return '<option value="' + c.id + '">' + U.esc(c.name) + '</option>';
+            }).join('')
+          : '<option value="">Aucune classe</option>';
+      }
+    });
+  }
+
+  // ------------------------------------------------------------
+  // Calcul
+  // ------------------------------------------------------------
+  function calculer() {
+    const classId = (document.getElementById('resClasse') || {}).value;
+    const periode = (document.getElementById('resPeriode') || {}).value;
+    if (!classId) { showToast('Choisissez une classe', 'error'); return; }
+
+    const classe = _classes.filter(function (c) { return c.id === classId; })[0] || {};
+    const eleves = _eleves.filter(function (e) { return e.classId === classId; });
+    if (!eleves.length) { showToast('Cette classe ne compte aucun élève', 'error'); return; }
+
+    const VALIDES = ['validated', 'locked', 'published'];
+    const lots = _notes.filter(function (g) {
+      return g.classId === classId && g.period === periode && VALIDES.indexOf(g.status) !== -1;
+    });
+
+    const resultats = eleves.map(function (e) {
+      const cle = e.uid || e.id;
+
+      // Notes de l'élève, regroupées par matière puis par type.
+      const parMatiere = {};
+      lots.forEach(function (lot) {
+        (lot.grades || []).forEach(function (n) {
+          if ((n.studentId || '') !== cle) return;
+          const v = parseFloat(n.grade);
+          if (isNaN(v)) return;
+          const m = lot.subject || 'Non précisée';
+          const t = lot.evalTypeId || lot.evalType || 'autre';
+          parMatiere[m] = parMatiere[m] || {};
+          (parMatiere[m][t] = parMatiere[m][t] || []).push(v);
+        });
+      });
+
+      const matieres = Object.keys(parMatiere).map(function (nom) {
+        return {
+          nom: nom,
+          coef: G.coefMatiere(nom, _config),
+          moyenne: G.moyenneMatiere(parMatiere[nom], _config)
+        };
+      }).sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
+
+      const moyenne = G.moyenneGenerale(matieres, _config);
+
+      // Absences de la période — bornes calées sur l'année scolaire.
+      const abs = _absences.filter(function (a) {
+        return (a.studentId === cle) && (a.type || 'absence') === 'absence';
+      }).length;
+      const retards = _absences.filter(function (a) {
+        return (a.studentId === cle) && a.type === 'retard';
+      }).length;
+
+      const notees = matieres.filter(function (m) { return m.moyenne != null; });
+      const triees = notees.slice().sort(function (a, b) { return b.moyenne - a.moyenne; });
+
+      return {
+        studentId: cle,
+        nom: ((e.firstName || '') + ' ' + (e.lastName || '')).trim() || e.fullName || 'Sans nom',
+        matieres: matieres,
+        moyenne: moyenne,
+        mention: moyenne == null ? null : G.mention(moyenne, _config),
+        admis: G.admis(moyenne, _config),
+        absences: abs,
+        retards: retards,
+        fortes: triees.slice(0, 2).map(function (m) { return m.nom; }),
+        faibles: triees.slice(-2).reverse().map(function (m) { return m.nom; }),
+        nbMatieres: notees.length
+      };
+    });
+
+    // Rang : à moyenne égale, même rang.
+    const avecMoyenne = resultats.filter(function (r) { return r.moyenne != null; })
+      .sort(function (a, b) { return b.moyenne - a.moyenne; });
+    let rangCourant = 0, precedente = null;
+    avecMoyenne.forEach(function (r, i) {
+      if (precedente === null || r.moyenne < precedente) rangCourant = i + 1;
+      r.rang = rangCourant;
+      precedente = r.moyenne;
+    });
+    resultats.forEach(function (r) { if (r.moyenne == null) r.rang = null; });
+
+    _calcul = {
+      classId: classId, className: classe.name || '', periode: periode,
+      annee: U.anneeScolaire(), eleves: resultats, effectif: resultats.length
+    };
+    _selection = {};
+    resultats.forEach(function (r) { if (r.moyenne != null) _selection[r.studentId] = true; });
+
+    // Publications déjà faites pour cette période.
+    _dejaPublies = {};
+    Promise.all(resultats.map(function (r) {
+      return db.collection('studentResults').doc(r.studentId + '_' + periode).get()
+        .then(function (d) { if (d.exists) _dejaPublies[r.studentId] = U.toDate((d.data() || {}).publishedAt); })
+        .catch(function () { /* absent */ });
+    })).then(afficher).catch(afficher);
+  }
+
+  // ------------------------------------------------------------
+  function afficher() {
+    const el = document.getElementById('resCorps');
+    if (!el || !_calcul) return;
+    const c = _calcul;
+    const max = _config.maxGrade;
+
+    const notes = c.eleves.filter(function (r) { return r.moyenne != null; });
+    const moyClasse = U.moyenne(notes.map(function (r) { return r.moyenne; }));
+    const admis = notes.filter(function (r) { return r.admis; }).length;
+    const taux = notes.length ? (admis / notes.length) * 100 : null;
+    const sansNote = c.eleves.length - notes.length;
+
+    let html = '';
+
+    if (!notes.length) {
+      el.innerHTML = '<div class="sch-card"><div class="sch-empty">' +
+        '<i class="fas fa-triangle-exclamation"></i><strong>Aucune note validée pour cette période</strong>' +
+        '<p>Les enseignants doivent d\'abord transmettre leurs notes, et l\'administration les valider, ' +
+        'avant que les résultats puissent être calculés.</p>' +
+        '<button class="sch-btn sch-btn-primary sch-btn-sm" onclick="navigate(\'school-grades-entry\')">' +
+        'Voir les notes à valider</button></div></div>';
+      return;
+    }
+
+    // Synthèse
+    html += '<div class="sch-kpis" style="margin-bottom:20px;">' +
+      tuile('Effectif', U.nombre(c.effectif), C.violet, 'fa-users',
+            sansNote ? (sansNote + ' sans note') : 'tous notés') +
+      tuile('Moyenne de classe', U.pourcent(moyClasse, _config.decimals), C.teal, 'fa-square-poll-vertical', '/' + max) +
+      tuile('Taux de réussite', U.pourcent(taux, 0) + ' %',
+            taux >= 50 ? C.ok : C.warn, 'fa-check-double', admis + ' admis sur ' + notes.length) +
+      tuile('Meilleure moyenne', U.pourcent(notes[0] ? Math.max.apply(null, notes.map(function (r) { return r.moyenne; })) : null, _config.decimals),
+            C.warn, 'fa-trophy', '/' + max) +
+    '</div>';
+
+    // Tableau
+    const tries = c.eleves.slice().sort(function (a, b) {
+      if (a.rang == null) return 1;
+      if (b.rang == null) return -1;
+      return a.rang - b.rang;
+    });
+
+    html += '<div class="sch-card">' +
+      '<div class="sch-card-head"><div>' +
+        '<h3 class="sch-card-title">' + U.esc(c.className) + ' — ' + U.esc(G.libellePeriode(c.periode, _config)) + '</h3>' +
+        '<p class="sch-card-sub">Année ' + U.esc(c.annee) + ' · vérifiez avant de publier</p></div>' +
+        '<div style="display:flex;gap:8px;">' +
+          '<button class="sch-btn sch-btn-sm" onclick="SchoolResults.toutSelectionner(true)">Tout cocher</button>' +
+          '<button class="sch-btn sch-btn-sm" onclick="SchoolResults.toutSelectionner(false)">Tout décocher</button>' +
+        '</div></div>' +
+
+      '<div class="sch-table-wrap"><table class="sch-table"><thead><tr>' +
+        '<th style="width:36px;"></th><th style="width:46px;">Rang</th><th>Élève</th>' +
+        '<th class="num">Moyenne</th><th>Mention</th><th>Décision</th>' +
+        '<th class="num">Abs.</th><th>Publié</th>' +
+      '</tr></thead><tbody>' +
+      tries.map(function (r) {
+        const dejaLe = _dejaPublies[r.studentId];
+        const sans = r.moyenne == null;
+        return '<tr' + (sans ? ' style="opacity:.55;"' : '') + '>' +
+          '<td>' + (sans ? '' :
+            '<input type="checkbox" ' + (_selection[r.studentId] ? 'checked ' : '') +
+            'onchange="SchoolResults.basculer(\'' + r.studentId + '\', this.checked)" />') + '</td>' +
+          '<td><strong>' + (r.rang == null ? '—' : r.rang) + '</strong></td>' +
+          '<td><strong>' + U.esc(r.nom) + '</strong>' +
+            '<div style="font-size:.72rem;color:var(--text-secondary);">' + r.nbMatieres + ' matière' + (r.nbMatieres > 1 ? 's' : '') + '</div></td>' +
+          '<td class="num">' + (sans ? '—' : U.pourcent(r.moyenne, _config.decimals)) + '</td>' +
+          '<td>' + (sans ? '—' : U.esc(r.mention)) + '</td>' +
+          '<td>' + (sans ? '—' : '<span class="sch-chip sch-chip-' + (r.admis ? 'ok' : 'bad') + '">' +
+            (r.admis ? 'Admis' : 'Non admis') + '</span>') + '</td>' +
+          '<td class="num">' + r.absences + '</td>' +
+          '<td>' + (dejaLe
+            ? '<span class="sch-chip sch-chip-info" title="Republier remplacera ces résultats">' +
+              dejaLe.toLocaleDateString('fr-FR') + '</span>'
+            : '<span class="sch-chip sch-chip-mute">non</span>') + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table></div>';
+
+    if (sansNote) {
+      html += '<div class="sch-note warn" style="margin-top:14px;"><i class="fas fa-triangle-exclamation"></i>' +
+        '<div><strong>' + sansNote + ' élève' + (sansNote > 1 ? 's' : '') + ' sans aucune note validée.</strong> ' +
+        'Ces élèves ne peuvent pas être publiés : il n\'y a rien à leur montrer.</div></div>';
+    }
+
+    html += '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">' +
+      '<button class="sch-btn sch-btn-primary" onclick="SchoolResults.confirmerPublication()">' +
+        '<i class="fas fa-bullhorn"></i> Publier les résultats sélectionnés</button>' +
+      '</div>' +
+      '<div class="sch-note" style="margin-top:14px;"><i class="fas fa-circle-info"></i><div>' +
+        'À la publication, chaque élève sélectionné reçoit une notification et voit ses résultats ' +
+        'dans « Ma scolarité ». <strong>Chacun ne voit que les siens</strong> : rang et moyenne de classe ' +
+        'lui sont donnés, jamais les notes de ses camarades.</div></div>' +
+      '</div>';
+
+    el.innerHTML = html;
+  }
+
+  function tuile(label, valeur, couleur, icone, note) {
+    return '<div class="sch-kpi" style="--kpi-color:' + couleur + ';--kpi-soft:' + couleur + '1f">' +
+      '<div class="sch-kpi-top"><span class="sch-kpi-label">' + label + '</span>' +
+      '<span class="sch-kpi-ico"><i class="fas ' + icone + '"></i></span></div>' +
+      '<div class="sch-kpi-val">' + (valeur == null ? '—' : valeur) + '</div>' +
+      '<div class="sch-kpi-foot">' + (note || '') + '</div></div>';
+  }
+
+  // ------------------------------------------------------------
+  function confirmerPublication() {
+    if (!_calcul) return;
+    const choisis = _calcul.eleves.filter(function (r) {
+      return _selection[r.studentId] && r.moyenne != null;
+    });
+    if (!choisis.length) { showToast('Sélectionnez au moins un élève', 'error'); return; }
+
+    const republies = choisis.filter(function (r) { return _dejaPublies[r.studentId]; }).length;
+
+    openModal('<h3>Publier les résultats ?</h3>' +
+      '<p style="color:var(--text-secondary);margin:12px 0;">' +
+        U.esc(_calcul.className) + ' — ' + U.esc(G.libellePeriode(_calcul.periode, _config)) + '<br>' +
+        '<strong>' + choisis.length + '</strong> élève' + (choisis.length > 1 ? 's' : '') + ' concerné' + (choisis.length > 1 ? 's' : '') +
+        (republies ? '<br><strong style="color:#f59e0b;">' + republies + ' déjà publié' + (republies > 1 ? 's' : '') +
+          ' — leurs résultats seront remplacés.</strong>' : '') +
+      '</p>' +
+      '<div class="sch-note"><i class="fas fa-circle-info"></i><div>' +
+        'Chaque élève sera notifié et pourra consulter ses résultats immédiatement.</div></div>' +
+      '<div style="display:flex;gap:10px;margin-top:18px;">' +
+        '<button class="sch-btn sch-btn-primary" style="flex:1" onclick="SchoolResults.publier()">' +
+          '<i class="fas fa-bullhorn"></i> Publier</button>' +
+        '<button class="sch-btn" onclick="closeModal()">Annuler</button></div>');
+  }
+
+  function publier() {
+    const c = _calcul;
+    const choisis = c.eleves.filter(function (r) { return _selection[r.studentId] && r.moyenne != null; });
+    const notes = c.eleves.filter(function (r) { return r.moyenne != null; });
+    const moyClasse = U.moyenne(notes.map(function (r) { return r.moyenne; }));
+    const p = State.profile || {};
+    const horodatage = firebase.firestore.FieldValue.serverTimestamp();
+
+    closeModal();
+    showToast('Publication en cours…', 'info');
+
+    // Un document par élève : personne ne peut lire les résultats d'un autre.
+    const ecritures = choisis.map(function (r) {
+      return db.collection('studentResults').doc(r.studentId + '_' + c.periode).set({
+        studentId: r.studentId,
+        schoolId: State.user.uid,
+        schoolName: p.schoolName || '',
+        classId: c.classId,
+        className: c.className,
+        period: c.periode,
+        periodLabel: G.libellePeriode(c.periode, _config),
+        year: c.annee,
+        name: r.nom,
+        subjectAvgs: r.matieres.map(function (m) {
+          return { name: m.nom, average: m.moyenne, coef: m.coef };
+        }),
+        generalAvg: r.moyenne,
+        maxGrade: _config.maxGrade,
+        mention: r.mention,
+        passed: r.admis,
+        rank: r.rang,
+        totalStudents: notes.length,
+        classAverage: moyClasse,
+        absences: r.absences,
+        retards: r.retards,
+        strongSubjects: r.fortes,
+        weakSubjects: r.faibles,
+        publishedAt: horodatage,
+        publishedBy: State.user.uid
+      });
+    });
+
+    Promise.all(ecritures).then(function () {
+      // Notifier chaque élève publié.
+      return Promise.all(choisis.map(function (r) {
+        return db.collection('messages').add({
+          recipientId: r.studentId,
+          senderId: State.user.uid,
+          senderName: p.schoolName || 'Établissement',
+          schoolId: State.user.uid,
+          type: 'results',
+          title: 'Vos résultats du ' + G.libellePeriode(c.periode, _config) + ' sont disponibles',
+          body: 'Moyenne générale : ' + U.pourcent(r.moyenne, _config.decimals) + '/' + _config.maxGrade +
+                ' · ' + (r.mention || '') + '. Consultez le détail dans « Ma scolarité ».',
+          period: c.periode,
+          createdAt: horodatage,
+          read: false
+        }).catch(function () { /* la notification ne doit pas bloquer */ });
+      }));
+    }).then(function () {
+      showToast(choisis.length + ' résultat' + (choisis.length > 1 ? 's' : '') + ' publié' +
+        (choisis.length > 1 ? 's' : '') + ' et notifié' + (choisis.length > 1 ? 's' : ''), 'success');
+      choisis.forEach(function (r) { _dejaPublies[r.studentId] = new Date(); });
+      afficher();
+    }).catch(function (e) {
+      console.error('[Résultats] publication :', e);
+      showToast('Erreur : ' + (e.message || e), 'error');
+    });
+  }
+
+  window.SchoolResults = {
+    render: render,
+    calculer: calculer,
+    basculer: function (id, v) { _selection[id] = v; },
+    toutSelectionner: function (v) {
+      if (!_calcul) return;
+      _calcul.eleves.forEach(function (r) { if (r.moyenne != null) _selection[r.studentId] = v; });
+      afficher();
+    },
+    confirmerPublication: confirmerPublication,
+    publier: publier
+  };
+  window.NC_PAGES = window.NC_PAGES || {};
+  window.NC_PAGES['school-results'] = render;
 })();
 
 </script>
