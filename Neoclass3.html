@@ -487,6 +487,23 @@
     .onboard-tooltip .step-dot{width:8px;height:8px;border-radius:50%;background:#e5e7eb;transition:all .3s ease;}
     .onboard-tooltip .step-dot.active{background:#6c63ff;width:24px;}
     .onboard-tooltip .step-dot.done{background:#10b981;}
+    /* Petit ecran : feuille ancree en bas, pleine largeur. Le
+       positionnement absolu d'origine faisait deborder la fenetre
+       hors de l'ecran sur telephone. */
+    .onboard-tooltip.onboard-feuille{
+      left:0 !important;right:0 !important;bottom:0 !important;top:auto !important;
+      transform:none !important;max-width:none;width:100%;
+      border-radius:18px 18px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));
+      max-height:72vh;overflow-y:auto;
+    }
+    .onboard-tooltip.onboard-feuille h3{font-size:1.05rem;}
+    .onboard-tooltip.onboard-feuille p{font-size:.9rem;}
+    .onboard-tooltip .onboard-actions{display:flex;gap:10px;align-items:center;justify-content:space-between;}
+    .onboard-tooltip.onboard-feuille .onboard-actions{flex-wrap:wrap;}
+    .onboard-tooltip.onboard-feuille .onboard-actions .btn{flex:1;min-width:130px;}
+    @media(max-width:420px){
+      .onboard-tooltip.onboard-feuille{padding:16px 14px calc(14px + env(safe-area-inset-bottom));}
+    }
     .onboard-actions{display:flex;gap:10px;justify-content:space-between;align-items:center;}
     .onboard-character{position:fixed;bottom:20px;right:20px;width:120px;height:120px;z-index:9999;animation:onboardBounce 2s ease-in-out infinite;}
     .onboard-character img{width:100%;height:100%;object-fit:contain;}
@@ -3867,6 +3884,107 @@ body.has-school-banner .school-banner {
       .apropos-actions .nc-btn{width:100%;}
     }
   </style>
+  <style id="sch-responsive">
+    /* ============================================================
+       ESPACE ÉCOLE — ADAPTATION TÉLÉPHONE / TABLETTE
+       Les pages École se consultent aussi depuis un téléphone, dans un
+       couloir, entre deux cours. Le menu latéral est masqué sous 768 px
+       et rien ne permettait de le rouvrir depuis ces pages.
+       ============================================================ */
+
+    /* --- Bouton d'ouverture du menu, visible sur petit écran --- */
+    .sch-menu-mobile{
+      display:none;
+      position:fixed;left:14px;bottom:calc(var(--nc-bottom-nav-h, 64px) + env(safe-area-inset-bottom) + 14px);
+      z-index:1200;
+      width:50px;height:50px;border-radius:50%;border:0;
+      background:var(--sch-violet, #7c5cff);color:#fff;font-size:1.05rem;
+      box-shadow:0 8px 26px rgba(124,92,255,.45);
+      cursor:pointer;align-items:center;justify-content:center;
+    }
+    .sch-menu-mobile:active{transform:scale(.94);}
+
+    @media(max-width:768px){
+      .sch-page .sch-menu-mobile,
+      body.sch-mobile .sch-menu-mobile{display:flex;}
+
+      /* Le contenu occupe toute la largeur dès que le menu est replié. */
+      .sch-page{padding-left:0;padding-right:0;}
+      .layout-dashboard .main-content{padding:16px 14px 28px;}
+
+      /* En-tête de page : tout passe en colonne, les actions s'étalent. */
+      .sch-head{flex-direction:column;align-items:stretch;gap:14px;margin-bottom:18px;}
+      .sch-head-actions{width:100%;flex-wrap:wrap;}
+      .sch-head-actions .sch-btn,
+      .sch-head-actions .sch-select{flex:1 1 auto;min-width:0;}
+      .sch-head h1{font-size:1.2rem;}
+      .sch-logo{width:46px;height:46px;flex-basis:46px;font-size:1.1rem;}
+
+      /* Barres d'outils et filtres : une ligne par contrôle si besoin. */
+      .sch-toolbar{gap:8px;}
+      .sch-toolbar > div{min-width:0;}
+      .sch-search{max-width:none;width:100%;}
+      .sch-select{width:100%;}
+
+      /* Les tableaux gardent leur défilement horizontal, mais on rend
+         le geste évident par une ombre de bord. */
+      .sch-table-wrap{
+        -webkit-overflow-scrolling:touch;
+        background-image:linear-gradient(to right, var(--bg-card) 30%, rgba(0,0,0,0)),
+                         linear-gradient(to left, var(--bg-card) 30%, rgba(0,0,0,0));
+        background-position:left center, right center;
+        background-repeat:no-repeat;
+        background-size:28px 100%, 28px 100%;
+        background-attachment:local, local;
+      }
+      table.sch-table th,
+      table.sch-table td{padding:10px 12px;font-size:.82rem;}
+
+      /* Cartes et graphiques : une colonne. */
+      .sch-charts{grid-template-columns:1fr;gap:14px;}
+      .sch-col-12,.sch-col-8,.sch-col-6,.sch-col-5,.sch-col-4{grid-column:span 1 !important;}
+      .sch-card{padding:16px;}
+      .sch-chart-box{height:230px;}
+      .sch-chart-box.tall{height:260px;}
+
+      /* Actions prioritaires empilées. */
+      .sch-todo{grid-template-columns:1fr;}
+
+      /* Le formulaire en deux colonnes devient une colonne. */
+      .sch-page .form-row{grid-template-columns:1fr;}
+    }
+
+    /* --- Tablette : deux colonnes plutôt qu'une seule --- */
+    @media(min-width:769px) and (max-width:1100px){
+      .sch-charts{grid-template-columns:repeat(2,1fr);}
+      .sch-col-12{grid-column:span 2;}
+      .sch-col-8{grid-column:span 2;}
+      .sch-col-6{grid-column:span 1;}
+      .sch-col-5{grid-column:span 1;}
+      .sch-col-4{grid-column:span 1;}
+      .sch-kpis{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));}
+      .layout-dashboard .main-content{padding:22px 20px;}
+    }
+
+    /* --- Très petit écran --- */
+    @media(max-width:400px){
+      .sch-kpis{grid-template-columns:1fr 1fr;gap:10px;}
+      .sch-kpi{padding:13px;}
+      .sch-kpi-val{font-size:1.3rem;}
+      .sch-head-actions .sch-btn{width:100%;}
+    }
+
+    /* --- Le bulletin reste lisible sur téléphone --- */
+    @media(max-width:768px){
+      .sch-bulletin{padding:16px;font-size:11px;}
+      .sch-bul-tete{flex-direction:column;text-align:center;gap:10px;}
+      .sch-bul-logo{width:52px;height:52px;flex-basis:52px;}
+      table.sch-bul-table{font-size:10.5px;}
+      table.sch-bul-table th,table.sch-bul-table td{padding:5px 6px;}
+      .sch-bul-signatures{gap:20px;}
+    }
+  </style>
+
 </head>
   <div class="page-loader" id="pageLoader" style="display:none;"><div class="spinner"></div><span style="font-weight:600;color:var(--text-secondary);">Chargement de Neoclass...</span></div>
   <div class="blue-light-filter" id="blueLightFilter"></div>
@@ -10110,6 +10228,17 @@ Réponds en JSON:
 
     // Démarrer le tutoriel d'onboarding
     function startOnboardingTour() {
+      // Le tutoriel parle de NabeCoins, de quiz et de la roue de la
+      // fortune : c'est du contenu eleve. Un chef d'etablissement, un
+      // enseignant ou un administrateur n'a rien a y faire, et sur
+      // telephone la fenetre recouvrait l'interface.
+      var roleTuto = (typeof State !== 'undefined' && State.profile) ? State.profile.role : '';
+      var tutoAutorise = ['student', 'indep_student', 'parent'].indexOf(roleTuto) !== -1;
+      if (!tutoAutorise) {
+        try { localStorage.setItem('neo_onboarded', 'true'); } catch (e) { /* mode prive */ }
+        return;
+      }
+
       isOnboardingActive = true;
       currentOnboardingStep = 0;
       
@@ -10202,8 +10331,15 @@ Réponds en JSON:
         </div>
       `;
       
-      // Positionner le tooltip
-      if(step.position === 'center' || !targetRect) {
+      // Positionner le tooltip.
+      // Sous 760 px, aucun placement absolu ne tient : la fenetre
+      // debordait et recouvrait le contenu. On bascule en feuille
+      // ancree en bas, pleine largeur, comme sur mobile natif.
+      var petitEcran = window.innerWidth <= 760;
+      if (petitEcran) {
+        tooltip.classList.add('onboard-feuille');
+        tooltip.style.cssText = '';
+      } else if(step.position === 'center' || !targetRect) {
         tooltip.style.cssText = `
           left: 50%;
           top: 50%;
@@ -12392,8 +12528,14 @@ Réponds en JSON:
           signupData.step=4;
           document.getElementById('signupBox').innerHTML = renderSignupStep();
         } else {
+          var roleInscrit = signupData.role;
           signupData={step:1,role:'',system:'',contentType:'mixte'};
-          navigate('video-intro');
+          if(['student','indep_student','parent'].indexOf(roleInscrit) !== -1){
+            navigate('video-intro');
+          } else {
+            // Une ecole va directement a son tableau de bord.
+            navigate('dashboard');
+          }
         }
       } catch(err){
         let msg="Erreur.";
@@ -26524,7 +26666,12 @@ function renderParentView(app) {
             renderNavbar();
 
             // Navigate
-            if(!State.profile.videoWatched){
+            // La video d'introduction presente les NabeCoins et la
+            // gamification : elle ne concerne ni les etablissements, ni
+            // les enseignants, ni les administrateurs.
+            var roleVideo = State.profile.role;
+            var videoPertinente = ['student', 'indep_student', 'parent'].indexOf(roleVideo) !== -1;
+            if(!State.profile.videoWatched && videoPertinente){
               navigate('video-intro');
             } else if((State.profile.role==='student'||State.profile.role==='indep_student')&&!State.profile.level){
               navigate('choose-level');
@@ -41996,7 +42143,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize pet after login (le tutoriel est maintenant géré dans auth.onAuthStateChanged)
   auth.onAuthStateChanged(user => {
-    if(user && State.profile) {
+    // La mascotte et la serie quotidienne relevent de la gamification
+    // eleve. Un etablissement, un enseignant ou un administrateur n'a
+    // pas a voir un compagnon virtuel flotter sur son interface de
+    // gestion.
+    var roleJeu = State.profile ? State.profile.role : '';
+    var gamificationPertinente = ['student', 'indep_student'].indexOf(roleJeu) !== -1;
+    if(user && State.profile && gamificationPertinente) {
       setTimeout(() => {
         PetSystem.init();
         checkAndUpdateStreak();
@@ -48800,6 +48953,68 @@ function handleDocumentUpload(e) {
   };
   window.NC_PAGES = window.NC_PAGES || {};
   window.NC_PAGES['school-results'] = render;
+})();
+
+</script>
+
+<!-- Menu mobile Ecole -->
+<script id="sch-mobile-v1">
+// ============================================================
+// 📱 NEOCLASS ÉCOLE — OUVERTURE DU MENU SUR TÉLÉPHONE
+//
+// Sous 768 px, le menu latéral est masqué (translateX(-100%)) et aucune
+// commande des pages École ne permettait de le rouvrir : la barre du
+// haut ne pilote que la navigation publique, et la barre du bas ne
+// couvre que quatre raccourcis. Un directeur sur téléphone se
+// retrouvait donc enfermé sur la page où il était.
+//
+// Ce bouton flottant ouvre le tiroir existant, sans rien changer au
+// comportement sur ordinateur.
+// ============================================================
+(function () {
+  'use strict';
+
+  const ROLES = ['school', 'admin', 'teacher', 'indep_teacher'];
+
+  function concerne() {
+    const p = (typeof State !== 'undefined' && State.profile) || {};
+    return ROLES.indexOf(p.role) !== -1;
+  }
+
+  function ouvrirMenu() {
+    // openDrawer() est la fonction du tiroir latéral de l'application.
+    if (typeof openDrawer === 'function' && openDrawer()) return;
+    // Repli : on montre la barre latérale directement.
+    const sb = document.querySelector('.sidebar');
+    if (sb) sb.classList.add('open');
+  }
+
+  function poser() {
+    if (!concerne()) { retirer(); return; }
+    if (!document.querySelector('.layout-dashboard .sidebar')) { retirer(); return; }
+    if (document.getElementById('schMenuMobile')) return;
+
+    const b = document.createElement('button');
+    b.id = 'schMenuMobile';
+    b.className = 'sch-menu-mobile';
+    b.setAttribute('aria-label', 'Ouvrir le menu');
+    b.innerHTML = '<i class="fas fa-bars"></i>';
+    b.onclick = ouvrirMenu;
+    document.body.appendChild(b);
+    document.body.classList.add('sch-mobile');
+  }
+
+  function retirer() {
+    const b = document.getElementById('schMenuMobile');
+    if (b) b.remove();
+    document.body.classList.remove('sch-mobile');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    setInterval(poser, 700);
+  });
+
+  window.SchoolMobile = { poser: poser, ouvrirMenu: ouvrirMenu };
 })();
 
 </script>
